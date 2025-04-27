@@ -23,15 +23,29 @@ extension PostgrestResponse {
 
 class SupabaseService {
     @AppStorage("isLoggedIn") var isLoggedIn = false
-    private let supabaseUrlString = "https://vlmwlvkaizgrcqzyonfy.supabase.co"
+  
     static let shared = SupabaseService()
+    
+    private let client: SupabaseClient
+    private let storageBucketName = "clothes-images"
 
-    private init() {}
+    private init() {
+        guard
+            let urlString = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String,
+            let key = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_KEY") as? String,
+            let url = URL(string: urlString)
+        else {
+            fatalError("❌ Supabaseの設定がInfo.plistにありません")
+        }
 
-    internal let client = SupabaseClient(
-        supabaseURL: URL(string: "https://vlmwlvkaizgrcqzyonfy.supabase.co")!,
-        supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsbXdsdmthaXpncmNxenlvbmZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU1MDM0NzAsImV4cCI6MjA2MTA3OTQ3MH0.EymP7N-yMrCHVkBpzEG3sfBWckHjYxYkv9_DvOU6KCI"
-    )
+        self.client = SupabaseClient(supabaseURL: url, supabaseKey: key)
+    }
+
+    var currentUser: User? {
+        client.auth.currentUser
+    }
+
+    // MARK: - 認証
 
     func signIn(email: String, password: String) async throws {
         try await client.auth.signIn(email: email, password: password)
@@ -48,11 +62,33 @@ class SupabaseService {
         isLoggedIn = false
     }
 
-    var currentUser: User? {
-        client.auth.currentUser
+    // MARK: - 服画像データ
+  
+    func fetchImages(for clothingId: UUID) async throws -> [ClothingImage] {
+        return try await client
+            .from("clothing_images")
+            .select("*")
+            .eq("clothing_id", value: clothingId.uuidString)
+            .execute()
+            .decoded(to: [ClothingImage].self)
     }
 
+    func addImage(for clothingId: UUID, imageUrl: String) async throws {
+        let clothingImage = [
+            "id": UUID().uuidString,
+            "clothing_id": clothingId.uuidString,
+            "image_url": imageUrl
+        ]
 
+        _ = try await client
+            .from("clothing_images")
+            .insert(clothingImage)
+            .execute()
+    }
+
+    // MARK: - 服データ
+
+  
     func fetchClothes() async throws -> [Clothing] {
         return try await client
             .from("clothes")
@@ -61,16 +97,46 @@ class SupabaseService {
             .decoded(to: [Clothing].self)
     }
 
-
     func addClothing(_ clothing: Clothing) async throws {
         _ = try await client
             .from("clothes")
-            .insert(clothing)
+            .insert([
+                "id": clothing.id.uuidString,
+                "user_id": clothing.user_id.uuidString,
+                "name": clothing.name,
+                "category": clothing.category,
+                "color": clothing.color,
+                "created_at": clothing.created_at
+            ])
             .execute()
     }
 
+    func updateClothing(_ clothing: Clothing) async throws {
+        _ = try await client
+            .from("clothes")
+            .update([
+                "name": clothing.name,
+                "category": clothing.category,
+                "color": clothing.color
+            ])
+            .eq("id", value: clothing.id.uuidString)
+            .execute()
+    }
 
+    func deleteClothing(_ clothing: Clothing) async throws {
+        try await deleteClothingById(clothing.id)
+    }
+
+    func deleteClothingById(_ id: UUID) async throws {
+        _ = try await client
+            .from("clothes")
+            .delete()
+            .eq("id", value: id.uuidString)
+            .execute()
+    }
   
+    // MARK: - 画像アップロード
+
     func uploadImage(_ image: UIImage, for filename: String) async throws -> String {
         guard let imageData = image.jpegData(compressionQuality: 0.8) else {
             throw NSError(domain: "upload", code: 0, userInfo: [NSLocalizedDescriptionKey: "画像の変換に失敗しました"])
@@ -79,36 +145,21 @@ class SupabaseService {
         let path = "\(filename).jpg"
 
         _ = try await client.storage
-          .from("clothes-images")
-          .upload(path, data: imageData, options: FileOptions(contentType: "image/jpeg"))
-        print("🧑 Supabase currentUser =", SupabaseService.shared.currentUser?.id ?? "nil")
+            .from(storageBucketName)
+            .upload(path, data: imageData, options: FileOptions(contentType: "image/jpeg"))
 
-        // 公開URLを返す
-        return "\(supabaseUrlString)/storage/v1/object/public/clothes-images/\(path)"
+        guard let urlString = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String else {
+            throw NSError(domain: "config", code: 0, userInfo: [NSLocalizedDescriptionKey: "Supabase URLが見つかりません"])
+        }
+
+        return "\(urlString)/storage/v1/object/public/\(storageBucketName)/\(path)"
     }
 
-    func deleteClothing(_ clothing: Clothing) async throws {
-        _ = try await client
-            .from("clothes")
-            .delete()
-            .eq("id", value: clothing.id)
-            .execute()
-    }
+    // MARK: - 天気キャッシュ
 
-    func deleteClothingById(_ id: UUID) async throws {
-        try await client
-            .from("clothes")
-            .delete()
-            .eq("id", value: id.uuidString)
-            .execute()
-    }
-
-  
     func fetchCachedWeather(for city: String) async throws -> Weather? {
-        // 3時間前のISO8601文字列を作成
         let threeHoursAgo = Calendar.current.date(byAdding: .hour, value: -3, to: Date())!
-        let formatter = ISO8601DateFormatter()
-        let cutoff = formatter.string(from: threeHoursAgo)
+        let cutoff = ISO8601DateFormatter().string(from: threeHoursAgo)
 
         let response = try await client
             .from("weather_cache")
@@ -121,37 +172,5 @@ class SupabaseService {
 
         let results = try response.decoded(to: [Weather].self)
         return results.first
-    }
-
-    func updateClothing(_ clothing: Clothing, isNew: Bool) async throws {
-        if isNew {
-            print("🆕 insert開始: \(clothing)")
-            _ = try await client
-                .from("clothes")
-                .insert([
-                    "id": clothing.id.uuidString,
-                    "user_id": clothing.user_id.uuidString,
-                    "name": clothing.name,
-                    "category": clothing.category,
-                    "color": clothing.color,
-                    "image_url": clothing.image_url,
-                    "created_at": clothing.created_at
-                ])
-                .execute()
-            print("✅ insert成功")
-        } else {
-            print("✏️ update開始: \(clothing)")
-            _ = try await client
-                .from("clothes")
-                .update([
-                    "name": clothing.name,
-                    "category": clothing.category,
-                    "color": clothing.color,
-                    "image_url": clothing.image_url
-                ])
-                .eq("id", value: clothing.id)
-                .execute()
-            print("✅ update成功")
-        }
     }
 }

@@ -14,6 +14,5 @@ struct Clothing: Codable, Identifiable, Equatable {
     var name: String
     var category: String
     var color: String
-    var image_url: String
     let created_at: String
 }
