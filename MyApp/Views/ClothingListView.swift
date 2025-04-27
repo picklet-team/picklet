@@ -12,7 +12,7 @@ struct ClothingListView: View {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                     ForEach(viewModel.clothes) { clothing in
                         NavigationLink(destination: ClothingDetailView(clothing: clothing).environmentObject(viewModel)) {
-                            ClothingItemView(clothing: clothing)
+                            ClothingItemView(clothing: clothing).environmentObject(viewModel)
                         }
                     }
                 }
@@ -21,11 +21,20 @@ struct ClothingListView: View {
             .navigationTitle("My Clothes")
             .safeAreaInset(edge: .bottom) {
                 PrimaryActionButton(title: "写真から服を追加") {
-                    Task {
-                        let newClothing = try? await viewModel.createLocalTemporaryClothing()
+                    if let user = SupabaseService.shared.currentUser {
+                        let newClothing = Clothing(
+                            id: UUID(),
+                            user_id: user.id,
+                            name: "",
+                            category: "",
+                            color: "",
+                            created_at: ISO8601DateFormatter().string(from: Date())
+                        )
                         self.editingClothing = newClothing
                         self.isNewClothing = true
                         self.navigateToEdit = true
+                    } else {
+                        print("❌ ログインユーザーがいません")
                     }
                 }
             }

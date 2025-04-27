@@ -7,18 +7,24 @@ struct ClothingDetailView: View {
     let clothing: Clothing
 
     @State private var showEdit = false
+    @State private var images: [ClothingImage] = []
 
     var body: some View {
         VStack {
-            if let url = URL(string: clothing.image_url), !clothing.image_url.isEmpty {
-                AsyncImage(url: url) { image in
-                    image
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 250)
-                } placeholder: {
-                    ProgressView()
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack {
+                    ForEach(images) { image in
+                        AsyncImage(url: URL(string: image.image_url)) { image in
+                            image.resizable()
+                                 .scaledToFill()
+                                 .frame(width: 150, height: 150)
+                                 .clipped()
+                        } placeholder: {
+                            ProgressView()
+                        }
+                    }
                 }
+                .padding()
             }
 
             Text(clothing.name)
@@ -45,6 +51,17 @@ struct ClothingDetailView: View {
             if !newClothes.contains(where: { $0.id == clothing.id }) {
                 dismiss()
             }
+        }
+        .task {
+            await loadImages()
+        }
+    }
+
+    private func loadImages() async {
+        do {
+            images = try await SupabaseService.shared.fetchImages(for: clothing.id)
+        } catch {
+            print("❌ 画像取得エラー: \(error.localizedDescription)")
         }
     }
 }

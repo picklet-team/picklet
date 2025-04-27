@@ -20,7 +20,6 @@ class LoginViewModel: ObservableObject {
     func login() async {
         do {
             try await SupabaseService.shared.signIn(email: email, password: password)
-            print("✅ ログイン成功")
             errorMessage = nil
         } catch {
             errorMessage = "ログインに失敗しました: \(error.localizedDescription)"

@@ -11,31 +11,42 @@ struct ClothingEditView: View {
 
     @State private var showPhotoPicker = false
     @State private var showDeleteConfirm = false
+  
+    @State private var images: [ClothingImage] = []
 
     var body: some View {
         VStack {
             Form {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack {
+                        ForEach(images) { image in
+                            AsyncImage(url: URL(string: image.image_url)) { img in
+                                img.resizable()
+                                    .scaledToFill()
+                                    .frame(width: 150, height: 150)
+                                    .clipped()
+                            } placeholder: {
+                                ProgressView()
+                            }
+                        }
+                        Button(action: {
+                            showPhotoPicker = true
+                        }) {
+                            VStack {
+                                Image(systemName: "plus")
+                                    .font(.largeTitle)
+                                    .frame(width: 150, height: 150)
+                                    .background(Color.gray.opacity(0.2))
+                                    .cornerRadius(8)
+                            }
+                        }
+                    }
+                    .padding(.vertical)
+                }
                 Section(header: Text("服の情報")) {
                     TextField("名前", text: $clothing.name)
                     TextField("カテゴリ", text: $clothing.category)
                     TextField("色", text: $clothing.color)
-                }
-
-                if let url = URL(string: clothing.image_url), !clothing.image_url.isEmpty {
-                    AsyncImage(url: url) { image in
-                        image
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 200)
-                    } placeholder: {
-                        ProgressView()
-                    }
-                }
-
-                Section {
-                    Button("写真を変更する") {
-                        showPhotoPicker = true
-                    }
                 }
 
                 if canDelete {
@@ -61,10 +72,16 @@ struct ClothingEditView: View {
         }
         .navigationTitle("服を編集")
         .sheet(isPresented: $showPhotoPicker) {
-            CaptureOrLibraryView{ selectedImage in
+            CaptureOrLibraryView { selectedImage in
                 Task {
                     let url = try await SupabaseService.shared.uploadImage(selectedImage, for: UUID().uuidString)
-                    clothing.image_url = url
+                    let newImage = ClothingImage(
+                        id: UUID(),
+                        clothing_id: clothing.id,
+                        image_url: url,
+                        created_at: ISO8601DateFormatter().string(from: Date())
+                    )
+                    images.append(newImage)
                 }
             }
         }
@@ -77,10 +94,21 @@ struct ClothingEditView: View {
             }
             Button("キャンセル", role: .cancel) {}
         }
+        .task {
+            await loadImages()
+        }
         .onAppear {
             if openPhotoPickerOnAppear {
                 showPhotoPicker = true
             }
+        }
+    }
+
+    private func loadImages() async {
+        do {
+            images = try await SupabaseService.shared.fetchImages(for: clothing.id)
+        } catch {
+            print("❌ 画像取得エラー: \(error.localizedDescription)")
         }
     }
 }
