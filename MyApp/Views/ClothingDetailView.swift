@@ -41,7 +41,7 @@ struct ClothingDetailView: View {
             )
             .environmentObject(viewModel)
         }
-        .onChange(of: viewModel.clothes) { newClothes in
+        .onChange(of: viewModel.clothes) { oldClothes, newClothes in
             if !newClothes.contains(where: { $0.id == clothing.id }) {
                 dismiss()
             }
