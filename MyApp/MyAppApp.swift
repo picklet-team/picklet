@@ -9,9 +9,15 @@ import SwiftUI
 
 @main
 struct MyAppApp: App {
+    @AppStorage("isLoggedIn") var isLoggedIn = false
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            if isLoggedIn && SupabaseService.shared.currentUser != nil {
+                MainTabView()
+            } else {
+                LoginView()
+            }
         }
     }
 }

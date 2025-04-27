@@ -14,4 +14,15 @@ struct MyAppTests {
         // Write your test here and use APIs like `#expect(...)` to check expected conditions.
     }
 
+    @Test func testLogin() async throws {
+        let viewModel = LoginViewModel()
+        viewModel.email = "test@example.com"
+        viewModel.password = "password123"
+
+        await viewModel.login()
+
+        XCTAssertTrue(viewModel.isLoggedIn)
+        XCTAssertNil(viewModel.errorMessage)
+    }
+
 }
