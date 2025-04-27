@@ -157,20 +157,33 @@ class SupabaseService {
 
     // MARK: - 天気キャッシュ
 
-    func fetchCachedWeather(for city: String) async throws -> Weather? {
-        let threeHoursAgo = Calendar.current.date(byAdding: .hour, value: -3, to: Date())!
-        let cutoff = ISO8601DateFormatter().string(from: threeHoursAgo)
+    func fetchWeatherCache(for city: String) async throws -> Weather {
+        let today = DateFormatter.cachedDateFormatter.string(from: Date())
 
         let response = try await client
             .from("weather_cache")
             .select("*")
             .eq("city", value: city)
-            .gte("timestamp", value: cutoff)
+            .eq("date", value: today)
             .limit(1)
-            .order("timestamp", ascending: false)
             .execute()
 
-        let results = try response.decoded(to: [Weather].self)
-        return results.first
+        return try response.decoded(to: Weather.self)
     }
+
+    func insertWeatherCache(_ weather: Weather) async throws {
+        _ = try await client
+            .from("weather_cache")
+            .insert(weather)
+            .execute()
+    }
+
+}
+
+extension DateFormatter {
+    static let cachedDateFormatter: DateFormatter = {
+        let df = DateFormatter()
+        df.dateFormat = "yyyy-MM-dd"
+        return df
+    }()
 }
