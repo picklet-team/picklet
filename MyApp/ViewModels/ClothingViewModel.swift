@@ -8,7 +8,7 @@ class ClothingViewModel: ObservableObject {
     @Published var error: String?
     @Published var clothingImages: [UUID: [ClothingImage]] = [:]
 
-    func updateClothing(_ clothing: Clothing, isNew: Bool) async {
+    func updateClothing(_ clothing: Clothing, images: [ClothingImage], isNew: Bool) async {
         do {
             if isNew {
                 try await SupabaseService.shared.addClothing(clothing)
@@ -16,10 +16,8 @@ class ClothingViewModel: ObservableObject {
                 try await SupabaseService.shared.updateClothing(clothing)
             }
             
-            if let images = clothingImages[clothing.id] {
-                for image in images {
-                    try await SupabaseService.shared.addImage(for: clothing.id, imageUrl: image.image_url)
-                }
+            for image in images {
+                try await SupabaseService.shared.addImage(for: clothing.id, imageUrl: image.image_url)
             }
         } catch {
             print("❌ 服の更新エラー: \(error.localizedDescription)")

@@ -7,27 +7,31 @@ struct ClothingItemView: View {
 
     var body: some View {
         VStack {
-          if let firstImageUrl = viewModel.clothingImages[clothing.id]?.first?.image_url,
-             let url = URL(string: firstImageUrl) {
-              WebImage(url: url)
-                  .resizable()
-                  .scaledToFill()
-                  .frame(height: 150)
-                  .clipped()
-                  .cornerRadius(8)
-          } else {
-              Color.gray
-                  .frame(height: 150)
-                  .cornerRadius(8)
-          }
-
-            Text(clothing.name)
-                .font(.caption)
-                .lineLimit(1)
+            if let firstImageUrl = viewModel.clothingImages[clothing.id]?.first?.image_url,
+               let url = URL(string: firstImageUrl) {
+                WebImage(url: url, options: [.queryMemoryData, .queryDiskDataSync, .refreshCached])
+                    .resizable()
+                    .indicator(.activity)
+                    .transition(.fade(duration: 0.5))
+                    .scaledToFill()
+                    .frame(width: 150, height: 150)
+                    .clipped()
+                    .cornerRadius(8)
+            } else {
+                placeholderView
+            }
         }
+        .frame(width: 150)
         .padding()
         .background(Color(.secondarySystemBackground))
         .cornerRadius(12)
         .shadow(radius: 2)
+    }
+
+    private var placeholderView: some View {
+        Rectangle()
+            .fill(Color.gray.opacity(0.2))
+            .frame(width: 150, height: 150)
+            .cornerRadius(8)
     }
 }

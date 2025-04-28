@@ -11,6 +11,9 @@ struct ClothingCropEditView: View {
     let originalImage: UIImage
     let onComplete: (UIImage) -> Void
 
+    @State private var userMaskImage = UIImage()
+    @State private var currentPenColor = UIColor.white
+
     @Environment(\.dismiss) private var dismiss
 
     @State private var maskedImage: UIImage?
@@ -22,10 +25,16 @@ struct ClothingCropEditView: View {
                 ProgressView("AIが服を切り抜いています…")
                     .padding()
             } else if let result = maskedImage {
-                Image(uiImage: result)
-                    .resizable()
-                    .scaledToFit()
-                    .padding()
+                ZStack {
+                    Image(uiImage: result)
+                        .resizable()
+                        .scaledToFit()
+                        .padding()
+
+                    MaskEditCanvasView(drawingImage: $userMaskImage, penColor: currentPenColor, penWidth: 20)
+                        .frame(width: 300, height: 400)
+                        .background(Color.clear)
+                }
 
                 Button("登録する") {
                     onComplete(result)

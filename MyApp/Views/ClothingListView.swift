@@ -10,9 +10,13 @@ struct ClothingListView: View {
         NavigationStack {
             ScrollView {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                    ForEach(viewModel.clothes) { clothing in
-                        NavigationLink(destination: ClothingDetailView(clothing: clothing).environmentObject(viewModel)) {
-                            ClothingItemView(clothing: clothing).environmentObject(viewModel)
+                    ForEach($viewModel.clothes, id: \.id) { $clothing in
+                        NavigationLink(
+                            destination: ClothingDetailView(clothing: $clothing, clothingId: clothing.id)
+                                .environmentObject(viewModel)
+                        ) {
+                            ClothingItemView(clothing: clothing)
+                                .environmentObject(viewModel)
                         }
                     }
                 }
@@ -39,9 +43,12 @@ struct ClothingListView: View {
                 }
             }
             .navigationDestination(isPresented: $navigateToEdit) {
-                if let clothing = editingClothing {
+                if let editingClothing = editingClothing {
                     ClothingEditView(
-                        clothing: clothing,
+                        clothing: Binding(
+                            get: { editingClothing },
+                            set: { self.editingClothing = $0 }
+                        ),
                         openPhotoPickerOnAppear: true,
                         canDelete: false,
                         isNew: true

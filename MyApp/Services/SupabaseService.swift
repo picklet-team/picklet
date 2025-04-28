@@ -74,16 +74,42 @@ class SupabaseService {
     }
 
     func addImage(for clothingId: UUID, imageUrl: String) async throws {
+        guard let user = currentUser else {
+            throw NSError(domain: "auth", code: 401, userInfo: [NSLocalizedDescriptionKey: "ユーザーが未ログインです"])
+        }
         let clothingImage = [
             "id": UUID().uuidString,
             "clothing_id": clothingId.uuidString,
-            "image_url": imageUrl
+            "user_id": user.id.uuidString,
+            "image_url": imageUrl,
+            "created_at": ISO8601DateFormatter().string(from: Date())
         ]
 
         _ = try await client
             .from("clothing_images")
             .insert(clothingImage)
             .execute()
+    }
+  
+    func uploadImage(_ image: UIImage, for filename: String) async throws -> String {
+        // まずリサイズする（幅を最大800pxに制限）
+        let resizedImage = image.resized(toMaxPixel: 800)
+
+        guard let imageData = resizedImage.jpegData(compressionQuality: 0.6) else {
+            throw NSError(domain: "upload", code: 0, userInfo: [NSLocalizedDescriptionKey: "画像の変換に失敗しました"])
+        }
+
+        let path = "\(filename).jpg"
+
+        _ = try await client.storage
+            .from(storageBucketName)
+            .upload(path, data: imageData, options: FileOptions(contentType: "image/jpeg"))
+
+        guard let urlString = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String else {
+            throw NSError(domain: "config", code: 0, userInfo: [NSLocalizedDescriptionKey: "Supabase URLが見つかりません"])
+        }
+
+        return "\(urlString)/storage/v1/object/public/\(storageBucketName)/\(path)"
     }
 
     // MARK: - 服データ
@@ -98,11 +124,14 @@ class SupabaseService {
     }
 
     func addClothing(_ clothing: Clothing) async throws {
+        guard let user = currentUser else {
+            throw NSError(domain: "auth", code: 401, userInfo: [NSLocalizedDescriptionKey: "ユーザーが未ログインです"])
+        }
         _ = try await client
             .from("clothes")
             .insert([
                 "id": clothing.id.uuidString,
-                "user_id": clothing.user_id.uuidString,
+                "user_id": user.id.uuidString,
                 "name": clothing.name,
                 "category": clothing.category,
                 "color": clothing.color,
@@ -133,26 +162,6 @@ class SupabaseService {
             .delete()
             .eq("id", value: id.uuidString)
             .execute()
-    }
-  
-    // MARK: - 画像アップロード
-
-    func uploadImage(_ image: UIImage, for filename: String) async throws -> String {
-        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
-            throw NSError(domain: "upload", code: 0, userInfo: [NSLocalizedDescriptionKey: "画像の変換に失敗しました"])
-        }
-
-        let path = "\(filename).jpg"
-
-        _ = try await client.storage
-            .from(storageBucketName)
-            .upload(path, data: imageData, options: FileOptions(contentType: "image/jpeg"))
-
-        guard let urlString = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String else {
-            throw NSError(domain: "config", code: 0, userInfo: [NSLocalizedDescriptionKey: "Supabase URLが見つかりません"])
-        }
-
-        return "\(urlString)/storage/v1/object/public/\(storageBucketName)/\(path)"
     }
 
     // MARK: - 天気キャッシュ
@@ -186,4 +195,24 @@ extension DateFormatter {
         df.dateFormat = "yyyy-MM-dd"
         return df
     }()
+}
+
+extension UIImage {
+    func resized(toMaxPixel maxPixel: CGFloat) -> UIImage {
+        let aspectRatio = size.width / size.height
+        var newSize: CGSize
+        if aspectRatio > 1 {
+            // Landscape
+            newSize = CGSize(width: maxPixel, height: maxPixel / aspectRatio)
+        } else {
+            // Portrait
+            newSize = CGSize(width: maxPixel * aspectRatio, height: maxPixel)
+        }
+
+        UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
+        self.draw(in: CGRect(origin: .zero, size: newSize))
+        let resizedImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return resizedImage ?? self
+    }
 }

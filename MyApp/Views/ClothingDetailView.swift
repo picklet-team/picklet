@@ -1,10 +1,12 @@
 import SwiftUI
+import SDWebImageSwiftUI
 
 struct ClothingDetailView: View {
     @EnvironmentObject var viewModel: ClothingViewModel
     @Environment(\.dismiss) private var dismiss
 
-    let clothing: Clothing
+    @Binding var clothing: Clothing
+    let clothingId: UUID
 
     @State private var showEdit = false
     @State private var images: [ClothingImage] = []
@@ -14,13 +16,20 @@ struct ClothingDetailView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack {
                     ForEach(images) { image in
-                        AsyncImage(url: URL(string: image.image_url)) { image in
-                            image.resizable()
-                                 .scaledToFill()
-                                 .frame(width: 150, height: 150)
-                                 .clipped()
-                        } placeholder: {
-                            ProgressView()
+                        if let url = URL(string: image.image_url) {
+                            WebImage(url: url, options: [.queryMemoryData, .queryDiskDataSync, .refreshCached])
+                                .resizable()
+                                .indicator(.activity)
+                                .transition(.fade(duration: 0.5))
+                                .scaledToFill()
+                                .frame(width: 150, height: 150)
+                                .clipped()
+                                .cornerRadius(8)
+                        } else {
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.2))
+                                .frame(width: 150, height: 150)
+                                .cornerRadius(8)
                         }
                     }
                 }
@@ -40,7 +49,7 @@ struct ClothingDetailView: View {
         }
         .sheet(isPresented: $showEdit) {
             ClothingEditView(
-                clothing: clothing,
+                clothing: $clothing,
                 openPhotoPickerOnAppear: false,
                 canDelete: true,
                 isNew: false
@@ -48,7 +57,7 @@ struct ClothingDetailView: View {
             .environmentObject(viewModel)
         }
         .onChange(of: viewModel.clothes) { oldClothes, newClothes in
-            if !newClothes.contains(where: { $0.id == clothing.id }) {
+            if !newClothes.contains(where: { $0.id == clothingId }) {
                 dismiss()
             }
         }
