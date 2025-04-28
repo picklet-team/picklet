@@ -11,6 +11,7 @@ import Foundation
 struct ClothingImage: Identifiable, Codable {
     let id: UUID
     let clothing_id: UUID
+    let user_id: UUID
     let image_url: String
     let created_at: String
 }
