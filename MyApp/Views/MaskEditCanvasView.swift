@@ -9,12 +9,17 @@
 import SwiftUI
 
 struct MaskEditCanvasView: UIViewRepresentable {
-    @Binding var drawingImage: UIImage // ユーザーの描いたマスク
-    var penColor: UIColor // 白=追加 / 黒=削除
+    @Binding var drawingImage: UIImage
+    var penColor: UIColor
     var penWidth: CGFloat = 20.0
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
 
     func makeUIView(context: Context) -> DrawingCanvas {
         let canvas = DrawingCanvas()
+        context.coordinator.canvas = canvas
         canvas.isUserInteractionEnabled = true
         return canvas
     }
@@ -24,11 +29,18 @@ struct MaskEditCanvasView: UIViewRepresentable {
         uiView.penWidth = penWidth
     }
 
+    class Coordinator: ObservableObject {
+        var canvas: DrawingCanvas?
+
+        func exportDrawingImage() -> UIImage {
+            return canvas?.exportDrawingImage() ?? UIImage()
+        }
+    }
+
     class DrawingCanvas: UIView {
         private var lines: [Line] = []
         var penColor: UIColor = .white
         var penWidth: CGFloat = 20.0
-
         private var lastPoint: CGPoint?
 
         override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {

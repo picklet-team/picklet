@@ -15,4 +15,5 @@ struct Clothing: Codable, Identifiable, Equatable {
     var category: String
     var color: String
     let created_at: String
+    let updated_at: String
 }

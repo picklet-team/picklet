@@ -1,14 +1,14 @@
 import SwiftUI
 import SDWebImageSwiftUI
 
+
 struct ClothingItemView: View {
-    @EnvironmentObject var viewModel: ClothingViewModel
     let clothing: Clothing
+    let imageUrl: String?
 
     var body: some View {
         VStack {
-            if let firstImageUrl = viewModel.clothingImages[clothing.id]?.first?.image_url,
-               let url = URL(string: firstImageUrl) {
+            if let urlString = imageUrl, let url = URL(string: urlString) {
                 WebImage(url: url, options: [.queryMemoryData, .queryDiskDataSync, .refreshCached])
                     .resizable()
                     .indicator(.activity)

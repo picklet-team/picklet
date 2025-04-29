@@ -19,6 +19,8 @@ struct ClothingCropEditView: View {
     @State private var maskedImage: UIImage?
     @State private var isLoading = true
 
+    @StateObject private var canvasCoordinator = MaskEditCanvasView.Coordinator()
+
     var body: some View {
         VStack {
             if isLoading {
@@ -34,10 +36,12 @@ struct ClothingCropEditView: View {
                     MaskEditCanvasView(drawingImage: $userMaskImage, penColor: currentPenColor, penWidth: 20)
                         .frame(width: 300, height: 400)
                         .background(Color.clear)
+                        .environmentObject(canvasCoordinator)
                 }
 
                 Button("登録する") {
-                    onComplete(result)
+                    let exportedMask = canvasCoordinator.exportDrawingImage()
+                    onComplete(exportedMask)
                     dismiss()
                 }
                 .padding()
