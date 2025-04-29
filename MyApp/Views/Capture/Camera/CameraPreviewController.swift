@@ -9,6 +9,7 @@
 import UIKit
 import AVFoundation
 
+
 class CameraPreviewController: UIViewController, AVCapturePhotoCaptureDelegate {
     var captureSession: AVCaptureSession?
     var photoOutput: AVCapturePhotoOutput?
@@ -23,7 +24,7 @@ class CameraPreviewController: UIViewController, AVCapturePhotoCaptureDelegate {
 
     private func setupCamera() {
         captureSession = AVCaptureSession()
-        captureSession?.sessionPreset = .photo
+        captureSession?.sessionPreset = .high
 
         guard let backCamera = AVCaptureDevice.default(for: .video),
               let input = try? AVCaptureDeviceInput(device: backCamera),
@@ -56,36 +57,35 @@ class CameraPreviewController: UIViewController, AVCapturePhotoCaptureDelegate {
         photoOutput?.capturePhoto(with: settings, delegate: self)
     }
 
-    func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
-        guard let data = photo.fileDataRepresentation(),
-              let image = UIImage(data: data) else { return }
-        let squareImage = cropToSquare(image: image)
-        onImageCaptured?(squareImage)
+    func photoOutput(_ output: AVCapturePhotoOutput,
+                     didFinishProcessingPhoto photo: AVCapturePhoto,
+                     error: Error?) {
+
+        guard let data  = photo.fileDataRepresentation(),
+              let image = UIImage(data: data),
+              let layer = previewLayer else { return }
+
+        // プレビューに写っていた矩形(0-1正規化) → 画像座標へ変換
+        let visible = layer.metadataOutputRectConverted(fromLayerRect: layer.bounds)
+        let cg      = image.cgImage!
+        let crop = CGRect(x: visible.origin.x * CGFloat(cg.width),
+                          y: visible.origin.y * CGFloat(cg.height),
+                          width:  visible.size.width  * CGFloat(cg.width),
+                          height: visible.size.height * CGFloat(cg.height)
+                         ).integral
+
+        guard let cropped = cg.cropping(to: crop) else {
+            onImageCaptured?(image)          // 失敗時はオリジナル
+            return
+        }
+
+        onImageCaptured?(UIImage(cgImage: cropped,
+                                 scale: image.scale,
+                                 orientation: image.imageOrientation))
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         previewLayer?.frame = view.bounds
     }
-
-    private func cropToSquare(image: UIImage) -> UIImage {
-        let originalWidth = image.size.width
-        let originalHeight = image.size.height
-
-        // カメラセンサーのアスペクト比と、プレビュー表示比が違うため
-        // 中央を正方形でトリミングする
-        let edgeLength = min(originalWidth, originalHeight)
-        let cropX = (originalWidth - edgeLength) / 2.0
-        let cropY = (originalHeight - edgeLength) / 2.0
-
-        let cropRect = CGRect(x: cropX, y: cropY, width: edgeLength, height: edgeLength)
-
-        guard let cgImage = image.cgImage?.cropping(to: cropRect) else {
-            print("⚠️ 正方形クロップ失敗、オリジナルを返します")
-            return image
-        }
-
-        return UIImage(cgImage: cgImage, scale: image.scale, orientation: image.imageOrientation)
-    }
-
 }
