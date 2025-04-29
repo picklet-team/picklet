@@ -77,11 +77,30 @@ class CameraPreviewController: UIViewController, AVCapturePhotoCaptureDelegate {
         guard let data = photo.fileDataRepresentation(),
               let image = UIImage(data: data) else { return }
 
-        onImageCaptured?(image)
+        // 正方形にクロップ
+        let squareImage = cropToSquare(image: image)
+        onImageCaptured?(squareImage)
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         previewLayer?.frame = view.bounds
     }
+
+    private func cropToSquare(image: UIImage) -> UIImage {
+        let originalWidth  = image.size.width
+        let originalHeight = image.size.height
+        let edgeLength = min(originalWidth, originalHeight)
+
+        let posX = (originalWidth  - edgeLength) / 2.0
+        let posY = (originalHeight - edgeLength) / 2.0
+        let cropRect = CGRect(x: posX, y: posY, width: edgeLength, height: edgeLength)
+
+        guard let cgImage = image.cgImage?.cropping(to: cropRect) else {
+            return image
+        }
+
+        return UIImage(cgImage: cgImage, scale: image.scale, orientation: image.imageOrientation)
+    }
+
 }
