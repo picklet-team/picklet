@@ -18,8 +18,9 @@ struct ImageEditView: View {
             if let image = imageSet.original {
                 Image(uiImage: image)
                     .resizable()
-                    .scaledToFit()
-                    .frame(height: 300)
+                    .aspectRatio(1, contentMode: .fill)
+                    .frame(width: 300, height: 300)
+                    .clipped()
             } else if let url = imageSet.originalUrl {
                 Text("URL: \(url)")
             } else {
