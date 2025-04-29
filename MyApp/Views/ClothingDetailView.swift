@@ -16,7 +16,7 @@ struct ClothingDetailView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack {
                     ForEach(images) { image in
-                        if let url = URL(string: image.image_url) {
+                        if let url = URL(string: image.original_url) {
                             WebImage(url: url, options: [.queryMemoryData, .queryDiskDataSync, .refreshCached])
                                 .resizable()
                                 .indicator(.activity)

@@ -15,8 +15,10 @@ struct ClothingListView: View {
                             destination: ClothingDetailView(clothing: $clothing, clothingId: clothing.id)
                                 .environmentObject(viewModel)
                         ) {
-                            ClothingItemView(clothing: clothing)
-                                .environmentObject(viewModel)
+                            ClothingItemView(
+                                clothing: clothing,
+                                imageUrl: viewModel.imageSetsMap[clothing.id]?.first?.originalUrl
+                            ).environmentObject(viewModel)
                         }
                     }
                 }
@@ -32,7 +34,8 @@ struct ClothingListView: View {
                             name: "",
                             category: "",
                             color: "",
-                            created_at: ISO8601DateFormatter().string(from: Date())
+                            created_at: ISO8601DateFormatter().string(from: Date()),
+                            updated_at: ""
                         )
                         self.editingClothing = newClothing
                         self.isNewClothing = true

@@ -73,23 +73,38 @@ class SupabaseService {
             .decoded(to: [ClothingImage].self)
     }
 
-    func addImage(for clothingId: UUID, imageUrl: String) async throws {
+    func addImage(for clothingId: UUID, originalUrl: String, maskUrl: String? = nil, resultUrl: String? = nil) async throws {
         guard let user = currentUser else {
             throw NSError(domain: "auth", code: 401, userInfo: [NSLocalizedDescriptionKey: "ユーザーが未ログインです"])
         }
-        let clothingImage = [
-            "id": UUID().uuidString,
-            "clothing_id": clothingId.uuidString,
-            "user_id": user.id.uuidString,
-            "image_url": imageUrl,
-            "created_at": ISO8601DateFormatter().string(from: Date())
-        ]
+
+        let newImage = NewClothingImage(
+            id: UUID(),
+            clothing_id: clothingId,
+            user_id: user.id,
+            original_url: originalUrl,
+            mask_url: maskUrl,
+            result_url: resultUrl,
+            created_at: ISO8601DateFormatter().string(from: Date())
+        )
 
         _ = try await client
             .from("clothing_images")
-            .insert(clothingImage)
+            .insert(newImage)
             .execute()
     }
+
+    func updateImageMaskAndResult(id: UUID, maskUrl: String?, resultUrl: String?) async throws {
+        _ = try await client
+            .from("clothing_images")
+            .update([
+                "mask_url": maskUrl,
+                "result_url": resultUrl
+            ])
+            .eq("id", value: id.uuidString)
+            .execute()
+    }
+  
   
     func uploadImage(_ image: UIImage, for filename: String) async throws -> String {
         // まずリサイズする（幅を最大800pxに制限）
@@ -186,7 +201,6 @@ class SupabaseService {
             .insert(weather)
             .execute()
     }
-
 }
 
 extension DateFormatter {
@@ -215,4 +229,14 @@ extension UIImage {
         UIGraphicsEndImageContext()
         return resizedImage ?? self
     }
+}
+
+private struct NewClothingImage: Encodable {
+    let id: UUID
+    let clothing_id: UUID
+    let user_id: UUID
+    let original_url: String
+    let mask_url: String?
+    let result_url: String?
+    let created_at: String
 }

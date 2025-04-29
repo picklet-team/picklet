@@ -1,11 +1,6 @@
 import SwiftUI
 import SDWebImageSwiftUI
 
-struct EditableClothingImage: Identifiable {
-    let id: UUID
-    var imageUrl: String?
-    var localImage: UIImage?
-}
 
 struct ClothingEditView: View {
     @EnvironmentObject var viewModel: ClothingViewModel
@@ -17,48 +12,20 @@ struct ClothingEditView: View {
     let isNew: Bool
 
     @State private var showPhotoPicker = false
+    @State private var showImageEditView = false
     @State private var showDeleteConfirm = false
   
-    @State private var editableImages: [EditableClothingImage] = []
-    @State private var selectedEditableImage: EditableClothingImage? = nil
-    @State private var selectedImageForCrop: UIImage? = nil
-    @State private var showCropView = false
+    @State private var imageSets: [EditableImageSet] = []
+    @State private var selectedImageSet: EditableImageSet? = nil
 
     var body: some View {
         VStack {
             Form {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack {
-                        ForEach(editableImages) { editableImage in
-                            Button {
-                                Task {
-                                    if let loadedImage = await loadUIImageFromEditable(editableImage) {
-                                        selectedEditableImage = editableImage
-                                        selectedImageForCrop = loadedImage
-                                        showCropView = true
-                                    }
-                                }
-                            } label: {
-                                if let urlString = editableImage.imageUrl, let url = URL(string: urlString) {
-                                    WebImage(url: url, options: [.queryMemoryData, .queryDiskDataSync, .refreshCached])
-                                        .resizable()
-                                        .indicator(.activity)
-                                        .transition(.fade(duration: 0.5))
-                                        .scaledToFill()
-                                        .frame(width: 150, height: 150)
-                                        .clipped()
-                                        .cornerRadius(8)
-                                } else if let localImage = editableImage.localImage {
-                                    Image(uiImage: localImage)
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 150, height: 150)
-                                        .clipped()
-                                        .cornerRadius(8)
-                                }
-                            }
+                        ForEach(imageSets) { imageSet in
+                            imageButton(for: imageSet)
                         }
-
                         Button(action: {
                             showPhotoPicker = true
                         }) {
@@ -103,8 +70,17 @@ struct ClothingEditView: View {
         .navigationTitle("服を編集")
         .sheet(isPresented: $showPhotoPicker) {
             CaptureOrLibraryView { selectedImage in
-                selectedImageForCrop = selectedImage
-                showCropView = true
+                let newSet = EditableImageSet(
+                    id: UUID(),
+                    original: selectedImage.normalized(),
+                    originalUrl: nil,
+                    mask: nil,
+                    maskUrl: nil,
+                    result: nil,
+                    resultUrl: nil,
+                    isNew: true
+                )
+                imageSets.append(newSet)
             }
         }
         .confirmationDialog("本当に削除しますか？", isPresented: $showDeleteConfirm) {
@@ -124,25 +100,9 @@ struct ClothingEditView: View {
                 showPhotoPicker = true
             }
         }
-        .sheet(isPresented: $showCropView) {
-            if let image = selectedImageForCrop {
-                ClothingCropEditView(
-                    originalImage: image,
-                    onComplete: { croppedImage in
-                        if let selected = selectedEditableImage {
-                            // 既存の画像を置き換える
-                            if let index = editableImages.firstIndex(where: { $0.id == selected.id }) {
-                                editableImages[index] = EditableClothingImage(id: selected.id, imageUrl: nil, localImage: croppedImage)
-                            }
-                        } else {
-                            // 新規登録の場合
-                            let newEditableImage = EditableClothingImage(id: UUID(), imageUrl: nil, localImage: croppedImage)
-                            editableImages.append(newEditableImage)
-                        }
-                        selectedEditableImage = nil
-                        showCropView = false
-                    }
-                )
+        .sheet(isPresented: $showImageEditView) {
+            if let selected = selectedImageSet {
+                ImageEditView(imageSet: selected)
             }
         }
     }
@@ -150,8 +110,17 @@ struct ClothingEditView: View {
     private func loadImages() async {
         do {
             let fetchedImages = try await SupabaseService.shared.fetchImages(for: clothing.id)
-            editableImages = fetchedImages.map { clothingImage in
-                EditableClothingImage(id: clothingImage.id, imageUrl: clothingImage.image_url, localImage: nil)
+            imageSets = fetchedImages.map { clothingImage in
+                EditableImageSet(
+                    id: clothingImage.id,
+                    original: nil,
+                    originalUrl: clothingImage.original_url,
+                    mask: nil,
+                    maskUrl: nil,
+                    result: nil,
+                    resultUrl: nil,
+                    isNew: false
+                )
             }
         } catch {
             print("❌ 画像取得エラー: \(error.localizedDescription)")
@@ -166,12 +135,11 @@ struct ClothingEditView: View {
                 try await SupabaseService.shared.updateClothing(clothing)
             }
 
-            for editableImage in editableImages {
-                if let localImage = editableImage.localImage {
-                    let uploadedUrl = try await SupabaseService.shared.uploadImage(localImage, for: UUID().uuidString)
-                    try await SupabaseService.shared.addImage(for: clothing.id, imageUrl: uploadedUrl)
-                } else {
-                    // imageUrlがある場合は既存画像なので特に何もしない
+            for set in imageSets {
+                if set.isNew, let original = set.original {
+                    let originalUrl = try await SupabaseService.shared.uploadImage(original, for: UUID().uuidString)
+                    try await SupabaseService.shared.addImage(for: clothing.id, originalUrl: originalUrl)
+                    print("✅ 画像保存完了: \(originalUrl)")
                 }
             }
         } catch {
@@ -179,19 +147,27 @@ struct ClothingEditView: View {
         }
     }
 
-    private func loadUIImageFromEditable(_ editableImage: EditableClothingImage) async -> UIImage? {
-        if let localImage = editableImage.localImage {
-            return localImage
-        } else if let urlString = editableImage.imageUrl,
-                  let url = URL(string: urlString) {
-            do {
-                let (data, _) = try await URLSession.shared.data(from: url)
-                return UIImage(data: data)
-            } catch {
-                print("❌ 画像ロードエラー: \(error.localizedDescription)")
-                return nil
+    private func imageButton(for imageSet: EditableImageSet) -> some View {
+        Button {
+            selectedImageSet = imageSet
+            showImageEditView = true
+        } label: {
+            Group {
+                if let original = imageSet.original {
+                    Image(uiImage: original)
+                        .resizable()
+                } else if let urlString = imageSet.originalUrl, let url = URL(string: urlString) {
+                    WebImage(url: url)
+                        .resizable()
+                        .indicator(.activity)
+                } else {
+                    Color.gray
+                }
             }
+            .scaledToFill()
+            .frame(width: 150, height: 150)
+            .clipped()
+            .cornerRadius(8)
         }
-        return nil
     }
 }
