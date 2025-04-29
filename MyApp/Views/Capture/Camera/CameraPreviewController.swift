@@ -28,44 +28,27 @@ class CameraPreviewController: UIViewController, AVCapturePhotoCaptureDelegate {
         guard let backCamera = AVCaptureDevice.default(for: .video),
               let input = try? AVCaptureDeviceInput(device: backCamera),
               let captureSession = captureSession else { return }
-
         if captureSession.canAddInput(input) {
             captureSession.addInput(input)
         }
-
         photoOutput = AVCapturePhotoOutput()
         if let photoOutput = photoOutput, captureSession.canAddOutput(photoOutput) {
             captureSession.addOutput(photoOutput)
         }
-
         previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
         previewLayer?.videoGravity = .resizeAspectFill
         previewLayer?.frame = view.bounds
         if let previewLayer = previewLayer {
             view.layer.addSublayer(previewLayer)
         }
-
-        captureSession.startRunning()
-
-        setupShutterButton()
+        DispatchQueue.global(qos: .userInitiated).async {
+            captureSession.startRunning()
+        }
     }
 
-    private func setupShutterButton() {
-        let button = UIButton(type: .system)
-        button.setTitle("", for: .normal)
-        button.backgroundColor = .white
-        button.layer.cornerRadius = 35
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.addTarget(self, action: #selector(capturePhoto), for: .touchUpInside)
-
-        view.addSubview(button)
-
-        NSLayoutConstraint.activate([
-            button.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -100),
-            button.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            button.widthAnchor.constraint(equalToConstant: 70),
-            button.heightAnchor.constraint(equalToConstant: 70)
-        ])
+    func capture() {
+        let settings = AVCapturePhotoSettings()
+        photoOutput?.capturePhoto(with: settings, delegate: self)
     }
 
     @objc private func capturePhoto() {
@@ -76,8 +59,6 @@ class CameraPreviewController: UIViewController, AVCapturePhotoCaptureDelegate {
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         guard let data = photo.fileDataRepresentation(),
               let image = UIImage(data: data) else { return }
-
-        // 正方形にクロップ
         let squareImage = cropToSquare(image: image)
         onImageCaptured?(squareImage)
     }
@@ -88,15 +69,19 @@ class CameraPreviewController: UIViewController, AVCapturePhotoCaptureDelegate {
     }
 
     private func cropToSquare(image: UIImage) -> UIImage {
-        let originalWidth  = image.size.width
+        let originalWidth = image.size.width
         let originalHeight = image.size.height
-        let edgeLength = min(originalWidth, originalHeight)
 
-        let posX = (originalWidth  - edgeLength) / 2.0
-        let posY = (originalHeight - edgeLength) / 2.0
-        let cropRect = CGRect(x: posX, y: posY, width: edgeLength, height: edgeLength)
+        // カメラセンサーのアスペクト比と、プレビュー表示比が違うため
+        // 中央を正方形でトリミングする
+        let edgeLength = min(originalWidth, originalHeight)
+        let cropX = (originalWidth - edgeLength) / 2.0
+        let cropY = (originalHeight - edgeLength) / 2.0
+
+        let cropRect = CGRect(x: cropX, y: cropY, width: edgeLength, height: edgeLength)
 
         guard let cgImage = image.cgImage?.cropping(to: cropRect) else {
+            print("⚠️ 正方形クロップ失敗、オリジナルを返します")
             return image
         }
 
