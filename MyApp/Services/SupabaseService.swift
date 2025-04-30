@@ -26,7 +26,7 @@ class SupabaseService {
   
     static let shared = SupabaseService()
     
-    private let client: SupabaseClient
+    internal let client: SupabaseClient
     private let storageBucketName = "clothes-images"
 
     private init() {
@@ -126,6 +126,26 @@ class SupabaseService {
 
         return "\(urlString)/storage/v1/object/public/\(storageBucketName)/\(path)"
     }
+  
+    func listClothingImageURLs() async throws -> [URL] {
+        guard let userId = currentUser?.id.uuidString else {
+            throw NSError(domain: "auth", code: 401, userInfo: [NSLocalizedDescriptionKey: "ユーザーが未ログインです"])
+        }
+
+        let bucket = client.storage.from(storageBucketName)
+        let objects = try await bucket.list(path: userId)
+
+        guard let baseURLString = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String else {
+            throw NSError(domain: "config", code: 0, userInfo: [NSLocalizedDescriptionKey: "Supabase URLが見つかりません"])
+        }
+
+        let urls = objects.map { object in
+            URL(string: "\(baseURLString)/storage/v1/object/public/\(storageBucketName)/\(userId)/\(object.name)")
+        }
+        
+        return urls.compactMap { $0 }
+    }
+
 
     // MARK: - 服データ
 
