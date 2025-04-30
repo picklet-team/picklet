@@ -26,7 +26,7 @@ struct CaptureOrLibraryView: View {
                         dismiss()
                     }
                 } else {
-                    LibraryPickerView { image in
+                    PhotoLibraryPickerView { image in
                         didPickImage = true
                         onImagePicked(image)
                         dismiss()
