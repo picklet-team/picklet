@@ -14,14 +14,14 @@ struct ClothingItemView: View {
                     .indicator(.activity)
                     .transition(.fade(duration: 0.5))
                     .scaledToFill()
-                    .frame(width: 150, height: 150)
+                    .frame(width: 100, height: 100)
                     .clipped()
                     .cornerRadius(8)
             } else {
                 placeholderView
             }
         }
-        .frame(width: 150)
+        .frame(width: 100)
         .padding()
         .background(Color(.secondarySystemBackground))
         .cornerRadius(12)
@@ -31,7 +31,7 @@ struct ClothingItemView: View {
     private var placeholderView: some View {
         Rectangle()
             .fill(Color.gray.opacity(0.2))
-            .frame(width: 150, height: 150)
+            .frame(width: 100, height: 100)
             .cornerRadius(8)
     }
 }
