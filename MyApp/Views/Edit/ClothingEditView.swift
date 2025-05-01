@@ -101,9 +101,7 @@ struct ClothingEditView: View {
             }
         }
         .sheet(isPresented: $showImageEditView) {
-            if let selected = selectedImageSet {
-                ImageEditView(imageSet: selected)
-            }
+            ImageEditView(imageSet: $selectedImageSet)
         }
     }
 
