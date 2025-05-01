@@ -1,4 +1,5 @@
 import SwiftUI
+import SDWebImageSwiftUI
 import Combine
 
 // MARK: - Helper types
@@ -27,7 +28,7 @@ struct ClothingQuickView: View {
     var body: some View {
         VStack(spacing: 12) {
             if let urlStr = imageURL, let url = URL(string: urlStr) {
-                AsyncImage(url: url) { phase in
+                WebImage(url: url, options: [.queryMemoryData, .queryDiskDataSync, .refreshCached]) { phase in
                     switch phase {
                     case .success(let img): img.resizable().scaledToFit()
                     case .failure(_): Image(systemName: "photo").resizable().scaledToFit().foregroundColor(.secondary)
