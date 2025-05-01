@@ -17,21 +17,72 @@ class CoreMLService {
         self.model = try! ISNet(configuration: MLModelConfiguration())
     }
 
+    func processImageSet(imageSet: EditableImageSet?) async -> EditableImageSet? {
+        // ① imageSet自体の存在をチェック
+        guard var set = imageSet else {
+            print("❌ imageSet is nil")
+            return nil
+        }
+
+        // ② original が nil なら URL からダウンロード
+        if set.original == nil,
+           let urlStr = set.originalUrl,
+           let url = URL(string: urlStr) {
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                if let image = UIImage(data: data) {
+                    set.original = image
+                } else {
+                    print("❌ failed to decode image from data")
+                    return nil
+                }
+            } catch {
+                print("❌ failed to download image:", error)
+                return nil
+            }
+        }
+
+        // ③ original が still nil の場合 → 処理不可
+        guard let original = set.original else {
+            print("❌ original image not available")
+            return nil
+        }
+
+        // ④ CoreML によるマスク推論
+        guard let mask = await CoreMLService.shared.predictMask(for: original) else {
+            print("❌ mask prediction failed")
+            return nil
+        }
+
+        // ⑤ マスクを使って切り抜き画像を生成
+        guard let result = ImageProcessor.applyMask(original: original, mask: mask) else {
+            print("❌ mask application failed")
+            return nil
+        }
+
+        // ⑥ 加工結果を保存して返す
+        set.mask = mask
+        set.result = result
+        return set
+    }
+
 
     func processImage(image: UIImage) async -> UIImage? {
         // 1. 推論
-        if let finalMask = CoreMLService.shared.predictMask(for: image) {
-            guard let maskedImage = ImageProcessor.applyMask(original: image, mask: finalMask) else {
-                return nil
-            }
-            return maskedImage
+        guard let mask = await CoreMLService.shared.predictMask(for: image) else {
+            print("❌ mask prediction failed")
+            return nil
         }
-        return nil
 
+        guard let result = ImageProcessor.applyMask(original: image, mask: mask) else {
+            print("❌ mask application failed")
+            return nil
+        }
+        return result
     }
 
     func predictMask(for image: UIImage,
-                     flipHorizontally: Bool = true) -> UIImage? {
+                     flipHorizontally: Bool = true) async -> UIImage? {
         let targetSize = CGSize(width: 1024, height: 1024)
 
         // 1. 推論用にリサイズ
