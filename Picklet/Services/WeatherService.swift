@@ -39,3 +39,24 @@ class WeatherManager {
     try await SupabaseService.shared.insertWeatherCache(weather)
   }
 }
+
+class WeatherService {
+  var cachedWeather: Weather?
+  
+  func getCurrentWeather(forCity city: String) async -> Weather? {
+    if let cached = cachedWeather, cached.city == city {
+      return cached
+    }
+    
+    do {
+      return try await WeatherManager.shared.fetchCachedWeather(for: city)
+    } catch {
+      return nil
+    }
+  }
+  
+  func saveWeather(_ weather: Weather) async throws {
+    try await WeatherManager.shared.saveWeatherToCache(weather)
+    cachedWeather = weather
+  }
+}

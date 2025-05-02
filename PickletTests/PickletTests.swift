@@ -157,6 +157,58 @@ struct PickletTests {
     #endif
   }
   
+  @Test func testWeatherServiceEdgeCases() async throws {
+    #if os(iOS) || os(macOS)
+    let weatherService = WeatherService()
+    
+    let nonExistentCity = "存在しない都市"
+    weatherService.cachedWeather = Weather(
+      city: "東京",
+      date: "2025-05-02",
+      temperature: 25.0,
+      condition: "晴れ",
+      icon: "sunny",
+      updated_at: "2025-05-02T10:00:00Z"
+    )
+    
+    let weatherForNonExistentCity = await weatherService.getCurrentWeather(forCity: nonExistentCity)
+    
+    #expect(weatherForNonExistentCity == nil)
+    
+    do {
+      let weatherToSave = Weather(
+        city: "京都",
+        date: "2025-05-02",
+        temperature: 20.0,
+        condition: "雨",
+        icon: "rainy",
+        updated_at: "2025-05-02T11:00:00Z"
+      )
+      
+      try await weatherService.saveWeather(weatherToSave)
+      
+      #expect(weatherService.cachedWeather?.city == "京都")
+      #expect(weatherService.cachedWeather?.temperature == 20.0)
+    } catch {
+      #expect(false, "Weather save should not throw an error in this test")
+    }
+    
+    let extremeWeather = Weather(
+      city: "極端な気象",
+      date: "2025-05-02",
+      temperature: -100.0, // 極端に低い温度
+      condition: "異常気象",
+      icon: "extreme",
+      updated_at: "2025-05-02T12:00:00Z"
+    )
+    
+    weatherService.cachedWeather = extremeWeather
+    let retrievedExtremeWeather = await weatherService.getCurrentWeather(forCity: "極端な気象")
+    
+    #expect(retrievedExtremeWeather?.temperature == -100.0)
+    #endif
+  }
+  
   @Test func testImageProcessor() throws {
     #if os(iOS) || os(macOS)
     let imageProcessor = ImageProcessor()

@@ -102,10 +102,88 @@ final class LinuxCompatibleTests: XCTestCase {
     }
     #endif
     
+    #if os(macOS) || os(iOS)
+    func testWeatherServiceEdgeCases() {
+        let weatherService = WeatherService()
+        
+        let nonExistentCity = "存在しない都市"
+        weatherService.cachedWeather = Weather(
+          city: "東京",
+          date: "2025-05-02",
+          temperature: 25.0,
+          condition: "晴れ",
+          icon: "sunny",
+          updated_at: "2025-05-02T10:00:00Z"
+        )
+        
+        let expectation1 = XCTestExpectation(description: "Get weather for non-existent city")
+        
+        Task {
+            let weatherForNonExistentCity = await weatherService.getCurrentWeather(forCity: nonExistentCity)
+            XCTAssertNil(weatherForNonExistentCity)
+            expectation1.fulfill()
+        }
+        
+        wait(for: [expectation1], timeout: 5.0)
+        
+        let expectation2 = XCTestExpectation(description: "Save and retrieve weather")
+        
+        Task {
+            do {
+                let weatherToSave = Weather(
+                  city: "京都",
+                  date: "2025-05-02",
+                  temperature: 20.0,
+                  condition: "雨",
+                  icon: "rainy",
+                  updated_at: "2025-05-02T11:00:00Z"
+                )
+                
+                try await weatherService.saveWeather(weatherToSave)
+                
+                XCTAssertEqual(weatherService.cachedWeather?.city, "京都")
+                XCTAssertEqual(weatherService.cachedWeather?.temperature, 20.0)
+                
+                let retrievedWeather = await weatherService.getCurrentWeather(forCity: "京都")
+                XCTAssertEqual(retrievedWeather?.city, "京都")
+                XCTAssertEqual(retrievedWeather?.temperature, 20.0)
+                
+                expectation2.fulfill()
+            } catch {
+                XCTFail("Weather save should not throw an error in this test")
+                expectation2.fulfill()
+            }
+        }
+        
+        wait(for: [expectation2], timeout: 5.0)
+        
+        let expectation3 = XCTestExpectation(description: "Handle extreme weather values")
+        
+        Task {
+            let extremeWeather = Weather(
+              city: "極端な気象",
+              date: "2025-05-02",
+              temperature: -100.0,
+              condition: "異常気象",
+              icon: "extreme",
+              updated_at: "2025-05-02T12:00:00Z"
+            )
+            
+            weatherService.cachedWeather = extremeWeather
+            let retrievedExtremeWeather = await weatherService.getCurrentWeather(forCity: "極端な気象")
+            
+            XCTAssertEqual(retrievedExtremeWeather?.temperature, -100.0)
+            expectation3.fulfill()
+        }
+        
+        wait(for: [expectation3], timeout: 5.0)
+    }
+    #endif
+    
     // Linux環境でもテストが実行されるようにするための特別なセットアップ
     static var allTests = [
         ("testClothingModel", testClothingModel),
-        ("testWeatherModel", testWeatherModel)
-        // ClothingImageモデルのテストはLinux環境では実行されません
+        ("testWeatherModel", testWeatherModel),
+        // ClothingImageモデルとWeatherServiceのテストはLinux環境では実行されません
     ]
 }
