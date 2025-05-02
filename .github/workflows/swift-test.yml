@@ -47,7 +47,6 @@ jobs:
         echo '            path: "Picklet/Models",' >> Package.swift
         echo '            exclude: [' >> Package.swift
         echo '                "LocationManager.swift",' >> Package.swift  # CoreLocation依存
-        echo '                "ClothingImage.swift",' >> Package.swift    # 追加: UIKit依存
         echo '                "ISNet.mlmodel"' >> Package.swift  # CoreML依存
         echo '            ],' >> Package.swift
         echo '            sources: ["Clothing.swift", "Weather.swift"]' >> Package.swift  # 明示的に必要なファイルのみを指定
@@ -56,104 +55,14 @@ jobs:
         echo '            name: "PickletCoreTests",' >> Package.swift
         echo '            dependencies: ["PickletCore"],' >> Package.swift
         echo '            path: "PickletTests",' >> Package.swift
-        echo '            sources: ["PickletTests.swift"]' >> Package.swift
+        echo '            sources: ["LinuxTests.swift"]' >> Package.swift  # Linux互換テストファイルを指定
         echo '        )' >> Package.swift
         echo '    ]' >> Package.swift
         echo ')' >> Package.swift
         
         # パッケージ構成を確認
         cat Package.swift
-        
-        # Linux用のテストファイルを作成 (XCTestで実装)
-        cat > PickletTests/LinuxTests.swift << 'EOL'
-        // LinuxTests.swift - XCTestを使用したLinux互換テスト
-        
-        import XCTest
-        @testable import PickletCore
-        
-        class PickletLinuxTests: XCTestCase {
-        
-            func testClothingModel() {
-                // テスト用の日付文字列
-                let dateStr = "2025-04-30T10:00:00Z"
-                
-                // Clothingインスタンスの作成テスト
-                let id = UUID()
-                let userId = UUID()
-                let clothing = Clothing(
-                    id: id,
-                    user_id: userId,
-                    name: "テストTシャツ",
-                    category: "トップス",
-                    color: "白",
-                    created_at: dateStr,
-                    updated_at: dateStr
-                )
-                
-                // 各プロパティが正しく設定されているかテスト
-                XCTAssertEqual(clothing.id, id)
-                XCTAssertEqual(clothing.user_id, userId)
-                XCTAssertEqual(clothing.name, "テストTシャツ")
-                XCTAssertEqual(clothing.category, "トップス")
-                XCTAssertEqual(clothing.color, "白")
-                XCTAssertEqual(clothing.created_at, dateStr)
-                XCTAssertEqual(clothing.updated_at, dateStr)
-            }
-            
-            func testWeatherModel() {
-                let weather = Weather(
-                    city: "東京",
-                    date: "2025-05-01",
-                    temperature: 25.5,
-                    condition: "晴れ",
-                    icon: "clear-day",
-                    updated_at: "2025-05-01T08:00:00Z"
-                )
-                
-                XCTAssertEqual(weather.city, "東京")
-                XCTAssertEqual(weather.date, "2025-05-01")
-                XCTAssertEqual(weather.temperature, 25.5)
-                XCTAssertEqual(weather.condition, "晴れ")
-                XCTAssertEqual(weather.icon, "clear-day")
-                XCTAssertEqual(weather.updated_at, "2025-05-01T08:00:00Z")
-            }
-            
-            // Linux環境でのテスト登録用
-            static var allTests = [
-                ("testClothingModel", testClothingModel),
-                ("testWeatherModel", testWeatherModel)
-            ]
-        }
-        
-        #if os(Linux)
-        extension PickletLinuxTests {
-            static let __allTests = [
-                ("testClothingModel", testClothingModel),
-                ("testWeatherModel", testWeatherModel),
-            ]
-        }
-        
-        // LinuxMain.swiftで使用するためのテスト一覧
-        public func __allTests() -> [XCTestCaseEntry] {
-            return [
-                testCase(PickletLinuxTests.__allTests)
-            ]
-        }
-        #endif
-        EOL
-        
-        # LinuxMain.swiftファイルを作成 (Linux環境での実行に必要)
-        mkdir -p Tests/LinuxMain
-        cat > Tests/LinuxMain/LinuxMain.swift << 'EOL'
-        import XCTest
-        
-        @testable import PickletCoreTests
-        
-        var tests = [XCTestCaseEntry]()
-        tests += PickletCoreTests.__allTests()
-        XCTMain(tests)
-        EOL
     - name: Run Linux-compatible tests
       run: |
         # XCTestを使用したLinux互換テストを実行
-        swift test -v || swift test --filter PickletLinuxTests
+        swift test -v || swift test --filter LinuxCompatibleTests
