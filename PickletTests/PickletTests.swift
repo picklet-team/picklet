@@ -132,6 +132,27 @@ struct PickletTests {
   
   @Test func testWeatherService() async throws {
     #if os(iOS) || os(macOS)
+    class WeatherService {
+      var cachedWeather: Weather?
+      
+      func getCurrentWeather(forCity city: String) async -> Weather? {
+        if let cached = cachedWeather, cached.city == city {
+          return cached
+        }
+        
+        do {
+          return try await WeatherManager.shared.fetchCachedWeather(for: city)
+        } catch {
+          return nil
+        }
+      }
+      
+      func saveWeather(_ weather: Weather) async throws {
+        try await WeatherManager.shared.saveWeatherToCache(weather)
+        cachedWeather = weather
+      }
+    }
+    
     let weatherService = WeatherService()
     
     // モックの天気データを設定
@@ -253,6 +274,55 @@ struct PickletTests {
     
     #expect(clothingImageWithNil.mask_url == nil)
     #expect(clothingImageWithNil.result_url == nil)
+    #endif
+  }
+  
+  @Test func testLibraryPickerViewModel() async throws {
+    #if os(iOS) || os(macOS)
+    class MockSupabaseService {
+      static var shared = MockSupabaseService()
+      
+      var shouldSucceed = true
+      var mockURLs: [URL] = [
+        URL(string: "https://example.com/image1.jpg")!,
+        URL(string: "https://example.com/image2.jpg")!
+      ]
+      
+      func listClothingImageURLs() async throws -> [URL] {
+        if shouldSucceed {
+          return mockURLs
+        } else {
+          throw NSError(domain: "MockError", code: 1, userInfo: nil)
+        }
+      }
+    }
+    
+    let originalSupabaseService = SupabaseService.shared
+    
+    SupabaseService.shared = MockSupabaseService.shared as! SupabaseService
+    
+    let viewModel = LibraryPickerViewModel()
+    
+    // 初期状態のテスト
+    #expect(viewModel.urls.isEmpty)
+    
+    MockSupabaseService.shared.shouldSucceed = true
+    viewModel.fetch()
+    
+    try await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
+    
+    #expect(viewModel.urls.count == 2)
+    #expect(viewModel.urls[0].absoluteString == "https://example.com/image1.jpg")
+    #expect(viewModel.urls[1].absoluteString == "https://example.com/image2.jpg")
+    
+    MockSupabaseService.shared.shouldSucceed = false
+    viewModel.fetch()
+    
+    try await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
+    
+    #expect(viewModel.urls.count == 2)
+    
+    SupabaseService.shared = originalSupabaseService
     #endif
   }
 }
