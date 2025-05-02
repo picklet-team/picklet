@@ -216,18 +216,7 @@ class SupabaseService {
   // MARK: - 天気キャッシュ
 
   func fetchWeatherCache(for city: String) async throws -> Weather {
-    let today = DateFormatter.cachedDateFormatter.string(from: Date())
-
-    let response =
-      try await client
-      .from("weather_cache")
-      .select("*")
-      .eq("city", value: city)
-      .eq("date", value: today)
-      .limit(1)
-      .execute()
-
-    return try response.decoded(to: Weather.self)
+    return try await WeatherFetchService.shared.fetchWeatherCache(for: city)
   }
 
   func insertWeatherCache(_ weather: Weather) async throws {

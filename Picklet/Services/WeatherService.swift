@@ -31,7 +31,7 @@ class WeatherManager {
 
   // キャッシュ取得
   func fetchCachedWeather(for city: String) async throws -> Weather {
-    return try await SupabaseService.shared.fetchWeatherCache(for: city)
+    return try await WeatherFetchService.shared.fetchWeatherCache(for: city)
   }
 
   // Supabaseに保存
