@@ -1,1 +1,3 @@
 .DS_Store
+# 大きすぎるファイルはGitHubの制限（100MB）を超えるため除外
+Picklet/Models/ISNet.mlmodel
