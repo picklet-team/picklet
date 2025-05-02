@@ -95,4 +95,104 @@ struct PickletTests {
     #expect(fixedImage.imageOrientation == .up)
     #endif
   }
+  
+  @Test func testClothingViewModel() async throws {
+    // ClothingViewModelのテスト
+    let viewModel = ClothingViewModel()
+    
+    // 初期状態のテスト
+    #expect(viewModel.clothingItems.isEmpty)
+    #expect(viewModel.isLoading == false)
+    #expect(viewModel.errorMessage == nil)
+    
+    // テストデータの作成
+    let clothing = Clothing(
+      id: UUID(),
+      user_id: UUID(),
+      name: "テストアイテム",
+      category: "ボトムス",
+      color: "青",
+      created_at: "2025-05-01T10:00:00Z",
+      updated_at: "2025-05-01T10:00:00Z"
+    )
+    
+    // モック化したデータを追加
+    viewModel.clothingItems = [clothing]
+    
+    #expect(viewModel.clothingItems.count == 1)
+    #expect(viewModel.clothingItems[0].name == "テストアイテム")
+    #expect(viewModel.clothingItems[0].category == "ボトムス")
+  }
+  
+  @Test func testWeatherService() async throws {
+    let weatherService = WeatherService()
+    
+    // モックの天気データを設定
+    let mockWeather = Weather(
+      city: "大阪",
+      date: "2025-05-02",
+      temperature: 22.0,
+      condition: "曇り",
+      icon: "cloudy",
+      updated_at: "2025-05-02T09:00:00Z"
+    )
+    
+    // 実際のAPIコールの代わりにモックデータを返すようにする
+    // 注: 実際のプロジェクトではDIやプロトコルを使ってモック化するとよい
+    weatherService.cachedWeather = mockWeather
+    
+    // テスト実行 (実際のAPIにはアクセスしない)
+    let weather = await weatherService.getCurrentWeather(forCity: "大阪")
+    
+    // 結果を検証
+    #expect(weather?.city == "大阪")
+    #expect(weather?.temperature == 22.0)
+    #expect(weather?.condition == "曇り")
+  }
+  
+  @Test func testImageProcessor() throws {
+    #if os(iOS) || os(macOS)
+    let imageProcessor = ImageProcessor()
+    
+    // テスト用の画像を作成
+    let size = CGSize(width: 200, height: 200)
+    UIGraphicsBeginImageContext(size)
+    let context = UIGraphicsGetCurrentContext()!
+    context.setFillColor(UIColor.blue.cgColor)
+    context.fill(CGRect(origin: .zero, size: size))
+    let originalImage = UIGraphicsGetImageFromCurrentImageContext()!
+    UIGraphicsEndImageContext()
+    
+    // リサイズ処理のテスト
+    let targetSize = CGSize(width: 100, height: 100)
+    let resizedImage = imageProcessor.resizeImage(originalImage, toSize: targetSize)
+    
+    #expect(resizedImage.size.width == 100)
+    #expect(resizedImage.size.height == 100)
+    #endif
+  }
+  
+  @Test func testCoreMLService() async throws {
+    #if os(iOS) || os(macOS)
+    let coreMLService = CoreMLService()
+    
+    // テスト用の画像を作成
+    let size = CGSize(width: 512, height: 512)
+    UIGraphicsBeginImageContext(size)
+    let context = UIGraphicsGetCurrentContext()!
+    context.setFillColor(UIColor.white.cgColor)
+    context.fill(CGRect(origin: .zero, size: size))
+    // 簡単な服の形を描画
+    context.setFillColor(UIColor.black.cgColor)
+    context.fill(CGRect(x: 100, y: 100, width: 312, height: 312))
+    let testImage = UIGraphicsGetImageFromCurrentImageContext()!
+    UIGraphicsEndImageContext()
+    
+    // 画像処理のテスト（実際のモデル推論はスキップ）
+    let processed = try await coreMLService.processImageForTest(testImage)
+    
+    // 処理が成功したことを確認
+    #expect(processed != nil)
+    #endif
+  }
 }
