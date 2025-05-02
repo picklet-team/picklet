@@ -132,6 +132,27 @@ struct PickletTests {
   
   @Test func testWeatherService() async throws {
     #if os(iOS) || os(macOS)
+    class WeatherService {
+      var cachedWeather: Weather?
+      
+      func getCurrentWeather(forCity city: String) async -> Weather? {
+        if let cached = cachedWeather, cached.city == city {
+          return cached
+        }
+        
+        do {
+          return try await WeatherManager.shared.fetchCachedWeather(for: city)
+        } catch {
+          return nil
+        }
+      }
+      
+      func saveWeather(_ weather: Weather) async throws {
+        try await WeatherManager.shared.saveWeatherToCache(weather)
+        cachedWeather = weather
+      }
+    }
+    
     let weatherService = WeatherService()
     
     // モックの天気データを設定
@@ -222,11 +243,44 @@ struct PickletTests {
     let testImage = UIGraphicsGetImageFromCurrentImageContext()!
     UIGraphicsEndImageContext()
     
-    // 画像処理のテスト（実際のモデル推論はスキップ）
-    let processed = try await coreMLService.processImageForTest(testImage)
+    UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
+    let maskContext = UIGraphicsGetCurrentContext()!
+    maskContext.setFillColor(UIColor.white.cgColor)
+    maskContext.fill(CGRect(origin: .zero, size: size))
+    let rectSize = CGSize(width: size.width * 0.7, height: size.height * 0.7)
+    let origin = CGPoint(x: (size.width - rectSize.width) / 2, y: (size.height - rectSize.height) / 2)
+    maskContext.setFillColor(UIColor.black.cgColor)
+    maskContext.fill(CGRect(origin: origin, size: rectSize))
+    let maskImage = UIGraphicsGetImageFromCurrentImageContext()!
+    UIGraphicsEndImageContext()
     
-    // 処理が成功したことを確認
+    let processed = ImageProcessor.applyMask(original: testImage, mask: maskImage)
     #expect(processed != nil)
+    
+    let imageSet = EditableImageSet(
+      id: UUID(),
+      originalUrl: "https://example.com/test.jpg",
+      original: testImage,
+      mask: nil,
+      result: nil
+    )
+    
+    let processedSet = await coreMLService.processImageSet(imageSet: imageSet)
+    #expect(processedSet != nil)
+    #expect(processedSet?.original != nil)
+    
+    let nilResult = await coreMLService.processImageSet(imageSet: nil)
+    #expect(nilResult == nil)
+    
+    let emptySet = EditableImageSet(
+      id: UUID(),
+      originalUrl: nil,
+      original: nil,
+      mask: nil,
+      result: nil
+    )
+    let emptyResult = await coreMLService.processImageSet(imageSet: emptySet)
+    #expect(emptyResult == nil)
     #endif
   }
   
@@ -273,6 +327,55 @@ struct PickletTests {
     
     #expect(clothingImageWithNil.mask_url == nil)
     #expect(clothingImageWithNil.result_url == nil)
+    #endif
+  }
+  
+  @Test func testLibraryPickerViewModel() async throws {
+    #if os(iOS) || os(macOS)
+    class MockSupabaseService {
+      static var shared = MockSupabaseService()
+      
+      var shouldSucceed = true
+      var mockURLs: [URL] = [
+        URL(string: "https://example.com/image1.jpg")!,
+        URL(string: "https://example.com/image2.jpg")!
+      ]
+      
+      func listClothingImageURLs() async throws -> [URL] {
+        if shouldSucceed {
+          return mockURLs
+        } else {
+          throw NSError(domain: "MockError", code: 1, userInfo: nil)
+        }
+      }
+    }
+    
+    let originalSupabaseService = SupabaseService.shared
+    
+    SupabaseService.shared = MockSupabaseService.shared as! SupabaseService
+    
+    let viewModel = LibraryPickerViewModel()
+    
+    // 初期状態のテスト
+    #expect(viewModel.urls.isEmpty)
+    
+    MockSupabaseService.shared.shouldSucceed = true
+    viewModel.fetch()
+    
+    try await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
+    
+    #expect(viewModel.urls.count == 2)
+    #expect(viewModel.urls[0].absoluteString == "https://example.com/image1.jpg")
+    #expect(viewModel.urls[1].absoluteString == "https://example.com/image2.jpg")
+    
+    MockSupabaseService.shared.shouldSucceed = false
+    viewModel.fetch()
+    
+    try await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
+    
+    #expect(viewModel.urls.count == 2)
+    
+    SupabaseService.shared = originalSupabaseService
     #endif
   }
 }
