@@ -200,33 +200,7 @@ class SupabaseService {
   }
 }
 
-extension DateFormatter {
-  static let cachedDateFormatter: DateFormatter = {
-    let df = DateFormatter()
-    df.dateFormat = "yyyy-MM-dd"
-    return df
-  }()
-}
 
-extension UIImage {
-  func resized(toMaxPixel maxPixel: CGFloat) -> UIImage {
-    let aspectRatio = size.width / size.height
-    var newSize: CGSize
-    if aspectRatio > 1 {
-      // Landscape
-      newSize = CGSize(width: maxPixel, height: maxPixel / aspectRatio)
-    } else {
-      // Portrait
-      newSize = CGSize(width: maxPixel * aspectRatio, height: maxPixel)
-    }
-
-    UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
-    self.draw(in: CGRect(origin: .zero, size: newSize))
-    let resizedImage = UIGraphicsGetImageFromCurrentImageContext()
-    UIGraphicsEndImageContext()
-    return resizedImage ?? self
-  }
-}
 
 private struct NewClothingImage: Encodable {
   let id: UUID
