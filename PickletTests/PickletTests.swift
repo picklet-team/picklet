@@ -195,11 +195,44 @@ struct PickletTests {
     let testImage = UIGraphicsGetImageFromCurrentImageContext()!
     UIGraphicsEndImageContext()
     
-    // 画像処理のテスト（実際のモデル推論はスキップ）
-    let processed = try await coreMLService.processImageForTest(testImage)
+    UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
+    let maskContext = UIGraphicsGetCurrentContext()!
+    maskContext.setFillColor(UIColor.white.cgColor)
+    maskContext.fill(CGRect(origin: .zero, size: size))
+    let rectSize = CGSize(width: size.width * 0.7, height: size.height * 0.7)
+    let origin = CGPoint(x: (size.width - rectSize.width) / 2, y: (size.height - rectSize.height) / 2)
+    maskContext.setFillColor(UIColor.black.cgColor)
+    maskContext.fill(CGRect(origin: origin, size: rectSize))
+    let maskImage = UIGraphicsGetImageFromCurrentImageContext()!
+    UIGraphicsEndImageContext()
     
-    // 処理が成功したことを確認
+    let processed = ImageProcessor.applyMask(original: testImage, mask: maskImage)
     #expect(processed != nil)
+    
+    let imageSet = EditableImageSet(
+      id: UUID(),
+      originalUrl: "https://example.com/test.jpg",
+      original: testImage,
+      mask: nil,
+      result: nil
+    )
+    
+    let processedSet = await coreMLService.processImageSet(imageSet: imageSet)
+    #expect(processedSet != nil)
+    #expect(processedSet?.original != nil)
+    
+    let nilResult = await coreMLService.processImageSet(imageSet: nil)
+    #expect(nilResult == nil)
+    
+    let emptySet = EditableImageSet(
+      id: UUID(),
+      originalUrl: nil,
+      original: nil,
+      mask: nil,
+      result: nil
+    )
+    let emptyResult = await coreMLService.processImageSet(imageSet: emptySet)
+    #expect(emptyResult == nil)
     #endif
   }
   
