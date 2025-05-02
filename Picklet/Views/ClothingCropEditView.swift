@@ -10,6 +10,7 @@ import SwiftUI
 struct ClothingCropEditView: View {
   let originalImage: UIImage
   let onComplete: (UIImage) -> Void
+  @Binding var editableImageSet: EditableImageSet?
 
   @State private var userMaskImage = UIImage()
   @State private var currentPenColor = UIColor.white
@@ -18,6 +19,9 @@ struct ClothingCropEditView: View {
 
   @State private var maskedImage: UIImage?
   @State private var isLoading = true
+  @State private var isShowingAlert = false
+  @State private var alertTitle = ""
+  @State private var alertMessage = ""
 
   @StateObject private var canvasCoordinator = MaskEditCanvasView.Coordinator()
 
@@ -39,12 +43,20 @@ struct ClothingCropEditView: View {
             .environmentObject(canvasCoordinator)
         }
 
-        Button("登録する") {
-          let exportedMask = canvasCoordinator.exportDrawingImage()
-          onComplete(exportedMask)
-          dismiss()
+        HStack {
+          Button("保存") {
+            saveMaskToEditableImageSet()
+          }
+          .padding()
+          .buttonStyle(.bordered)
+          
+          Button("登録する") {
+            let exportedMask = canvasCoordinator.exportDrawingImage()
+            onComplete(exportedMask)
+            dismiss()
+          }
+          .padding()
         }
-        .padding()
       } else {
         Text("切り抜きに失敗しました")
         Button("戻る") {
@@ -58,6 +70,11 @@ struct ClothingCropEditView: View {
     .task {
       await processImage()
     }
+    .alert(alertTitle, isPresented: $isShowingAlert) {
+      Button("OK") {}
+    } message: {
+      Text(alertMessage)
+    }
   }
 
   private func processImage() async {
@@ -65,5 +82,22 @@ struct ClothingCropEditView: View {
       self.maskedImage = output
     }
     self.isLoading = false
+  }
+  
+  private func saveMaskToEditableImageSet() {
+    let exportedMask = canvasCoordinator.exportDrawingImage()
+    
+    if editableImageSet != nil {
+      editableImageSet?.mask = exportedMask
+      showAlert(title: "保存完了", message: "マスク画像が保存されました")
+    } else {
+      showAlert(title: "保存エラー", message: "保存先が見つかりません")
+    }
+  }
+  
+  private func showAlert(title: String, message: String) {
+    alertTitle = title
+    alertMessage = message
+    isShowingAlert = true
   }
 }
