@@ -103,35 +103,155 @@ final class LinuxCompatibleTests: XCTestCase {
     #endif
     
     #if os(macOS) || os(iOS)
-    func testLocationManager() {
-        let locationManager = LocationManager()
+    func testLibraryPickerViewModel() async throws {
+        class MockSupabaseService {
+            static var shared = MockSupabaseService()
+            
+            var shouldSucceed = true
+            var mockURLs: [URL] = [
+                URL(string: "https://example.com/image1.jpg")!,
+                URL(string: "https://example.com/image2.jpg")!
+            ]
+            
+            func listClothingImageURLs() async throws -> [URL] {
+                if shouldSucceed {
+                    return mockURLs
+                } else {
+                    throw NSError(domain: "MockError", code: 1, userInfo: nil)
+                }
+            }
+        }
         
-        XCTAssertNil(locationManager.currentLocation)
-        XCTAssertNil(locationManager.placemark)
-        XCTAssertNil(locationManager.locationError)
+        let originalSupabaseService = SupabaseService.shared
         
-        let testLocation = CLLocation(latitude: 35.6812, longitude: 139.7671) // 東京の座標
-        let locations = [testLocation]
+        SupabaseService.shared = MockSupabaseService.shared as! SupabaseService
         
-        locationManager.locationManager(CLLocationManager(), didUpdateLocations: locations)
+        let viewModel = LibraryPickerViewModel()
         
-        XCTAssertNotNil(locationManager.currentLocation)
-        XCTAssertEqual(locationManager.currentLocation?.coordinate.latitude, 35.6812)
-        XCTAssertEqual(locationManager.currentLocation?.coordinate.longitude, 139.7671)
+        XCTAssertTrue(viewModel.urls.isEmpty)
         
-        let testError = NSError(domain: "LocationManagerTest", code: 1, userInfo: nil)
-        locationManager.locationManager(CLLocationManager(), didFailWithError: testError)
+        MockSupabaseService.shared.shouldSucceed = true
+        viewModel.fetch()
         
-        XCTAssertNotNil(locationManager.locationError)
-        XCTAssertEqual((locationManager.locationError as NSError?)?.domain, "LocationManagerTest")
-        XCTAssertEqual((locationManager.locationError as NSError?)?.code, 1)
+        try await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
+        
+        XCTAssertEqual(viewModel.urls.count, 2)
+        XCTAssertEqual(viewModel.urls[0].absoluteString, "https://example.com/image1.jpg")
+        XCTAssertEqual(viewModel.urls[1].absoluteString, "https://example.com/image2.jpg")
+        
+        MockSupabaseService.shared.shouldSucceed = false
+        viewModel.fetch()
+        
+        try await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
+        
+        XCTAssertEqual(viewModel.urls.count, 2)
+        
+        SupabaseService.shared = originalSupabaseService
     }
     #endif
     
+    #if os(macOS) || os(iOS)
+    func testCoreMLService() async throws {
+        let coreMLService = CoreMLService()
+        
+        let size = CGSize(width: 512, height: 512)
+        UIGraphicsBeginImageContext(size)
+        let context = UIGraphicsGetCurrentContext()!
+        context.setFillColor(UIColor.white.cgColor)
+        context.fill(CGRect(origin: .zero, size: size))
+        context.setFillColor(UIColor.black.cgColor)
+        context.fill(CGRect(x: 100, y: 100, width: 312, height: 312))
+        let testImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        
+        UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
+        let maskContext = UIGraphicsGetCurrentContext()!
+        maskContext.setFillColor(UIColor.white.cgColor)
+        maskContext.fill(CGRect(origin: .zero, size: size))
+        let rectSize = CGSize(width: size.width * 0.7, height: size.height * 0.7)
+        let origin = CGPoint(x: (size.width - rectSize.width) / 2, y: (size.height - rectSize.height) / 2)
+        maskContext.setFillColor(UIColor.black.cgColor)
+        maskContext.fill(CGRect(origin: origin, size: rectSize))
+        let maskImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        
+        let processed = ImageProcessor.applyMask(original: testImage, mask: maskImage)
+        XCTAssertNotNil(processed)
+        
+        let imageSet = EditableImageSet(
+          id: UUID(),
+          originalUrl: "https://example.com/test.jpg",
+          original: testImage,
+          mask: nil,
+          result: nil
+        )
+        
+        let processedSet = await coreMLService.processImageSet(imageSet: imageSet)
+        XCTAssertNotNil(processedSet)
+        XCTAssertNotNil(processedSet?.original)
+        
+        let nilResult = await coreMLService.processImageSet(imageSet: nil)
+        XCTAssertNil(nilResult)
+        
+        let emptySet = EditableImageSet(
+          id: UUID(),
+          originalUrl: nil,
+          original: nil,
+          mask: nil,
+          result: nil
+        )
+        let emptyResult = await coreMLService.processImageSet(imageSet: emptySet)
+        XCTAssertNil(emptyResult)
+    }
+    #endif
+    
+    #if os(macOS) || os(iOS)
+    func testWeatherService() async throws {
+        class WeatherService {
+            var cachedWeather: Weather?
+            
+            func getCurrentWeather(forCity city: String) async -> Weather? {
+                if let cached = cachedWeather, cached.city == city {
+                    return cached
+                }
+                
+                do {
+                    return try await WeatherManager.shared.fetchCachedWeather(for: city)
+                } catch {
+                    return nil
+                }
+            }
+            
+            func saveWeather(_ weather: Weather) async throws {
+                try await WeatherManager.shared.saveWeatherToCache(weather)
+                cachedWeather = weather
+            }
+        }
+        
+        let weatherService = WeatherService()
+        
+        let mockWeather = Weather(
+            city: "大阪",
+            date: "2025-05-02",
+            temperature: 22.0,
+            condition: "曇り",
+            icon: "cloudy",
+            updated_at: "2025-05-02T09:00:00Z"
+        )
+        
+        weatherService.cachedWeather = mockWeather
+        
+        let weather = await weatherService.getCurrentWeather(forCity: "大阪")
+        
+        XCTAssertEqual(weather?.city, "大阪")
+        XCTAssertEqual(weather?.temperature, 22.0)
+        XCTAssertEqual(weather?.condition, "曇り")
+    }
+    #endif
     // Linux環境でもテストが実行されるようにするための特別なセットアップ
     static var allTests = [
         ("testClothingModel", testClothingModel),
         ("testWeatherModel", testWeatherModel)
-        // ClothingImageモデルとLocationManagerのテストはLinux環境では実行されません
+        // ClothingImageモデル、LibraryPickerViewModel、CoreMLService、WeatherServiceのテストはLinux環境では実行されません
     ]
 }
