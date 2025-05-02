@@ -8,6 +8,10 @@
 import Testing
 import XCTest
 
+#if canImport(UIKit)
+import UIKit
+#endif
+
 @testable import Picklet
 
 struct PickletTests {
@@ -17,6 +21,7 @@ struct PickletTests {
   }
 
   @Test func testLogin() async throws {
+    #if os(macOS) || os(iOS)
     let viewModel = LoginViewModel()
     viewModel.email = "test@example.com"
     viewModel.password = "password123"
@@ -30,6 +35,7 @@ struct PickletTests {
 
     #expect(viewModel.isLoggedIn)
     #expect(viewModel.errorMessage == nil)
+    #endif
   }
   
   @Test func testClothingModel() throws {
@@ -78,9 +84,7 @@ struct PickletTests {
   }
   
   @Test func testImageExtensions() throws {
-    // UIImageの拡張機能テスト
-    // 注：このテストはLinux環境では実行できません（UIKitがmacOS/iOS専用のため）
-    // Linuxでこのテストをスキップするロジックを後で追加する
+    // UIImageの拡張機能テスト - macOSとiOSのみ
     #if os(iOS) || os(macOS)
     let size = CGSize(width: 100, height: 100)
     UIGraphicsBeginImageContext(size)
@@ -97,6 +101,7 @@ struct PickletTests {
   }
   
   @Test func testClothingViewModel() async throws {
+    #if os(iOS) || os(macOS)
     // ClothingViewModelのテスト
     let viewModel = ClothingViewModel()
     
@@ -122,9 +127,11 @@ struct PickletTests {
     #expect(viewModel.clothingItems.count == 1)
     #expect(viewModel.clothingItems[0].name == "テストアイテム")
     #expect(viewModel.clothingItems[0].category == "ボトムス")
+    #endif
   }
   
   @Test func testWeatherService() async throws {
+    #if os(iOS) || os(macOS)
     let weatherService = WeatherService()
     
     // モックの天気データを設定
@@ -138,7 +145,6 @@ struct PickletTests {
     )
     
     // 実際のAPIコールの代わりにモックデータを返すようにする
-    // 注: 実際のプロジェクトではDIやプロトコルを使ってモック化するとよい
     weatherService.cachedWeather = mockWeather
     
     // テスト実行 (実際のAPIにはアクセスしない)
@@ -148,6 +154,7 @@ struct PickletTests {
     #expect(weather?.city == "大阪")
     #expect(weather?.temperature == 22.0)
     #expect(weather?.condition == "曇り")
+    #endif
   }
   
   @Test func testImageProcessor() throws {
