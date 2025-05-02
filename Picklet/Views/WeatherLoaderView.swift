@@ -55,7 +55,7 @@ struct WeatherLoaderView: View {
     }
 
     do {
-      let fetchedWeather = try await WeatherManager.shared.fetchCachedWeather(for: city)
+      let fetchedWeather = try await WeatherManager.shared.fetchWeather(for: city)
       self.weather = fetchedWeather
     } catch {
       self.errorMessage = "天気情報の取得に失敗しました: \(error.localizedDescription)"
