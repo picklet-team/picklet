@@ -47,13 +47,21 @@ class CameraPreviewController: UIViewController, AVCapturePhotoCaptureDelegate {
   }
 
   func capture() {
+    guard let photoOutput = photoOutput else {
+      print("❌ カメラの初期化に失敗しました")
+      return
+    }
     let settings = AVCapturePhotoSettings()
-    photoOutput?.capturePhoto(with: settings, delegate: self)
+    photoOutput.capturePhoto(with: settings, delegate: self)
   }
 
   @objc private func capturePhoto() {
+    guard let photoOutput = photoOutput else {
+      print("❌ カメラの初期化に失敗しました")
+      return
+    }
     let settings = AVCapturePhotoSettings()
-    photoOutput?.capturePhoto(with: settings, delegate: self)
+    photoOutput.capturePhoto(with: settings, delegate: self)
   }
 
   func photoOutput(
