@@ -207,6 +207,33 @@ struct PickletTests {
     #endif
   }
   
+  @Test func testLocationManager() throws {
+    #if os(iOS) || os(macOS)
+    let locationManager = LocationManager()
+    
+    // 初期状態のテスト
+    #expect(locationManager.currentLocation == nil)
+    #expect(locationManager.placemark == nil)
+    #expect(locationManager.locationError == nil)
+    
+    let testLocation = CLLocation(latitude: 35.6812, longitude: 139.7671) // 東京の座標
+    let locations = [testLocation]
+    
+    locationManager.locationManager(CLLocationManager(), didUpdateLocations: locations)
+    
+    #expect(locationManager.currentLocation != nil)
+    #expect(locationManager.currentLocation?.coordinate.latitude == 35.6812)
+    #expect(locationManager.currentLocation?.coordinate.longitude == 139.7671)
+    
+    let testError = NSError(domain: "LocationManagerTest", code: 1, userInfo: nil)
+    locationManager.locationManager(CLLocationManager(), didFailWithError: testError)
+    
+    #expect(locationManager.locationError != nil)
+    #expect((locationManager.locationError as NSError?)?.domain == "LocationManagerTest")
+    #expect((locationManager.locationError as NSError?)?.code == 1)
+    #endif
+  }
+  
   @Test func testCoreMLService() async throws {
     #if os(iOS) || os(macOS)
     let coreMLService = CoreMLService()

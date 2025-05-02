@@ -1,12 +1,11 @@
 //
 //  LoginViewModel.swift
-//  MyApp
 //
 //  Created by al dente on 2025/04/25.
 //
 
-// ViewModels/LoginViewModel.swift
 import Foundation
+import Supabase
 
 @MainActor
 class LoginViewModel: ObservableObject {
@@ -15,22 +14,28 @@ class LoginViewModel: ObservableObject {
   @Published var errorMessage: String?
   @Published var isLoading = false
   @Published var isLoggedIn = false
-
+  
+  private let authService = AuthService.shared
+  
   func login() async {
+    isLoading = true
     do {
-      try await SupabaseService.shared.signIn(email: email, password: password)
+      try await authService.signIn(email: email, password: password)
       errorMessage = nil
     } catch {
       errorMessage = "ログインに失敗しました: \(error.localizedDescription)"
     }
+    isLoading = false
   }
-
+  
   func signUp() async {
+    isLoading = true
     do {
-      try await SupabaseService.shared.signUp(email: email, password: password)
+      try await authService.signUp(email: email, password: password)
       errorMessage = nil
     } catch {
       errorMessage = "サインアップに失敗しました: \(error.localizedDescription)"
     }
+    isLoading = false
   }
 }
