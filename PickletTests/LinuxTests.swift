@@ -102,10 +102,58 @@ final class LinuxCompatibleTests: XCTestCase {
     }
     #endif
     
+    #if os(macOS) || os(iOS)
+    func testLibraryPickerViewModel() async throws {
+        class MockSupabaseService {
+            static var shared = MockSupabaseService()
+            
+            var shouldSucceed = true
+            var mockURLs: [URL] = [
+                URL(string: "https://example.com/image1.jpg")!,
+                URL(string: "https://example.com/image2.jpg")!
+            ]
+            
+            func listClothingImageURLs() async throws -> [URL] {
+                if shouldSucceed {
+                    return mockURLs
+                } else {
+                    throw NSError(domain: "MockError", code: 1, userInfo: nil)
+                }
+            }
+        }
+        
+        let originalSupabaseService = SupabaseService.shared
+        
+        SupabaseService.shared = MockSupabaseService.shared as! SupabaseService
+        
+        let viewModel = LibraryPickerViewModel()
+        
+        XCTAssertTrue(viewModel.urls.isEmpty)
+        
+        MockSupabaseService.shared.shouldSucceed = true
+        viewModel.fetch()
+        
+        try await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
+        
+        XCTAssertEqual(viewModel.urls.count, 2)
+        XCTAssertEqual(viewModel.urls[0].absoluteString, "https://example.com/image1.jpg")
+        XCTAssertEqual(viewModel.urls[1].absoluteString, "https://example.com/image2.jpg")
+        
+        MockSupabaseService.shared.shouldSucceed = false
+        viewModel.fetch()
+        
+        try await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
+        
+        XCTAssertEqual(viewModel.urls.count, 2)
+        
+        SupabaseService.shared = originalSupabaseService
+    }
+    #endif
+    
     // Linux環境でもテストが実行されるようにするための特別なセットアップ
     static var allTests = [
         ("testClothingModel", testClothingModel),
         ("testWeatherModel", testWeatherModel)
-        // ClothingImageモデルのテストはLinux環境では実行されません
+        // ClothingImageモデルとLibraryPickerViewModelのテストはLinux環境では実行されません
     ]
 }
