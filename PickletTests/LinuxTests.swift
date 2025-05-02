@@ -152,6 +152,34 @@ final class LinuxCompatibleTests: XCTestCase {
     
     #if os(macOS) || os(iOS)
     func testCoreMLService() async throws {
+        class MockCoreMLService: CoreMLService {
+            var shouldFailPrediction = false
+            var mockMask: UIImage?
+            
+            override func predictMask(for image: UIImage, flipHorizontally: Bool = true) async -> UIImage? {
+                if shouldFailPrediction {
+                    return nil
+                }
+                
+                if let mockMask = mockMask {
+                    return mockMask
+                }
+                
+                let size = image.size
+                UIGraphicsBeginImageContext(size)
+                let context = UIGraphicsGetCurrentContext()!
+                context.setFillColor(UIColor.black.cgColor)
+                context.fill(CGRect(origin: .zero, size: size))
+                context.setFillColor(UIColor.white.cgColor)
+                context.fill(CGRect(x: size.width * 0.25, y: size.height * 0.25, 
+                                   width: size.width * 0.5, height: size.height * 0.5))
+                let mask = UIGraphicsGetImageFromCurrentImageContext()!
+                UIGraphicsEndImageContext()
+                
+                return mask
+            }
+        }
+        
         let coreMLService = CoreMLService()
         
         let size = CGSize(width: 512, height: 512)
@@ -164,44 +192,53 @@ final class LinuxCompatibleTests: XCTestCase {
         let testImage = UIGraphicsGetImageFromCurrentImageContext()!
         UIGraphicsEndImageContext()
         
-        UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
-        let maskContext = UIGraphicsGetCurrentContext()!
-        maskContext.setFillColor(UIColor.white.cgColor)
-        maskContext.fill(CGRect(origin: .zero, size: size))
-        let rectSize = CGSize(width: size.width * 0.7, height: size.height * 0.7)
-        let origin = CGPoint(x: (size.width - rectSize.width) / 2, y: (size.height - rectSize.height) / 2)
-        maskContext.setFillColor(UIColor.black.cgColor)
-        maskContext.fill(CGRect(origin: origin, size: rectSize))
-        let maskImage = UIGraphicsGetImageFromCurrentImageContext()!
-        UIGraphicsEndImageContext()
-        
-        let processed = ImageProcessor.applyMask(original: testImage, mask: maskImage)
-        XCTAssertNotNil(processed)
+        let mockService = MockCoreMLService()
         
         let imageSet = EditableImageSet(
-          id: UUID(),
-          originalUrl: "https://example.com/test.jpg",
-          original: testImage,
-          mask: nil,
-          result: nil
+            id: UUID(),
+            originalUrl: "https://example.com/test.jpg",
+            original: testImage,
+            mask: nil,
+            result: nil
         )
         
-        let processedSet = await coreMLService.processImageSet(imageSet: imageSet)
+        let processedSet = await mockService.processImageSet(imageSet: imageSet)
         XCTAssertNotNil(processedSet)
         XCTAssertNotNil(processedSet?.original)
+        XCTAssertNotNil(processedSet?.mask)
+        XCTAssertNotNil(processedSet?.result)
         
-        let nilResult = await coreMLService.processImageSet(imageSet: nil)
+        let nilResult = await mockService.processImageSet(imageSet: nil)
         XCTAssertNil(nilResult)
         
         let emptySet = EditableImageSet(
-          id: UUID(),
-          originalUrl: nil,
-          original: nil,
-          mask: nil,
-          result: nil
+            id: UUID(),
+            originalUrl: nil,
+            original: nil,
+            mask: nil,
+            result: nil
         )
-        let emptyResult = await coreMLService.processImageSet(imageSet: emptySet)
+        let emptyResult = await mockService.processImageSet(imageSet: emptySet)
         XCTAssertNil(emptyResult)
+        
+        let processedImage = await mockService.processImage(image: testImage)
+        XCTAssertNotNil(processedImage)
+        
+        mockService.shouldFailPrediction = true
+        let failedImage = await mockService.processImage(image: testImage)
+        XCTAssertNil(failedImage)
+        
+        mockService.shouldFailPrediction = false
+        UIGraphicsBeginImageContext(size)
+        let customMaskContext = UIGraphicsGetCurrentContext()!
+        customMaskContext.setFillColor(UIColor.white.cgColor)
+        customMaskContext.fill(CGRect(origin: .zero, size: size))
+        let customMask = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        
+        mockService.mockMask = customMask
+        let customMaskResult = await mockService.predictMask(for: testImage)
+        XCTAssertNotNil(customMaskResult)
     }
     #endif
     
