@@ -27,38 +27,35 @@ jobs:
       uses: swift-actions/setup-swift@v1
       with:
         swift-version: "5.9"
-    - name: Prepare Swift Package
+    - name: Create Package.swift
       run: |
-        if [ ! -f "Package.swift" ]; then
-          cat > Package.swift <<EOF
-// swift-tools-version:5.9
-import PackageDescription
-
-let package = Package(
-    name: "Picklet",
-    platforms: [.iOS(.v16)],
-    products: [
-        .library(name: "PickletCore", targets: ["PickletCore"]),
-    ],
-    dependencies: [],
-    targets: [
-        .target(
-            name: "PickletCore",
-            dependencies: [],
-            path: "Picklet",
-            exclude: ["Views", "Extensions", "PickletApp.swift"],
-            sources: ["Models", "ViewModels", "Services"]
-        ),
-        .testTarget(
-            name: "PickletCoreTests",
-            dependencies: ["PickletCore"],
-            path: "PickletTests",
-            exclude: ["PickletUITests.swift"]
-        )
-    ]
-)
-EOF
-        fi
+        echo '// swift-tools-version:5.9' > Package.swift
+        echo 'import PackageDescription' >> Package.swift
+        echo '' >> Package.swift
+        echo 'let package = Package(' >> Package.swift
+        echo '    name: "Picklet",' >> Package.swift
+        echo '    platforms: [.iOS(.v16)],' >> Package.swift
+        echo '    products: [' >> Package.swift
+        echo '        .library(name: "PickletCore", targets: ["PickletCore"]),' >> Package.swift
+        echo '    ],' >> Package.swift
+        echo '    dependencies: [],' >> Package.swift
+        echo '    targets: [' >> Package.swift
+        echo '        .target(' >> Package.swift
+        echo '            name: "PickletCore",' >> Package.swift
+        echo '            dependencies: [],' >> Package.swift
+        echo '            path: "Picklet",' >> Package.swift
+        echo '            exclude: ["Views", "Extensions", "PickletApp.swift", "Resources", "Preview Content"],' >> Package.swift
+        echo '            sources: ["Models", "Services"]' >> Package.swift
+        echo '        ),' >> Package.swift
+        echo '        .testTarget(' >> Package.swift
+        echo '            name: "PickletCoreTests",' >> Package.swift
+        echo '            dependencies: ["PickletCore"],' >> Package.swift
+        echo '            path: "PickletTests",' >> Package.swift
+        echo '            exclude: ["PickletUITests.swift"]' >> Package.swift
+        echo '        )' >> Package.swift
+        echo '    ]' >> Package.swift
+        echo ')' >> Package.swift
     - name: Run Linux-compatible tests
       run: |
+        # 明示的にLinux対応のテストのみを実行
         swift test --filter "PickletTests.testClothingModel" --filter "PickletTests.testWeatherModel"
