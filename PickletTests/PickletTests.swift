@@ -132,6 +132,27 @@ struct PickletTests {
   
   @Test func testWeatherService() async throws {
     #if os(iOS) || os(macOS)
+    class WeatherService {
+      var cachedWeather: Weather?
+      
+      func getCurrentWeather(forCity city: String) async -> Weather? {
+        if let cached = cachedWeather, cached.city == city {
+          return cached
+        }
+        
+        do {
+          return try await WeatherManager.shared.fetchCachedWeather(for: city)
+        } catch {
+          return nil
+        }
+      }
+      
+      func saveWeather(_ weather: Weather) async throws {
+        try await WeatherManager.shared.saveWeatherToCache(weather)
+        cachedWeather = weather
+      }
+    }
+    
     let weatherService = WeatherService()
     
     // モックの天気データを設定
