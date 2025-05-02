@@ -20,7 +20,8 @@ jobs:
         xcodebuild test -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 15' | xcpretty
 
   test-linux:
-    runs-on: ubuntu-latest
+    # Ubuntu 24.04がサポートされていないため22.04を明示的に指定
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
     - name: Set up Swift
