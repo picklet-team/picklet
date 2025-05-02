@@ -1,6 +1,5 @@
 //
 //  SupabaseService.swift
-//  MyApp
 //
 //  Created by al dente on 2025/04/25.
 //
@@ -9,56 +8,41 @@ import Foundation
 import PostgREST
 import Storage
 import Supabase
-// Services/SupabaseService.swift
 import SwiftUI
 import UIKit
 
-extension PostgrestResponse {
-  func decoded<U: Decodable>(to type: U.Type) throws -> U {
-    let decoder = JSONDecoder()
-    return try decoder.decode(U.self, from: self.data)
-  }
-}
 
 class SupabaseService {
-  @AppStorage("isLoggedIn") var isLoggedIn = false
-
   static let shared = SupabaseService()
 
   internal let client: SupabaseClient
   private let storageBucketName = "clothes-images"
 
   private init() {
-    guard
-      let urlString = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String,
-      let key = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_KEY") as? String,
-      let url = URL(string: urlString)
-    else {
-      fatalError("❌ Supabaseの設定がInfo.plistにありません")
-    }
-
-    self.client = SupabaseClient(supabaseURL: url, supabaseKey: key)
-  }
-
-  var currentUser: User? {
-    client.auth.currentUser
+    self.client = AuthService.shared.client
   }
 
   // MARK: - 認証
 
+  var isLoggedIn: Bool {
+    get { AuthService.shared.isLoggedIn }
+    set { AuthService.shared.isLoggedIn = newValue }
+  }
+  
+  var currentUser: User? {
+    AuthService.shared.currentUser
+  }
+
   func signIn(email: String, password: String) async throws {
-    try await client.auth.signIn(email: email, password: password)
-    isLoggedIn = true
+    try await AuthService.shared.signIn(email: email, password: password)
   }
 
   func signUp(email: String, password: String) async throws {
-    try await client.auth.signUp(email: email, password: password)
-    isLoggedIn = true
+    try await AuthService.shared.signUp(email: email, password: password)
   }
 
   func signOut() async throws {
-    try await client.auth.signOut()
-    isLoggedIn = false
+    try await AuthService.shared.signOut()
   }
 
   // MARK: - 服画像データ
@@ -239,33 +223,6 @@ class SupabaseService {
   }
 }
 
-extension DateFormatter {
-  static let cachedDateFormatter: DateFormatter = {
-    let df = DateFormatter()
-    df.dateFormat = "yyyy-MM-dd"
-    return df
-  }()
-}
-
-extension UIImage {
-  func resized(toMaxPixel maxPixel: CGFloat) -> UIImage {
-    let aspectRatio = size.width / size.height
-    var newSize: CGSize
-    if aspectRatio > 1 {
-      // Landscape
-      newSize = CGSize(width: maxPixel, height: maxPixel / aspectRatio)
-    } else {
-      // Portrait
-      newSize = CGSize(width: maxPixel * aspectRatio, height: maxPixel)
-    }
-
-    UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
-    self.draw(in: CGRect(origin: .zero, size: newSize))
-    let resizedImage = UIGraphicsGetImageFromCurrentImageContext()
-    UIGraphicsEndImageContext()
-    return resizedImage ?? self
-  }
-}
 
 private struct NewClothingImage: Encodable {
   let id: UUID
