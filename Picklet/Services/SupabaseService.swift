@@ -193,6 +193,7 @@ class SupabaseService {
 }
 
 
+
 private struct NewClothingImage: Encodable {
   let id: UUID
   let clothing_id: UUID
