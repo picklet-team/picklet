@@ -151,6 +151,90 @@ final class LinuxCompatibleTests: XCTestCase {
     #endif
     
     #if os(macOS) || os(iOS)
+    func testImageProcessor() {
+        let size = CGSize(width: 200, height: 200)
+        UIGraphicsBeginImageContext(size)
+        let context = UIGraphicsGetCurrentContext()!
+        context.setFillColor(UIColor.blue.cgColor)
+        context.fill(CGRect(origin: .zero, size: size))
+        let originalImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        
+        UIGraphicsBeginImageContext(size)
+        let maskContext = UIGraphicsGetCurrentContext()!
+        maskContext.setFillColor(UIColor.black.cgColor)
+        maskContext.fill(CGRect(origin: .zero, size: size))
+        maskContext.setFillColor(UIColor.white.cgColor)
+        maskContext.fill(CGRect(x: 50, y: 50, width: 100, height: 100))
+        let maskImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        
+        let maskedImage = ImageProcessor.applyMask(original: originalImage, mask: maskImage)
+        XCTAssertNotNil(maskedImage)
+        
+        UIGraphicsBeginImageContext(size)
+        let complexMaskContext = UIGraphicsGetCurrentContext()!
+        complexMaskContext.setFillColor(UIColor.black.cgColor)
+        complexMaskContext.fill(CGRect(origin: .zero, size: size))
+        
+        complexMaskContext.setFillColor(UIColor.white.cgColor)
+        complexMaskContext.fillEllipse(in: CGRect(x: 30, y: 30, width: 60, height: 60))
+        complexMaskContext.fillEllipse(in: CGRect(x: 110, y: 30, width: 60, height: 60))
+        complexMaskContext.fill(CGRect(x: 70, y: 100, width: 60, height: 80))
+        
+        let complexMaskImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        
+        let complexMaskedImage = ImageProcessor.applyMask(original: originalImage, mask: complexMaskImage)
+        XCTAssertNotNil(complexMaskedImage)
+        
+        UIGraphicsBeginImageContext(size)
+        let blackMaskContext = UIGraphicsGetCurrentContext()!
+        blackMaskContext.setFillColor(UIColor.black.cgColor)
+        blackMaskContext.fill(CGRect(origin: .zero, size: size))
+        let blackMaskImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        
+        let blackMaskedImage = ImageProcessor.applyMask(original: originalImage, mask: blackMaskImage)
+        XCTAssertNotNil(blackMaskedImage)
+        
+        UIGraphicsBeginImageContext(size)
+        let whiteMaskContext = UIGraphicsGetCurrentContext()!
+        whiteMaskContext.setFillColor(UIColor.white.cgColor)
+        whiteMaskContext.fill(CGRect(origin: .zero, size: size))
+        let whiteMaskImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        
+        let whiteMaskedImage = ImageProcessor.applyMask(original: originalImage, mask: whiteMaskImage)
+        XCTAssertNotNil(whiteMaskedImage)
+        
+        let nilMaskedImage = ImageProcessor.applyMask(original: nil, mask: maskImage)
+        XCTAssertNil(nilMaskedImage)
+        
+        let nilMaskImage = ImageProcessor.applyMask(original: originalImage, mask: nil)
+        XCTAssertNil(nilMaskImage)
+        
+        let visualizedImage = ImageProcessor.visualizeMaskOnOriginal(original: originalImage, mask: maskImage)
+        XCTAssertNotNil(visualizedImage)
+        
+        let nilVisualizedImage = ImageProcessor.visualizeMaskOnOriginal(original: nil, mask: maskImage)
+        XCTAssertNil(nilVisualizedImage)
+        
+        let nilMaskVisualizedImage = ImageProcessor.visualizeMaskOnOriginal(original: originalImage, mask: nil)
+        XCTAssertNil(nilMaskVisualizedImage)
+        
+        let smallSize = CGSize(width: 100, height: 100)
+        UIGraphicsBeginImageContext(smallSize)
+        let smallContext = UIGraphicsGetCurrentContext()!
+        smallContext.setFillColor(UIColor.red.cgColor)
+        smallContext.fill(CGRect(origin: .zero, size: smallSize))
+        let smallImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        
+        let differentSizeMaskedImage = ImageProcessor.applyMask(original: smallImage, mask: maskImage)
+        XCTAssertNotNil(differentSizeMaskedImage)
+    }
+    
     func testCoreMLService() async throws {
         let coreMLService = CoreMLService()
         
@@ -273,7 +357,8 @@ final class LinuxCompatibleTests: XCTestCase {
     // Linux環境でもテストが実行されるようにするための特別なセットアップ
     static var allTests = [
         ("testClothingModel", testClothingModel),
-        ("testWeatherModel", testWeatherModel)
+        ("testWeatherModel", testWeatherModel),
+        ("testImageProcessor", testImageProcessor)
         // ClothingImageモデル、LibraryPickerViewModel、LocationManager、CoreMLService、WeatherServiceのテストはLinux環境では実行されません
     ]
 }

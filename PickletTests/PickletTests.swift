@@ -201,9 +201,67 @@ struct PickletTests {
     
     #expect(maskedImage != nil)
     
-    let visualizedImage = ImageProcessor.visualizeMaskOnOriginal(original: originalImage, mask: maskImage)
+    UIGraphicsBeginImageContext(size)
+    let complexMaskContext = UIGraphicsGetCurrentContext()!
+    complexMaskContext.setFillColor(UIColor.black.cgColor)
+    complexMaskContext.fill(CGRect(origin: .zero, size: size))
     
+    complexMaskContext.setFillColor(UIColor.white.cgColor)
+    complexMaskContext.fillEllipse(in: CGRect(x: 30, y: 30, width: 60, height: 60))
+    complexMaskContext.fillEllipse(in: CGRect(x: 110, y: 30, width: 60, height: 60))
+    complexMaskContext.fill(CGRect(x: 70, y: 100, width: 60, height: 80))
+    
+    let complexMaskImage = UIGraphicsGetImageFromCurrentImageContext()!
+    UIGraphicsEndImageContext()
+    
+    let complexMaskedImage = ImageProcessor.applyMask(original: originalImage, mask: complexMaskImage)
+    #expect(complexMaskedImage != nil)
+    
+    UIGraphicsBeginImageContext(size)
+    let blackMaskContext = UIGraphicsGetCurrentContext()!
+    blackMaskContext.setFillColor(UIColor.black.cgColor)
+    blackMaskContext.fill(CGRect(origin: .zero, size: size))
+    let blackMaskImage = UIGraphicsGetImageFromCurrentImageContext()!
+    UIGraphicsEndImageContext()
+    
+    let blackMaskedImage = ImageProcessor.applyMask(original: originalImage, mask: blackMaskImage)
+    #expect(blackMaskedImage != nil)
+    
+    UIGraphicsBeginImageContext(size)
+    let whiteMaskContext = UIGraphicsGetCurrentContext()!
+    whiteMaskContext.setFillColor(UIColor.white.cgColor)
+    whiteMaskContext.fill(CGRect(origin: .zero, size: size))
+    let whiteMaskImage = UIGraphicsGetImageFromCurrentImageContext()!
+    UIGraphicsEndImageContext()
+    
+    let whiteMaskedImage = ImageProcessor.applyMask(original: originalImage, mask: whiteMaskImage)
+    #expect(whiteMaskedImage != nil)
+    
+    let nilMaskedImage = ImageProcessor.applyMask(original: nil, mask: maskImage)
+    #expect(nilMaskedImage == nil)
+    
+    let nilMaskImage = ImageProcessor.applyMask(original: originalImage, mask: nil)
+    #expect(nilMaskImage == nil)
+    
+    let visualizedImage = ImageProcessor.visualizeMaskOnOriginal(original: originalImage, mask: maskImage)
     #expect(visualizedImage != nil)
+    
+    let nilVisualizedImage = ImageProcessor.visualizeMaskOnOriginal(original: nil, mask: maskImage)
+    #expect(nilVisualizedImage == nil)
+    
+    let nilMaskVisualizedImage = ImageProcessor.visualizeMaskOnOriginal(original: originalImage, mask: nil)
+    #expect(nilMaskVisualizedImage == nil)
+    
+    let smallSize = CGSize(width: 100, height: 100)
+    UIGraphicsBeginImageContext(smallSize)
+    let smallContext = UIGraphicsGetCurrentContext()!
+    smallContext.setFillColor(UIColor.red.cgColor)
+    smallContext.fill(CGRect(origin: .zero, size: smallSize))
+    let smallImage = UIGraphicsGetImageFromCurrentImageContext()!
+    UIGraphicsEndImageContext()
+    
+    let differentSizeMaskedImage = ImageProcessor.applyMask(original: smallImage, mask: maskImage)
+    #expect(differentSizeMaskedImage != nil)
     #endif
   }
   
