@@ -231,11 +231,7 @@ class SupabaseService {
   }
 
   func insertWeatherCache(_ weather: Weather) async throws {
-    _ =
-      try await client
-      .from("weather_cache")
-      .insert(weather)
-      .execute()
+    try await WeatherCacheService.shared.insertWeatherCache(weather)
   }
 }
 

@@ -36,6 +36,6 @@ class WeatherManager {
 
   // Supabaseに保存
   func saveWeatherToCache(_ weather: Weather) async throws {
-    try await SupabaseService.shared.insertWeatherCache(weather)
+    try await WeatherCacheService.shared.insertWeatherCache(weather)
   }
 }
