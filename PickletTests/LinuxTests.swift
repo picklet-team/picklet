@@ -105,9 +105,7 @@ final class LinuxCompatibleTests: XCTestCase {
     // Linux環境でもテストが実行されるようにするための特別なセットアップ
     static var allTests = [
         ("testClothingModel", testClothingModel),
-        ("testWeatherModel", testWeatherModel),
-        #if os(macOS) || os(iOS)
-        ("testClothingImageModel", testClothingImageModel),
-        #endif
+        ("testWeatherModel", testWeatherModel)
+        // ClothingImageモデルのテストはLinux環境では実行されません
     ]
 }
