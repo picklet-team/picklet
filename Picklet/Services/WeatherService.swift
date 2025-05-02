@@ -11,7 +11,12 @@ import CoreLocation
 import Foundation
 import Supabase
 
-let openWeatherApiKey = "a27cc85d4f34ac0e5e5f4fde84d5067f"
+func getOpenWeatherApiKey() -> String {
+    guard let apiKey = Bundle.main.object(forInfoDictionaryKey: "OPENWEATHER_API_KEY") as? String else {
+        fatalError("❌ OpenWeather APIキーがInfo.plistにありません")
+    }
+    return apiKey
+}
 
 struct OpenWeatherResponse: Codable {
   struct WeatherItem: Codable {
