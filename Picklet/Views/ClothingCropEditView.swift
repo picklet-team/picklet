@@ -6,11 +6,11 @@
 //
 
 import SwiftUI
-import Photos
 
 struct ClothingCropEditView: View {
   let originalImage: UIImage
   let onComplete: (UIImage) -> Void
+  @Binding var editableImageSet: EditableImageSet?
 
   @State private var userMaskImage = UIImage()
   @State private var currentPenColor = UIColor.white
@@ -45,7 +45,7 @@ struct ClothingCropEditView: View {
 
         HStack {
           Button("保存") {
-            saveMaskToPhotoLibrary()
+            saveMaskToEditableImageSet()
           }
           .padding()
           .buttonStyle(.bordered)
@@ -84,17 +84,14 @@ struct ClothingCropEditView: View {
     self.isLoading = false
   }
   
-  private func saveMaskToPhotoLibrary() {
+  private func saveMaskToEditableImageSet() {
     let exportedMask = canvasCoordinator.exportDrawingImage()
     
-    UIImageWriteToSavedPhotosAlbum(exportedMask, self, #selector(image(_:didFinishSavingWithError:contextInfo:)), nil)
-  }
-  
-  @objc private func image(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer) {
-    if let error = error {
-      showAlert(title: "保存エラー", message: error.localizedDescription)
-    } else {
+    if editableImageSet != nil {
+      editableImageSet?.mask = exportedMask
       showAlert(title: "保存完了", message: "マスク画像が保存されました")
+    } else {
+      showAlert(title: "保存エラー", message: "保存先が見つかりません")
     }
   }
   
