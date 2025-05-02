@@ -103,35 +103,6 @@ final class LinuxCompatibleTests: XCTestCase {
     #endif
     
     #if os(macOS) || os(iOS)
-    func testImageProcessor() {
-        let size = CGSize(width: 200, height: 200)
-        UIGraphicsBeginImageContext(size)
-        let context = UIGraphicsGetCurrentContext()!
-        context.setFillColor(UIColor.blue.cgColor)
-        context.fill(CGRect(origin: .zero, size: size))
-        let originalImage = UIGraphicsGetImageFromCurrentImageContext()!
-        UIGraphicsEndImageContext()
-        
-        UIGraphicsBeginImageContext(size)
-        let maskContext = UIGraphicsGetCurrentContext()!
-        maskContext.setFillColor(UIColor.black.cgColor)
-        maskContext.fill(CGRect(origin: .zero, size: size))
-        maskContext.setFillColor(UIColor.white.cgColor)
-        maskContext.fill(CGRect(x: 50, y: 50, width: 100, height: 100))
-        let maskImage = UIGraphicsGetImageFromCurrentImageContext()!
-        UIGraphicsEndImageContext()
-        
-        let maskedImage = ImageProcessor.applyMask(original: originalImage, mask: maskImage)
-        
-        XCTAssertNotNil(maskedImage)
-        
-        let visualizedImage = ImageProcessor.visualizeMaskOnOriginal(original: originalImage, mask: maskImage)
-        
-        XCTAssertNotNil(visualizedImage)
-    }
-    #endif
-    
-    #if os(macOS) || os(iOS)
     func testLibraryPickerViewModel() async throws {
         class MockSupabaseService {
             static var shared = MockSupabaseService()
@@ -176,6 +147,61 @@ final class LinuxCompatibleTests: XCTestCase {
         XCTAssertEqual(viewModel.urls.count, 2)
         
         SupabaseService.shared = originalSupabaseService
+    }
+    #endif
+    
+    #if os(macOS) || os(iOS)
+    func testCoreMLService() async throws {
+        let coreMLService = CoreMLService()
+        
+        let size = CGSize(width: 512, height: 512)
+        UIGraphicsBeginImageContext(size)
+        let context = UIGraphicsGetCurrentContext()!
+        context.setFillColor(UIColor.white.cgColor)
+        context.fill(CGRect(origin: .zero, size: size))
+        context.setFillColor(UIColor.black.cgColor)
+        context.fill(CGRect(x: 100, y: 100, width: 312, height: 312))
+        let testImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        
+        UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
+        let maskContext = UIGraphicsGetCurrentContext()!
+        maskContext.setFillColor(UIColor.white.cgColor)
+        maskContext.fill(CGRect(origin: .zero, size: size))
+        let rectSize = CGSize(width: size.width * 0.7, height: size.height * 0.7)
+        let origin = CGPoint(x: (size.width - rectSize.width) / 2, y: (size.height - rectSize.height) / 2)
+        maskContext.setFillColor(UIColor.black.cgColor)
+        maskContext.fill(CGRect(origin: origin, size: rectSize))
+        let maskImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        
+        let processed = ImageProcessor.applyMask(original: testImage, mask: maskImage)
+        XCTAssertNotNil(processed)
+        
+        let imageSet = EditableImageSet(
+          id: UUID(),
+          originalUrl: "https://example.com/test.jpg",
+          original: testImage,
+          mask: nil,
+          result: nil
+        )
+        
+        let processedSet = await coreMLService.processImageSet(imageSet: imageSet)
+        XCTAssertNotNil(processedSet)
+        XCTAssertNotNil(processedSet?.original)
+        
+        let nilResult = await coreMLService.processImageSet(imageSet: nil)
+        XCTAssertNil(nilResult)
+        
+        let emptySet = EditableImageSet(
+          id: UUID(),
+          originalUrl: nil,
+          original: nil,
+          mask: nil,
+          result: nil
+        )
+        let emptyResult = await coreMLService.processImageSet(imageSet: emptySet)
+        XCTAssertNil(emptyResult)
     }
     #endif
     
@@ -226,6 +252,6 @@ final class LinuxCompatibleTests: XCTestCase {
     static var allTests = [
         ("testClothingModel", testClothingModel),
         ("testWeatherModel", testWeatherModel)
-        // ClothingImageモデル、ImageProcessor、LibraryPickerViewModel、WeatherServiceのテストはLinux環境では実行されません
+        // ClothingImageモデル、LibraryPickerViewModel、CoreMLService、WeatherServiceのテストはLinux環境では実行されません
     ]
 }
