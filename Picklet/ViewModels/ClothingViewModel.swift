@@ -3,9 +3,9 @@ import SwiftUI
 
 @MainActor
 class ClothingViewModel: ObservableObject {
-  @Published var clothes: [Clothing] = []
+  @Published var clothingItems: [Clothing] = []
   @Published var isLoading = false
-  @Published var error: String?
+  @Published var errorMessage: String?
 
   @Published var imageSetsMap: [UUID: [EditableImageSet]] = [:]
   
@@ -34,7 +34,7 @@ class ClothingViewModel: ObservableObject {
       }
     } catch {
       print("❌ 服の保存エラー: \(error.localizedDescription)")
-      self.error = error.localizedDescription
+      self.errorMessage = error.localizedDescription
     }
   }
 
@@ -42,10 +42,10 @@ class ClothingViewModel: ObservableObject {
   func loadClothes() async {
     isLoading = true
     do {
-      clothes = try await clothingService.fetchClothes()
-      print("✅ 服データ読み込み完了: \(clothes.count)件")
+      clothingItems = try await clothingService.fetchClothes()
+      print("✅ 服データ読み込み完了: \(clothingItems.count)件")
 
-      for clothing in clothes {
+      for clothing in clothingItems {
         let images = try await imageMetadataService.fetchImages(for: clothing.id)
         let sets = images.map { img in
           EditableImageSet(
@@ -53,9 +53,9 @@ class ClothingViewModel: ObservableObject {
             original: nil,
             originalUrl: img.original_url,
             mask: nil,
-            maskUrl: nil,
+            maskUrl: img.mask_url,
             result: nil,
-            resultUrl: nil,
+            resultUrl: img.result_url,
             isNew: false
           )
         }
@@ -64,7 +64,7 @@ class ClothingViewModel: ObservableObject {
 
       print("✅ 画像データ読み込み完了")
     } catch {
-      self.error = error.localizedDescription
+      self.errorMessage = error.localizedDescription
     }
     isLoading = false
   }
@@ -76,7 +76,7 @@ class ClothingViewModel: ObservableObject {
       print("🗑️ 削除成功: \(clothing.name)")
       await loadClothes()
     } catch {
-      self.error = error.localizedDescription
+      self.errorMessage = error.localizedDescription
     }
   }
 }
