@@ -14,11 +14,12 @@ final class LibraryPickerViewModel: ObservableObject {
   @Published var urls: [URL] = []
 
   private var cancellables = Set<AnyCancellable>()
+  private let imageStorageService = ImageStorageService.shared
 
   func fetch() {
     Task {
       do {
-        self.urls = try await SupabaseService.shared.listClothingImageURLs()
+        self.urls = try await imageStorageService.listClothingImageURLs()
       } catch {
         print("❌ image fetch error:", error)
       }
