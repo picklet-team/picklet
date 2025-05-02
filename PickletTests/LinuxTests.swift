@@ -229,7 +229,8 @@ final class LinuxCompatibleTests: XCTestCase {
         XCTAssertEqual((locationManager.locationError as NSError?)?.domain, "LocationManagerTest")
         XCTAssertEqual((locationManager.locationError as NSError?)?.code, 1)
     }
-    #endif
+    
+    #if os(macOS) || os(iOS)
     func testWeatherService() async throws {
         class WeatherService {
             var cachedWeather: Weather?
@@ -271,7 +272,7 @@ final class LinuxCompatibleTests: XCTestCase {
         XCTAssertEqual(weather?.temperature, 22.0)
         XCTAssertEqual(weather?.condition, "曇り")
     }
-    #endif
+    
     // Linux環境でもテストが実行されるようにするための特別なセットアップ
     static var allTests = [
         ("testClothingModel", testClothingModel),
