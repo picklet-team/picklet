@@ -33,6 +33,16 @@ struct OpenWeatherResponse: Codable {
 class WeatherManager {
 
   static let shared = WeatherManager()
+  
+  func fetchWeather(for city: String) async throws -> Weather {
+    do {
+      return try await fetchCachedWeather(for: city)
+    } catch {
+      let weather = try await WeatherAPIService.shared.fetchWeatherData(for: city)
+      try await saveWeatherToCache(weather)
+      return weather
+    }
+  }
 
   // キャッシュ取得
   func fetchCachedWeather(for city: String) async throws -> Weather {
