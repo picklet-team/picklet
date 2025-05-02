@@ -50,7 +50,7 @@ class CoreMLService {
     }
 
     // ④ CoreML によるマスク推論
-    guard let mask = await CoreMLService.shared.predictMask(for: original) else {
+    guard let mask = await self.predictMask(for: original) else {
       print("❌ mask prediction failed")
       return nil
     }
@@ -69,7 +69,7 @@ class CoreMLService {
 
   func processImage(image: UIImage) async -> UIImage? {
     // 1. 推論
-    guard let mask = await CoreMLService.shared.predictMask(for: image) else {
+    guard let mask = await self.predictMask(for: image) else {
       print("❌ mask prediction failed")
       return nil
     }
