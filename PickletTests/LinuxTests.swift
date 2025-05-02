@@ -268,6 +268,104 @@ final class LinuxCompatibleTests: XCTestCase {
         XCTAssertEqual(weather?.temperature, 22.0)
         XCTAssertEqual(weather?.condition, "曇り")
     }
+    
+    func testWeatherServiceEdgeCases() async throws {
+        class MockWeatherService {
+            var cachedWeather: Weather?
+            var shouldThrowNetworkError = false
+            var shouldReturnEmptyData = false
+            var shouldReturnInvalidData = false
+            
+            func getCurrentWeather(forCity city: String) async -> Weather? {
+                if let cached = cachedWeather, cached.city == city {
+                    return cached
+                }
+                
+                if shouldThrowNetworkError || shouldReturnEmptyData {
+                    return nil
+                }
+                
+                if shouldReturnInvalidData {
+                    return Weather(
+                        city: city,
+                        date: "2025-05-02",
+                        temperature: 999.9,
+                        condition: "",
+                        icon: "",
+                        updated_at: "2025-05-02T10:00:00Z"
+                    )
+                }
+                
+                return Weather(
+                    city: city,
+                    date: "2025-05-02",
+                    temperature: 22.5,
+                    condition: "晴れ",
+                    icon: "clear-day",
+                    updated_at: "2025-05-02T10:00:00Z"
+                )
+            }
+            
+            func saveWeather(_ weather: Weather) async throws {
+                if shouldThrowNetworkError {
+                    throw NSError(domain: "weather", code: 500, userInfo: [NSLocalizedDescriptionKey: "保存エラー"])
+                }
+                cachedWeather = weather
+            }
+        }
+        
+        let weatherService = MockWeatherService()
+        
+        var weather = await weatherService.getCurrentWeather(forCity: "東京")
+        XCTAssertNotNil(weather)
+        XCTAssertEqual(weather?.city, "東京")
+        XCTAssertEqual(weather?.temperature, 22.5)
+        
+        weatherService.shouldThrowNetworkError = true
+        weather = await weatherService.getCurrentWeather(forCity: "大阪")
+        XCTAssertNil(weather)
+        
+        weatherService.shouldThrowNetworkError = false
+        weatherService.shouldReturnEmptyData = true
+        weather = await weatherService.getCurrentWeather(forCity: "名古屋")
+        XCTAssertNil(weather)
+        
+        weatherService.shouldReturnEmptyData = false
+        weatherService.shouldReturnInvalidData = true
+        weather = await weatherService.getCurrentWeather(forCity: "札幌")
+        XCTAssertNotNil(weather)
+        XCTAssertEqual(weather?.temperature, 999.9)
+        XCTAssertEqual(weather?.condition, "")
+        
+        let testWeather = Weather(
+            city: "福岡",
+            date: "2025-05-02",
+            temperature: 25.0,
+            condition: "曇り",
+            icon: "cloudy",
+            updated_at: "2025-05-02T11:00:00Z"
+        )
+        
+        weatherService.shouldThrowNetworkError = false
+        weatherService.shouldReturnInvalidData = false
+        try await weatherService.saveWeather(testWeather)
+        
+        weather = await weatherService.getCurrentWeather(forCity: "福岡")
+        XCTAssertNotNil(weather)
+        XCTAssertEqual(weather?.city, "福岡")
+        XCTAssertEqual(weather?.temperature, 25.0)
+        XCTAssertEqual(weather?.condition, "曇り")
+        
+        weatherService.shouldThrowNetworkError = true
+        do {
+            try await weatherService.saveWeather(testWeather)
+            XCTFail("エラーが発生するはずです")
+        } catch {
+            let nsError = error as NSError
+            XCTAssertEqual(nsError.domain, "weather")
+            XCTAssertEqual(nsError.code, 500)
+        }
+    }
     #endif
     
     // Linux環境でもテストが実行されるようにするための特別なセットアップ

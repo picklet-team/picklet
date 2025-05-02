@@ -385,4 +385,184 @@ struct PickletTests {
     SupabaseService.shared = originalSupabaseService
     #endif
   }
+  
+  @Test func testWeatherServiceEdgeCases() async throws {
+    #if os(iOS) || os(macOS)
+    class MockWeatherAPIService {
+      static let shared = MockWeatherAPIService()
+      
+      var shouldThrowNetworkError = false
+      var shouldReturnEmptyData = false
+      var shouldReturnInvalidData = false
+      
+      func fetchWeatherData(for city: String) async throws -> Weather {
+        if shouldThrowNetworkError {
+          throw NSError(domain: "weather", code: 500, userInfo: [NSLocalizedDescriptionKey: "ネットワークエラー"])
+        }
+        
+        if shouldReturnEmptyData {
+          throw NSError(domain: "weather", code: 404, userInfo: [NSLocalizedDescriptionKey: "データが見つかりません"])
+        }
+        
+        if shouldReturnInvalidData {
+          return Weather(
+            city: city,
+            date: "2025-05-02",
+            temperature: 999.9, // 極端な温度
+            condition: "",      // 空の状態
+            icon: "",           // 空のアイコン
+            updated_at: "2025-05-02T10:00:00Z"
+          )
+        }
+        
+        return Weather(
+          city: city,
+          date: "2025-05-02",
+          temperature: 22.5,
+          condition: "晴れ",
+          icon: "clear-day",
+          updated_at: "2025-05-02T10:00:00Z"
+        )
+      }
+    }
+    
+    class MockWeatherCacheService {
+      static let shared = MockWeatherCacheService()
+      
+      var cachedWeathers: [String: Weather] = [:]
+      var shouldThrowError = false
+      
+      func fetchWeatherCache(for city: String) async throws -> Weather {
+        if shouldThrowError {
+          throw NSError(domain: "cache", code: 404, userInfo: [NSLocalizedDescriptionKey: "キャッシュが見つかりません"])
+        }
+        
+        if let weather = cachedWeathers[city] {
+          return weather
+        }
+        
+        throw NSError(domain: "cache", code: 404, userInfo: [NSLocalizedDescriptionKey: "キャッシュが見つかりません"])
+      }
+      
+      func insertWeatherCache(_ weather: Weather) async throws {
+        if shouldThrowError {
+          throw NSError(domain: "cache", code: 500, userInfo: [NSLocalizedDescriptionKey: "キャッシュの保存に失敗しました"])
+        }
+        
+        cachedWeathers[weather.city] = weather
+      }
+    }
+    
+    class MockWeatherManager {
+      static let shared = MockWeatherManager()
+      
+      var apiService = MockWeatherAPIService.shared
+      var cacheService = MockWeatherCacheService.shared
+      
+      func fetchWeather(for city: String) async throws -> Weather {
+        do {
+          return try await fetchCachedWeather(for: city)
+        } catch {
+          let weather = try await apiService.fetchWeatherData(for: city)
+          try await saveWeatherToCache(weather)
+          return weather
+        }
+      }
+      
+      func fetchCachedWeather(for city: String) async throws -> Weather {
+        return try await cacheService.fetchWeatherCache(for: city)
+      }
+      
+      func saveWeatherToCache(_ weather: Weather) async throws {
+        try await cacheService.insertWeatherCache(weather)
+      }
+    }
+    
+    class TestWeatherService {
+      var weatherManager: MockWeatherManager
+      var cachedWeather: Weather?
+      
+      init(weatherManager: MockWeatherManager) {
+        self.weatherManager = weatherManager
+      }
+      
+      func getCurrentWeather(forCity city: String) async -> Weather? {
+        if let cached = cachedWeather, cached.city == city {
+          return cached
+        }
+        
+        do {
+          return try await weatherManager.fetchCachedWeather(for: city)
+        } catch {
+          do {
+            let weather = try await weatherManager.fetchWeather(for: city)
+            cachedWeather = weather
+            return weather
+          } catch {
+            return nil
+          }
+        }
+      }
+      
+      func saveWeather(_ weather: Weather) async throws {
+        try await weatherManager.saveWeatherToCache(weather)
+        cachedWeather = weather
+      }
+    }
+    
+    let mockWeatherManager = MockWeatherManager.shared
+    let weatherService = TestWeatherService(weatherManager: mockWeatherManager)
+    
+    mockWeatherManager.cacheService.shouldThrowError = true
+    mockWeatherManager.apiService.shouldThrowNetworkError = false
+    
+    var weather = await weatherService.getCurrentWeather(forCity: "東京")
+    #expect(weather != nil)
+    #expect(weather?.city == "東京")
+    #expect(weather?.temperature == 22.5)
+    
+    mockWeatherManager.cacheService.shouldThrowError = true
+    mockWeatherManager.apiService.shouldThrowNetworkError = true
+    
+    weather = await weatherService.getCurrentWeather(forCity: "大阪")
+    #expect(weather == nil)
+    
+    mockWeatherManager.cacheService.shouldThrowError = true
+    mockWeatherManager.apiService.shouldThrowNetworkError = false
+    mockWeatherManager.apiService.shouldReturnEmptyData = true
+    
+    weather = await weatherService.getCurrentWeather(forCity: "名古屋")
+    #expect(weather == nil)
+    
+    mockWeatherManager.cacheService.shouldThrowError = true
+    mockWeatherManager.apiService.shouldThrowNetworkError = false
+    mockWeatherManager.apiService.shouldReturnEmptyData = false
+    mockWeatherManager.apiService.shouldReturnInvalidData = true
+    
+    weather = await weatherService.getCurrentWeather(forCity: "札幌")
+    #expect(weather != nil)
+    #expect(weather?.temperature == 999.9)
+    #expect(weather?.condition == "")
+    
+    let testWeather = Weather(
+      city: "福岡",
+      date: "2025-05-02",
+      temperature: 25.0,
+      condition: "曇り",
+      icon: "cloudy",
+      updated_at: "2025-05-02T11:00:00Z"
+    )
+    
+    mockWeatherManager.cacheService.shouldThrowError = false
+    try await weatherService.saveWeather(testWeather)
+    
+    mockWeatherManager.apiService.shouldThrowNetworkError = true // APIは使わないはず
+    weather = await weatherService.getCurrentWeather(forCity: "福岡")
+    
+    #expect(weather != nil)
+    #expect(weather?.city == "福岡")
+    #expect(weather?.temperature == 25.0)
+    #expect(weather?.condition == "曇り")
+    #endif
+  }
 }
