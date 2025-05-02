@@ -106,18 +106,13 @@ struct ClothingEditView: View {
 
   private func loadImages() async {
     do {
-      let fetchedImages = try await SupabaseService.shared.fetchImages(for: clothing.id)
-      imageSets = fetchedImages.map { clothingImage in
-        EditableImageSet(
-          id: clothingImage.id,
-          original: nil,
-          originalUrl: clothingImage.original_url,
-          mask: nil,
-          maskUrl: nil,
-          result: nil,
-          resultUrl: nil,
-          isNew: false
-        )
+      if let sets = viewModel.imageSetsMap[clothing.id] {
+        imageSets = sets
+      } else {
+        await viewModel.loadClothes()
+        if let sets = viewModel.imageSetsMap[clothing.id] {
+          imageSets = sets
+        }
       }
     } catch {
       print("❌ 画像取得エラー: \(error.localizedDescription)")
@@ -126,20 +121,9 @@ struct ClothingEditView: View {
 
   private func saveChanges() async {
     do {
-      if isNew {
-        try await SupabaseService.shared.addClothing(clothing)
-      } else {
-        try await SupabaseService.shared.updateClothing(clothing)
-      }
-
-      for set in imageSets {
-        if set.isNew, let original = set.original {
-          let originalUrl = try await SupabaseService.shared.uploadImage(
-            original, for: UUID().uuidString)
-          try await SupabaseService.shared.addImage(for: clothing.id, originalUrl: originalUrl)
-          print("✅ 画像保存完了: \(originalUrl)")
-        }
-      }
+      await viewModel.updateClothing(clothing, imageSets: imageSets, isNew: isNew)
+      
+      await viewModel.loadClothes()
     } catch {
       print("❌ 保存エラー: \(error.localizedDescription)")
     }
