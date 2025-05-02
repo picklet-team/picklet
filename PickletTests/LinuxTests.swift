@@ -131,10 +131,101 @@ final class LinuxCompatibleTests: XCTestCase {
     }
     #endif
     
+    #if os(macOS) || os(iOS)
+    func testLibraryPickerViewModel() async throws {
+        class MockSupabaseService {
+            static var shared = MockSupabaseService()
+            
+            var shouldSucceed = true
+            var mockURLs: [URL] = [
+                URL(string: "https://example.com/image1.jpg")!,
+                URL(string: "https://example.com/image2.jpg")!
+            ]
+            
+            func listClothingImageURLs() async throws -> [URL] {
+                if shouldSucceed {
+                    return mockURLs
+                } else {
+                    throw NSError(domain: "MockError", code: 1, userInfo: nil)
+                }
+            }
+        }
+        
+        let originalSupabaseService = SupabaseService.shared
+        
+        SupabaseService.shared = MockSupabaseService.shared as! SupabaseService
+        
+        let viewModel = LibraryPickerViewModel()
+        
+        XCTAssertTrue(viewModel.urls.isEmpty)
+        
+        MockSupabaseService.shared.shouldSucceed = true
+        viewModel.fetch()
+        
+        try await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
+        
+        XCTAssertEqual(viewModel.urls.count, 2)
+        XCTAssertEqual(viewModel.urls[0].absoluteString, "https://example.com/image1.jpg")
+        XCTAssertEqual(viewModel.urls[1].absoluteString, "https://example.com/image2.jpg")
+        
+        MockSupabaseService.shared.shouldSucceed = false
+        viewModel.fetch()
+        
+        try await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
+        
+        XCTAssertEqual(viewModel.urls.count, 2)
+        
+        SupabaseService.shared = originalSupabaseService
+    }
+    #endif
+    
+    #if os(macOS) || os(iOS)
+    func testWeatherService() async throws {
+        class WeatherService {
+            var cachedWeather: Weather?
+            
+            func getCurrentWeather(forCity city: String) async -> Weather? {
+                if let cached = cachedWeather, cached.city == city {
+                    return cached
+                }
+                
+                do {
+                    return try await WeatherManager.shared.fetchCachedWeather(for: city)
+                } catch {
+                    return nil
+                }
+            }
+            
+            func saveWeather(_ weather: Weather) async throws {
+                try await WeatherManager.shared.saveWeatherToCache(weather)
+                cachedWeather = weather
+            }
+        }
+        
+        let weatherService = WeatherService()
+        
+        let mockWeather = Weather(
+            city: "大阪",
+            date: "2025-05-02",
+            temperature: 22.0,
+            condition: "曇り",
+            icon: "cloudy",
+            updated_at: "2025-05-02T09:00:00Z"
+        )
+        
+        weatherService.cachedWeather = mockWeather
+        
+        let weather = await weatherService.getCurrentWeather(forCity: "大阪")
+        
+        XCTAssertEqual(weather?.city, "大阪")
+        XCTAssertEqual(weather?.temperature, 22.0)
+        XCTAssertEqual(weather?.condition, "曇り")
+    }
+    #endif
     // Linux環境でもテストが実行されるようにするための特別なセットアップ
     static var allTests = [
         ("testClothingModel", testClothingModel),
         ("testWeatherModel", testWeatherModel)
-        // ClothingImageモデルとImageProcessorのテストはLinux環境では実行されません
+        // ClothingImageモデル、ImageProcessor、LibraryPickerViewModel、WeatherServiceのテストはLinux環境では実行されません
     ]
 }
