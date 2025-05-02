@@ -27,6 +27,14 @@ class SupabaseService {
 
   internal let client: SupabaseClient
   private let storageBucketName = "clothes-images"
+  
+  private let imageStorageService = ImageStorageService.shared
+  
+  // private let authService = AuthService.shared
+  // private let clothingDataService = ClothingDataService.shared
+  // private let imageMetadataService = ImageMetadataService.shared
+  // private let weatherFetchService = WeatherFetchService.shared
+  // private let weatherCacheService = WeatherCacheService.shared
 
   private init() {
     guard
