@@ -150,10 +150,65 @@ final class LinuxCompatibleTests: XCTestCase {
     }
     #endif
     
+    #if os(macOS) || os(iOS)
+    func testCoreMLService() async throws {
+        let coreMLService = CoreMLService()
+        
+        let size = CGSize(width: 512, height: 512)
+        UIGraphicsBeginImageContext(size)
+        let context = UIGraphicsGetCurrentContext()!
+        context.setFillColor(UIColor.white.cgColor)
+        context.fill(CGRect(origin: .zero, size: size))
+        context.setFillColor(UIColor.black.cgColor)
+        context.fill(CGRect(x: 100, y: 100, width: 312, height: 312))
+        let testImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        
+        UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
+        let maskContext = UIGraphicsGetCurrentContext()!
+        maskContext.setFillColor(UIColor.white.cgColor)
+        maskContext.fill(CGRect(origin: .zero, size: size))
+        let rectSize = CGSize(width: size.width * 0.7, height: size.height * 0.7)
+        let origin = CGPoint(x: (size.width - rectSize.width) / 2, y: (size.height - rectSize.height) / 2)
+        maskContext.setFillColor(UIColor.black.cgColor)
+        maskContext.fill(CGRect(origin: origin, size: rectSize))
+        let maskImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        
+        let processed = ImageProcessor.applyMask(original: testImage, mask: maskImage)
+        XCTAssertNotNil(processed)
+        
+        let imageSet = EditableImageSet(
+          id: UUID(),
+          originalUrl: "https://example.com/test.jpg",
+          original: testImage,
+          mask: nil,
+          result: nil
+        )
+        
+        let processedSet = await coreMLService.processImageSet(imageSet: imageSet)
+        XCTAssertNotNil(processedSet)
+        XCTAssertNotNil(processedSet?.original)
+        
+        let nilResult = await coreMLService.processImageSet(imageSet: nil)
+        XCTAssertNil(nilResult)
+        
+        let emptySet = EditableImageSet(
+          id: UUID(),
+          originalUrl: nil,
+          original: nil,
+          mask: nil,
+          result: nil
+        )
+        let emptyResult = await coreMLService.processImageSet(imageSet: emptySet)
+        XCTAssertNil(emptyResult)
+    }
+    #endif
+    
     // Linux環境でもテストが実行されるようにするための特別なセットアップ
     static var allTests = [
         ("testClothingModel", testClothingModel),
         ("testWeatherModel", testWeatherModel)
-        // ClothingImageモデルとLibraryPickerViewModelのテストはLinux環境では実行されません
+        // ClothingImageモデル、LibraryPickerViewModel、CoreMLServiceのテストはLinux環境では実行されません
     ]
 }
