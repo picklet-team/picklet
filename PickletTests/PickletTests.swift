@@ -248,4 +248,53 @@ struct PickletTests {
     #expect(clothingImageWithNil.result_url == nil)
     #endif
   }
+  
+  @Test func testLibraryPickerViewModel() async throws {
+    #if os(iOS) || os(macOS)
+    class MockSupabaseService {
+      static var shared = MockSupabaseService()
+      
+      var shouldSucceed = true
+      var mockURLs: [URL] = [
+        URL(string: "https://example.com/image1.jpg")!,
+        URL(string: "https://example.com/image2.jpg")!
+      ]
+      
+      func listClothingImageURLs() async throws -> [URL] {
+        if shouldSucceed {
+          return mockURLs
+        } else {
+          throw NSError(domain: "MockError", code: 1, userInfo: nil)
+        }
+      }
+    }
+    
+    let originalSupabaseService = SupabaseService.shared
+    
+    SupabaseService.shared = MockSupabaseService.shared as! SupabaseService
+    
+    let viewModel = LibraryPickerViewModel()
+    
+    // 初期状態のテスト
+    #expect(viewModel.urls.isEmpty)
+    
+    MockSupabaseService.shared.shouldSucceed = true
+    viewModel.fetch()
+    
+    try await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
+    
+    #expect(viewModel.urls.count == 2)
+    #expect(viewModel.urls[0].absoluteString == "https://example.com/image1.jpg")
+    #expect(viewModel.urls[1].absoluteString == "https://example.com/image2.jpg")
+    
+    MockSupabaseService.shared.shouldSucceed = false
+    viewModel.fetch()
+    
+    try await Task.sleep(nanoseconds: 500_000_000) // 0.5秒待機
+    
+    #expect(viewModel.urls.count == 2)
+    
+    SupabaseService.shared = originalSupabaseService
+    #endif
+  }
 }
