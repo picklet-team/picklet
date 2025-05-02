@@ -182,6 +182,7 @@ struct PickletTests {
   @Test func testCoreMLService() async throws {
     #if os(iOS) || os(macOS)
     let coreMLService = CoreMLService()
+    coreMLService.isTestMode = true
     
     // テスト用の画像を作成
     let size = CGSize(width: 512, height: 512)
@@ -195,11 +196,35 @@ struct PickletTests {
     let testImage = UIGraphicsGetImageFromCurrentImageContext()!
     UIGraphicsEndImageContext()
     
-    // 画像処理のテスト（実際のモデル推論はスキップ）
     let processed = try await coreMLService.processImageForTest(testImage)
-    
-    // 処理が成功したことを確認
     #expect(processed != nil)
+    
+    let imageSet = EditableImageSet(
+      id: UUID(),
+      originalUrl: "https://example.com/test.jpg",
+      original: testImage,
+      mask: nil,
+      result: nil
+    )
+    
+    let processedSet = await coreMLService.processImageSet(imageSet: imageSet)
+    #expect(processedSet != nil)
+    #expect(processedSet?.original != nil)
+    #expect(processedSet?.mask != nil)
+    #expect(processedSet?.result != nil)
+    
+    let nilResult = await coreMLService.processImageSet(imageSet: nil)
+    #expect(nilResult == nil)
+    
+    let emptySet = EditableImageSet(
+      id: UUID(),
+      originalUrl: nil,
+      original: nil,
+      mask: nil,
+      result: nil
+    )
+    let emptyResult = await coreMLService.processImageSet(imageSet: emptySet)
+    #expect(emptyResult == nil)
     #endif
   }
   

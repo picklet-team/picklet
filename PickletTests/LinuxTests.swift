@@ -102,10 +102,57 @@ final class LinuxCompatibleTests: XCTestCase {
     }
     #endif
     
+    #if os(macOS) || os(iOS)
+    func testCoreMLService() async throws {
+        let coreMLService = CoreMLService()
+        coreMLService.isTestMode = true
+        
+        let size = CGSize(width: 512, height: 512)
+        UIGraphicsBeginImageContext(size)
+        let context = UIGraphicsGetCurrentContext()!
+        context.setFillColor(UIColor.white.cgColor)
+        context.fill(CGRect(origin: .zero, size: size))
+        context.setFillColor(UIColor.black.cgColor)
+        context.fill(CGRect(x: 100, y: 100, width: 312, height: 312))
+        let testImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        
+        let processed = try await coreMLService.processImageForTest(testImage)
+        XCTAssertNotNil(processed)
+        
+        let imageSet = EditableImageSet(
+          id: UUID(),
+          originalUrl: "https://example.com/test.jpg",
+          original: testImage,
+          mask: nil,
+          result: nil
+        )
+        
+        let processedSet = await coreMLService.processImageSet(imageSet: imageSet)
+        XCTAssertNotNil(processedSet)
+        XCTAssertNotNil(processedSet?.original)
+        XCTAssertNotNil(processedSet?.mask)
+        XCTAssertNotNil(processedSet?.result)
+        
+        let nilResult = await coreMLService.processImageSet(imageSet: nil)
+        XCTAssertNil(nilResult)
+        
+        let emptySet = EditableImageSet(
+          id: UUID(),
+          originalUrl: nil,
+          original: nil,
+          mask: nil,
+          result: nil
+        )
+        let emptyResult = await coreMLService.processImageSet(imageSet: emptySet)
+        XCTAssertNil(emptyResult)
+    }
+    #endif
+    
     // Linux環境でもテストが実行されるようにするための特別なセットアップ
     static var allTests = [
         ("testClothingModel", testClothingModel),
         ("testWeatherModel", testWeatherModel)
-        // ClothingImageモデルのテストはLinux環境では実行されません
+        // ClothingImageモデルとCoreMLServiceのテストはLinux環境では実行されません
     ]
 }
