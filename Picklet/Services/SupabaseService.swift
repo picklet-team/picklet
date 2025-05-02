@@ -64,50 +64,18 @@ class SupabaseService {
   // MARK: - 服画像データ
 
   func fetchImages(for clothingId: UUID) async throws -> [ClothingImage] {
-    return
-      try await client
-      .from("clothing_images")
-      .select("*")
-      .eq("clothing_id", value: clothingId.uuidString)
-      .execute()
-      .decoded(to: [ClothingImage].self)
+    return try await ImageMetadataService.shared.fetchImages(for: clothingId)
   }
 
   func addImage(
     for clothingId: UUID, originalUrl: String, maskUrl: String? = nil, resultUrl: String? = nil
   ) async throws {
-    guard let user = currentUser else {
-      throw NSError(
-        domain: "auth", code: 401, userInfo: [NSLocalizedDescriptionKey: "ユーザーが未ログインです"])
-    }
-
-    let newImage = NewClothingImage(
-      id: UUID(),
-      clothing_id: clothingId,
-      user_id: user.id,
-      original_url: originalUrl,
-      mask_url: maskUrl,
-      result_url: resultUrl,
-      created_at: ISO8601DateFormatter().string(from: Date())
-    )
-
-    _ =
-      try await client
-      .from("clothing_images")
-      .insert(newImage)
-      .execute()
+    try await ImageMetadataService.shared.addImage(
+      for: clothingId, originalUrl: originalUrl, maskUrl: maskUrl, resultUrl: resultUrl)
   }
 
   func updateImageMaskAndResult(id: UUID, maskUrl: String?, resultUrl: String?) async throws {
-    _ =
-      try await client
-      .from("clothing_images")
-      .update([
-        "mask_url": maskUrl,
-        "result_url": resultUrl,
-      ])
-      .eq("id", value: id.uuidString)
-      .execute()
+    try await ImageMetadataService.shared.updateImageMaskAndResult(id: id, maskUrl: maskUrl, resultUrl: resultUrl)
   }
 
   func uploadImage(_ image: UIImage, for filename: String) async throws -> String {
