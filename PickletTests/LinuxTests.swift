@@ -102,10 +102,39 @@ final class LinuxCompatibleTests: XCTestCase {
     }
     #endif
     
+    #if os(macOS) || os(iOS)
+    func testImageProcessor() {
+        let size = CGSize(width: 200, height: 200)
+        UIGraphicsBeginImageContext(size)
+        let context = UIGraphicsGetCurrentContext()!
+        context.setFillColor(UIColor.blue.cgColor)
+        context.fill(CGRect(origin: .zero, size: size))
+        let originalImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        
+        UIGraphicsBeginImageContext(size)
+        let maskContext = UIGraphicsGetCurrentContext()!
+        maskContext.setFillColor(UIColor.black.cgColor)
+        maskContext.fill(CGRect(origin: .zero, size: size))
+        maskContext.setFillColor(UIColor.white.cgColor)
+        maskContext.fill(CGRect(x: 50, y: 50, width: 100, height: 100))
+        let maskImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        
+        let maskedImage = ImageProcessor.applyMask(original: originalImage, mask: maskImage)
+        
+        XCTAssertNotNil(maskedImage)
+        
+        let visualizedImage = ImageProcessor.visualizeMaskOnOriginal(original: originalImage, mask: maskImage)
+        
+        XCTAssertNotNil(visualizedImage)
+    }
+    #endif
+    
     // Linux環境でもテストが実行されるようにするための特別なセットアップ
     static var allTests = [
         ("testClothingModel", testClothingModel),
         ("testWeatherModel", testWeatherModel)
-        // ClothingImageモデルのテストはLinux環境では実行されません
+        // ClothingImageモデルとImageProcessorのテストはLinux環境では実行されません
     ]
 }
