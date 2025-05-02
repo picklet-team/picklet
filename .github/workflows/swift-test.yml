@@ -28,7 +28,7 @@ jobs:
       uses: swift-actions/setup-swift@v1
       with:
         swift-version: "5.9"
-    - name: Create Package.swift
+    - name: Create Package.swift for Linux
       run: |
         echo '// swift-tools-version:5.9' > Package.swift
         echo 'import PackageDescription' >> Package.swift
@@ -44,18 +44,24 @@ jobs:
         echo '        .target(' >> Package.swift
         echo '            name: "PickletCore",' >> Package.swift
         echo '            dependencies: [],' >> Package.swift
-        echo '            path: "Picklet",' >> Package.swift
-        echo '            exclude: ["Views", "Extensions", "PickletApp.swift", "Resources", "Preview Content"],' >> Package.swift
-        echo '            sources: ["Models", "Services"]' >> Package.swift
+        echo '            path: "Picklet/Models",' >> Package.swift
+        echo '            exclude: [' >> Package.swift
+        echo '                "LocationManager.swift",' >> Package.swift  # CoreLocation依存
+        echo '                "ISNet.mlmodel"' >> Package.swift  # CoreML依存
+        echo '            ],' >> Package.swift
+        echo '            sources: ["Clothing.swift", "Weather.swift"]' >> Package.swift  # 明示的に必要なファイルのみを指定
         echo '        ),' >> Package.swift
         echo '        .testTarget(' >> Package.swift
         echo '            name: "PickletCoreTests",' >> Package.swift
         echo '            dependencies: ["PickletCore"],' >> Package.swift
         echo '            path: "PickletTests",' >> Package.swift
-        echo '            exclude: ["PickletUITests.swift"]' >> Package.swift
+        echo '            sources: ["PickletTests.swift"]' >> Package.swift
         echo '        )' >> Package.swift
         echo '    ]' >> Package.swift
         echo ')' >> Package.swift
+        
+        # パッケージ構成を確認
+        cat Package.swift
     - name: Run Linux-compatible tests
       run: |
         # 明示的にLinux対応のテストのみを実行
