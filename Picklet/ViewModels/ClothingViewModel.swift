@@ -8,23 +8,26 @@ class ClothingViewModel: ObservableObject {
   @Published var error: String?
 
   @Published var imageSetsMap: [UUID: [EditableImageSet]] = [:]
+  
+  private let clothingService = ClothingDataService.shared
+  private let imageService = SupabaseService.shared
 
   /// 服を保存（新規 or 更新）
   func updateClothing(_ clothing: Clothing, imageSets: [EditableImageSet], isNew: Bool) async {
     do {
       if isNew {
-        try await SupabaseService.shared.addClothing(clothing)
+        try await clothingService.addClothing(clothing)
         print("✅ 新規服登録: \(clothing.name)")
       } else {
-        try await SupabaseService.shared.updateClothing(clothing)
+        try await clothingService.updateClothing(clothing)
         print("✅ 服更新: \(clothing.name)")
       }
 
       for set in imageSets {
         if set.isNew, let original = set.original {
-          let originalUrl = try await SupabaseService.shared.uploadImage(
+          let originalUrl = try await imageService.uploadImage(
             original, for: UUID().uuidString)
-          try await SupabaseService.shared.addImage(for: clothing.id, originalUrl: originalUrl)
+          try await imageService.addImage(for: clothing.id, originalUrl: originalUrl)
           print("✅ 画像アップロード & 登録完了: \(originalUrl)")
         }
       }
@@ -38,11 +41,11 @@ class ClothingViewModel: ObservableObject {
   func loadClothes() async {
     isLoading = true
     do {
-      clothes = try await SupabaseService.shared.fetchClothes()
+      clothes = try await clothingService.fetchClothes()
       print("✅ 服データ読み込み完了: \(clothes.count)件")
 
       for clothing in clothes {
-        let images = try await SupabaseService.shared.fetchImages(for: clothing.id)
+        let images = try await imageService.fetchImages(for: clothing.id)
         let sets = images.map { img in
           EditableImageSet(
             id: img.id,
@@ -68,7 +71,7 @@ class ClothingViewModel: ObservableObject {
   /// 服を削除
   func deleteClothing(_ clothing: Clothing) async {
     do {
-      try await SupabaseService.shared.deleteClothing(clothing)
+      try await clothingService.deleteClothing(clothing)
       print("🗑️ 削除成功: \(clothing.name)")
       await loadClothes()
     } catch {
