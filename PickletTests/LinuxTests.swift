@@ -270,10 +270,123 @@ final class LinuxCompatibleTests: XCTestCase {
     }
     #endif
     
+    #if os(macOS) || os(iOS)
+    func testAuthService() async throws {
+        class MockSupabaseClient {
+            var isSignedIn = false
+            var isSignedUp = false
+            var isSignedOut = false
+            var shouldThrowError = false
+            var mockUser: User?
+            
+            func signIn(email: String, password: String) async throws {
+                if shouldThrowError {
+                    throw NSError(domain: "AuthError", code: 401, userInfo: [NSLocalizedDescriptionKey: "認証エラー"])
+                }
+                isSignedIn = true
+                mockUser = User(id: UUID().uuidString, email: email)
+            }
+            
+            func signUp(email: String, password: String) async throws {
+                if shouldThrowError {
+                    throw NSError(domain: "AuthError", code: 400, userInfo: [NSLocalizedDescriptionKey: "登録エラー"])
+                }
+                isSignedUp = true
+                mockUser = User(id: UUID().uuidString, email: email)
+            }
+            
+            func signOut() async throws {
+                if shouldThrowError {
+                    throw NSError(domain: "AuthError", code: 500, userInfo: [NSLocalizedDescriptionKey: "サインアウトエラー"])
+                }
+                isSignedOut = true
+                mockUser = nil
+            }
+        }
+        
+        class MockAuthService: AuthService {
+            var mockClient = MockSupabaseClient()
+            var mockIsLoggedIn = false
+            
+            override var isLoggedIn: Bool {
+                get { return mockIsLoggedIn }
+                set { mockIsLoggedIn = newValue }
+            }
+            
+            override var currentUser: User? {
+                return mockClient.mockUser
+            }
+            
+            override func signIn(email: String, password: String) async throws {
+                try await mockClient.signIn(email: email, password: password)
+                isLoggedIn = true
+            }
+            
+            override func signUp(email: String, password: String) async throws {
+                try await mockClient.signUp(email: email, password: password)
+                isLoggedIn = true
+            }
+            
+            override func signOut() async throws {
+                try await mockClient.signOut()
+                isLoggedIn = false
+            }
+        }
+        
+        let authService = MockAuthService()
+        
+        XCTAssertFalse(authService.isLoggedIn)
+        XCTAssertNil(authService.currentUser)
+        
+        try await authService.signIn(email: "test@example.com", password: "password123")
+        XCTAssertTrue(authService.isLoggedIn)
+        XCTAssertNotNil(authService.currentUser)
+        XCTAssertEqual(authService.currentUser?.email, "test@example.com")
+        
+        try await authService.signOut()
+        XCTAssertFalse(authService.isLoggedIn)
+        XCTAssertNil(authService.currentUser)
+        
+        try await authService.signUp(email: "new@example.com", password: "newpassword123")
+        XCTAssertTrue(authService.isLoggedIn)
+        XCTAssertNotNil(authService.currentUser)
+        XCTAssertEqual(authService.currentUser?.email, "new@example.com")
+        
+        authService.mockClient.shouldThrowError = true
+        
+        do {
+            try await authService.signIn(email: "error@example.com", password: "errorpassword")
+            XCTFail("エラーが発生するはずです")
+        } catch {
+            let nsError = error as NSError
+            XCTAssertEqual(nsError.domain, "AuthError")
+            XCTAssertEqual(nsError.code, 401)
+        }
+        
+        do {
+            try await authService.signUp(email: "error@example.com", password: "errorpassword")
+            XCTFail("エラーが発生するはずです")
+        } catch {
+            let nsError = error as NSError
+            XCTAssertEqual(nsError.domain, "AuthError")
+            XCTAssertEqual(nsError.code, 400)
+        }
+        
+        do {
+            try await authService.signOut()
+            XCTFail("エラーが発生するはずです")
+        } catch {
+            let nsError = error as NSError
+            XCTAssertEqual(nsError.domain, "AuthError")
+            XCTAssertEqual(nsError.code, 500)
+        }
+    }
+    #endif
+    
     // Linux環境でもテストが実行されるようにするための特別なセットアップ
     static var allTests = [
         ("testClothingModel", testClothingModel),
         ("testWeatherModel", testWeatherModel)
-        // ClothingImageモデル、LibraryPickerViewModel、LocationManager、CoreMLService、WeatherServiceのテストはLinux環境では実行されません
+        // ClothingImageモデル、LibraryPickerViewModel、LocationManager、CoreMLService、WeatherService、AuthServiceのテストはLinux環境では実行されません
     ]
 }
