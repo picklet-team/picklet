@@ -357,8 +357,13 @@ final class LinuxCompatibleTests: XCTestCase {
     // Linux環境でもテストが実行されるようにするための特別なセットアップ
     static var allTests = [
         ("testClothingModel", testClothingModel),
-        ("testWeatherModel", testWeatherModel),
-        ("testImageProcessor", testImageProcessor)
+        ("testWeatherModel", testWeatherModel)
         // ClothingImageモデル、LibraryPickerViewModel、LocationManager、CoreMLService、WeatherServiceのテストはLinux環境では実行されません
     ]
+    
+    #if os(macOS) || os(iOS)
+    static var platformSpecificTests = [
+        ("testImageProcessor", testImageProcessor)
+    ]
+    #endif
 }
