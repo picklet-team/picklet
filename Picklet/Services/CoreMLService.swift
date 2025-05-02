@@ -12,34 +12,9 @@ class CoreMLService {
   static let shared = CoreMLService()
 
   private let model: ISNet
-  
-  var isTestMode = false
 
   init() {
     self.model = try! ISNet(configuration: MLModelConfiguration())
-  }
-  
-  func processImageForTest(_ image: UIImage) async throws -> UIImage? {
-    if isTestMode {
-      let size = image.size
-      UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
-      let context = UIGraphicsGetCurrentContext()!
-      
-      context.setFillColor(UIColor.white.cgColor)
-      context.fill(CGRect(origin: .zero, size: size))
-      
-      let rectSize = CGSize(width: size.width * 0.7, height: size.height * 0.7)
-      let origin = CGPoint(x: (size.width - rectSize.width) / 2, y: (size.height - rectSize.height) / 2)
-      context.setFillColor(UIColor.black.cgColor)
-      context.fill(CGRect(origin: origin, size: rectSize))
-      
-      let maskImage = UIGraphicsGetImageFromCurrentImageContext()!
-      UIGraphicsEndImageContext()
-      
-      return ImageProcessor.applyMask(original: image, mask: maskImage)
-    } else {
-      return await processImage(image: image)
-    }
   }
 
   func processImageSet(imageSet: EditableImageSet?) async -> EditableImageSet? {

@@ -182,7 +182,6 @@ struct PickletTests {
   @Test func testCoreMLService() async throws {
     #if os(iOS) || os(macOS)
     let coreMLService = CoreMLService()
-    coreMLService.isTestMode = true
     
     // テスト用の画像を作成
     let size = CGSize(width: 512, height: 512)
@@ -196,7 +195,18 @@ struct PickletTests {
     let testImage = UIGraphicsGetImageFromCurrentImageContext()!
     UIGraphicsEndImageContext()
     
-    let processed = try await coreMLService.processImageForTest(testImage)
+    UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
+    let maskContext = UIGraphicsGetCurrentContext()!
+    maskContext.setFillColor(UIColor.white.cgColor)
+    maskContext.fill(CGRect(origin: .zero, size: size))
+    let rectSize = CGSize(width: size.width * 0.7, height: size.height * 0.7)
+    let origin = CGPoint(x: (size.width - rectSize.width) / 2, y: (size.height - rectSize.height) / 2)
+    maskContext.setFillColor(UIColor.black.cgColor)
+    maskContext.fill(CGRect(origin: origin, size: rectSize))
+    let maskImage = UIGraphicsGetImageFromCurrentImageContext()!
+    UIGraphicsEndImageContext()
+    
+    let processed = ImageProcessor.applyMask(original: testImage, mask: maskImage)
     #expect(processed != nil)
     
     let imageSet = EditableImageSet(
