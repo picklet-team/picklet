@@ -180,9 +180,6 @@ struct PickletTests {
   
   @Test func testImageProcessor() throws {
     #if os(iOS) || os(macOS)
-    let imageProcessor = ImageProcessor()
-    
-    // テスト用の画像を作成
     let size = CGSize(width: 200, height: 200)
     UIGraphicsBeginImageContext(size)
     let context = UIGraphicsGetCurrentContext()!
@@ -191,12 +188,22 @@ struct PickletTests {
     let originalImage = UIGraphicsGetImageFromCurrentImageContext()!
     UIGraphicsEndImageContext()
     
-    // リサイズ処理のテスト
-    let targetSize = CGSize(width: 100, height: 100)
-    let resizedImage = imageProcessor.resizeImage(originalImage, toSize: targetSize)
+    UIGraphicsBeginImageContext(size)
+    let maskContext = UIGraphicsGetCurrentContext()!
+    maskContext.setFillColor(UIColor.black.cgColor)
+    maskContext.fill(CGRect(origin: .zero, size: size))
+    maskContext.setFillColor(UIColor.white.cgColor)
+    maskContext.fill(CGRect(x: 50, y: 50, width: 100, height: 100))
+    let maskImage = UIGraphicsGetImageFromCurrentImageContext()!
+    UIGraphicsEndImageContext()
     
-    #expect(resizedImage.size.width == 100)
-    #expect(resizedImage.size.height == 100)
+    let maskedImage = ImageProcessor.applyMask(original: originalImage, mask: maskImage)
+    
+    #expect(maskedImage != nil)
+    
+    let visualizedImage = ImageProcessor.visualizeMaskOnOriginal(original: originalImage, mask: maskImage)
+    
+    #expect(visualizedImage != nil)
     #endif
   }
   
