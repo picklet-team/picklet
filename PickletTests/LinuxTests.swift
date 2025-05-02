@@ -55,9 +55,57 @@ final class LinuxCompatibleTests: XCTestCase {
         XCTAssertEqual(weather.updated_at, "2025-05-01T08:00:00Z")
     }
     
+    // Linux環境ではClothingImageモデルがPickletCoreモジュールに含まれていないため、
+    #if os(macOS) || os(iOS)
+    func testClothingImageModel() {
+        // テスト用の日付文字列
+        let dateStr = "2025-05-01T10:00:00Z"
+        
+        // ClothingImageインスタンスの作成テスト
+        let id = UUID()
+        let clothingId = UUID()
+        let userId = UUID()
+        let clothingImage = ClothingImage(
+          id: id,
+          clothing_id: clothingId,
+          user_id: userId,
+          original_url: "https://example.com/original.jpg",
+          mask_url: "https://example.com/mask.jpg",
+          result_url: "https://example.com/result.jpg",
+          created_at: dateStr,
+          updated_at: dateStr
+        )
+        
+        // 各プロパティが正しく設定されているかテスト
+        XCTAssertEqual(clothingImage.id, id)
+        XCTAssertEqual(clothingImage.clothing_id, clothingId)
+        XCTAssertEqual(clothingImage.user_id, userId)
+        XCTAssertEqual(clothingImage.original_url, "https://example.com/original.jpg")
+        XCTAssertEqual(clothingImage.mask_url, "https://example.com/mask.jpg")
+        XCTAssertEqual(clothingImage.result_url, "https://example.com/result.jpg")
+        XCTAssertEqual(clothingImage.created_at, dateStr)
+        XCTAssertEqual(clothingImage.updated_at, dateStr)
+        
+        let clothingImageWithNil = ClothingImage(
+          id: id,
+          clothing_id: clothingId,
+          user_id: userId,
+          original_url: "https://example.com/original.jpg",
+          mask_url: nil,
+          result_url: nil,
+          created_at: dateStr,
+          updated_at: dateStr
+        )
+        
+        XCTAssertNil(clothingImageWithNil.mask_url)
+        XCTAssertNil(clothingImageWithNil.result_url)
+    }
+    #endif
+    
     // Linux環境でもテストが実行されるようにするための特別なセットアップ
     static var allTests = [
         ("testClothingModel", testClothingModel),
-        ("testWeatherModel", testWeatherModel),
+        ("testWeatherModel", testWeatherModel)
+        // ClothingImageモデルのテストはLinux環境では実行されません
     ]
 }
