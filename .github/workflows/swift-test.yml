@@ -1,0 +1,64 @@
+name: Swift Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+    - name: Build and Test
+      run: |
+        xcodebuild test -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 15' | xcpretty
+
+  test-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Swift
+      uses: swift-actions/setup-swift@v1
+      with:
+        swift-version: "5.9"
+    - name: Prepare Swift Package
+      run: |
+        if [ ! -f "Package.swift" ]; then
+          cat > Package.swift <<EOF
+// swift-tools-version:5.9
+import PackageDescription
+
+let package = Package(
+    name: "Picklet",
+    platforms: [.iOS(.v16)],
+    products: [
+        .library(name: "PickletCore", targets: ["PickletCore"]),
+    ],
+    dependencies: [],
+    targets: [
+        .target(
+            name: "PickletCore",
+            dependencies: [],
+            path: "Picklet",
+            exclude: ["Views", "Extensions", "PickletApp.swift"],
+            sources: ["Models", "ViewModels", "Services"]
+        ),
+        .testTarget(
+            name: "PickletCoreTests",
+            dependencies: ["PickletCore"],
+            path: "PickletTests",
+            exclude: ["PickletUITests.swift"]
+        )
+    ]
+)
+EOF
+        fi
+    - name: Run Linux-compatible tests
+      run: |
+        swift test --filter "PickletTests.testClothingModel" --filter "PickletTests.testWeatherModel"

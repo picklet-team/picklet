@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct MyAppApp: App {
+struct PickletApp: App {
   @AppStorage("isLoggedIn") var isLoggedIn = false
 
   var body: some Scene {
