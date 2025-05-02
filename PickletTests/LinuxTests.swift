@@ -229,6 +229,7 @@ final class LinuxCompatibleTests: XCTestCase {
         XCTAssertEqual((locationManager.locationError as NSError?)?.domain, "LocationManagerTest")
         XCTAssertEqual((locationManager.locationError as NSError?)?.code, 1)
     }
+    #endif
     
     #if os(macOS) || os(iOS)
     func testWeatherService() async throws {
