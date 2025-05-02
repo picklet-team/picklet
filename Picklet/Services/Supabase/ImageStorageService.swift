@@ -7,6 +7,8 @@ import Storage
 import Supabase
 import UIKit
 
+@_implementationOnly import class Picklet.SupabaseService
+
 class ImageStorageService {
     static let shared = ImageStorageService()
     
@@ -14,7 +16,7 @@ class ImageStorageService {
     private let storageBucketName = "clothes-images"
     
     private init() {
-        self.client = AuthService.shared.client
+        self.client = SupabaseService.shared.client
     }
     
     func uploadImage(_ image: UIImage, for filename: String) async throws -> String {
@@ -40,7 +42,7 @@ class ImageStorageService {
     }
     
     func listClothingImageURLs() async throws -> [URL] {
-        guard let userId = AuthService.shared.currentUser?.id.uuidString else {
+        guard let userId = SupabaseService.shared.currentUser?.id.uuidString else {
             throw NSError(
                 domain: "auth", code: 401, userInfo: [NSLocalizedDescriptionKey: "ユーザーが未ログインです"])
         }
