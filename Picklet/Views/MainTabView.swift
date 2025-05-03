@@ -8,9 +8,11 @@
 import SwiftUI
 
 struct MainTabView: View {
+  @EnvironmentObject private var viewModel: ClothingViewModel
   var body: some View {
     TabView {
       ClothingListView()
+        .environmentObject(viewModel)
         .tabItem {
           //                    Label("クローゼット", systemImage: "tshirt")
           Image(systemName: "tshirt")

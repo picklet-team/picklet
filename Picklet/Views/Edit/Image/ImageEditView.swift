@@ -26,38 +26,21 @@ struct CropingMessageView: View {
 }
 
 struct ImageEditView: View {
+  @StateObject private var viewModel: ImageEditViewModel
   @Binding var imageSet: EditableImageSet?
 
-  @State private var maskedImage: UIImage?
-  @State private var isCropping = true
+//  @State private var isCropping = true
 
   var body: some View {
-    ZStack {
-      VStack {
-        if let set = imageSet {
-          if isCropping {
-            ImageView(image: set.original, urlStr: set.originalUrl)
-          } else {
-            ImageView(image: set.mask, urlStr: set.maskUrl)
-          }
-        } else {
-          Text("画像が見つかりません")
-        }
-      }
-      .padding()
-      .task {
-        await processImageSet()
-      }
-      if isCropping {
-        CropingMessageView()
+    VStack {
+      if viewModel.isProcessing {
+        ProgressView("処理中…")
+      } else {
+        Image(uiImage: viewModel.imageSet.mask ?? viewModel.imageSet.original)
+          .resizable()
+          .scaledToFit()
       }
     }
-  }
-
-  private func processImageSet() async {
-    if let output = await CoreMLService.shared.processImageSet(imageSet: imageSet) {
-      imageSet = output
-      isCropping = false
-    }
+    .onAppear { viewModel.runSegmentation() }
   }
 }

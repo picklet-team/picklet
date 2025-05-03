@@ -2,6 +2,7 @@ import SDWebImageSwiftUI
 import SwiftUI
 
 struct ClothingItemView: View {
+  let clothing: Clothing
   let imageUrl: String?
 
   var body: some View {

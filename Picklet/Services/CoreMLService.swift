@@ -10,61 +10,29 @@ import SwiftUI
 
 class CoreMLService {
   static let shared = CoreMLService()
-
   private let model: ISNet
 
   init() {
     self.model = try! ISNet(configuration: MLModelConfiguration())
   }
 
-  func processImageSet(imageSet: EditableImageSet?) async -> EditableImageSet? {
-    // ① imageSet自体の存在をチェック
-    guard var set = imageSet else {
-      print("❌ imageSet is nil")
-      return nil
-    }
+  func processImageSet(imageSet: EditableImageSet) async -> EditableImageSet? {
+    let original = imageSet.original
 
-    // ② original が nil なら URL からダウンロード
-    if set.original == nil,
-      let urlStr = set.originalUrl,
-      let url = URL(string: urlStr)
-    {
-      do {
-        let (data, _) = try await URLSession.shared.data(from: url)
-        if let image = UIImage(data: data) {
-          set.original = image
-        } else {
-          print("❌ failed to decode image from data")
-          return nil
-        }
-      } catch {
-        print("❌ failed to download image:", error)
-        return nil
-      }
-    }
-
-    // ③ original が still nil の場合 → 処理不可
-    guard let original = set.original else {
-      print("❌ original image not available")
-      return nil
-    }
-
-    // ④ CoreML によるマスク推論
     guard let mask = await self.predictMask(for: original) else {
       print("❌ mask prediction failed")
       return nil
     }
 
-    // ⑤ マスクを使って切り抜き画像を生成
     guard let result = ImageProcessor.applyMask(original: original, mask: mask) else {
       print("❌ mask application failed")
       return nil
     }
 
-    // ⑥ 加工結果を保存して返す
-    set.mask = mask
-    set.result = result
-    return set
+    var newSet = imageSet
+    newSet.mask = mask
+    newSet.result = result
+    return newSet
   }
 
   func processImage(image: UIImage) async -> UIImage? {
