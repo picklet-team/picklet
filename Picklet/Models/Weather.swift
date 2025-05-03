@@ -11,5 +11,10 @@ struct Weather: Codable {
   let temperature: Double
   let condition: String  // 表示用（日本語: 曇りなど）
   let icon: String  // OpenWeatherのアイコン名
-  let updated_at: String  // ISO8601形式の日時（キャッシュの有効性判定にも使える）
+  let updatedAt: String  // ISO8601形式の日時（キャッシュの有効性判定にも使える）
+
+  enum CodingKeys: String, CodingKey {
+    case city, date, temperature, condition, icon
+    case updatedAt = "updated_at"
+  }
 }

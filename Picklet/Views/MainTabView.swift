@@ -19,7 +19,8 @@ struct MainTabView: View {
 
       WeatherLoaderView()
         .tabItem {
-          Label("今日のコーデ", systemImage: "sun.max")
+//          Label("今日のコーデ", systemImage: "sun.max")
+          Image(systemName: "sun.max")
         }
 
       SettingsView()

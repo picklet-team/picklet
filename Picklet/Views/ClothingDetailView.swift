@@ -14,23 +14,9 @@ struct ClothingDetailView: View {
   var body: some View {
     VStack {
       ScrollView(.horizontal, showsIndicators: false) {
-        HStack {
+        HStack(spacing: 12) {
           ForEach(images) { image in
-            if let url = URL(string: image.original_url) {
-              WebImage(url: url, options: [.queryMemoryData, .queryDiskDataSync, .refreshCached])
-                .resizable()
-                .indicator(.activity)
-                .transition(.fade(duration: 0.5))
-                .scaledToFill()
-                .frame(width: 150, height: 150)
-                .clipped()
-                .cornerRadius(8)
-            } else {
-              Rectangle()
-                .fill(Color.gray.opacity(0.2))
-                .frame(width: 150, height: 150)
-                .cornerRadius(8)
-            }
+            ClothingDetailImageView(imageURL: image.originalURL)
           }
         }
         .padding()
@@ -72,5 +58,24 @@ struct ClothingDetailView: View {
     } catch {
       print("❌ 画像取得エラー: \(error.localizedDescription)")
     }
+  }
+}
+
+private struct ClothingDetailImageView: View {
+  let imageURL: String?
+  var body: some View {
+    Group {
+      if let urlString = imageURL, let url = URL(string: urlString) {
+        WebImage(url: url, options: [.queryMemoryData, .queryDiskDataSync, .refreshCached])
+          .resizable()
+          .indicator(.activity)
+      } else {
+        Rectangle().fill(Color.gray.opacity(0.2))
+      }
+    }
+    .scaledToFill()
+    .frame(width: 150, height: 150)
+    .clipped()
+    .cornerRadius(8)
   }
 }

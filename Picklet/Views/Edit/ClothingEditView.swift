@@ -111,11 +111,11 @@ struct ClothingEditView: View {
         EditableImageSet(
           id: clothingImage.id,
           original: nil,
-          originalUrl: clothingImage.original_url,
+          originalUrl: clothingImage.originalURL,
           mask: nil,
-          maskUrl: nil,
+          maskUrl: clothingImage.maskURL,
           result: nil,
-          resultUrl: nil,
+          resultUrl: clothingImage.resultURL,
           isNew: false
         )
       }

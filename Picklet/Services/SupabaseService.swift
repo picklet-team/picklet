@@ -75,12 +75,12 @@ class SupabaseService {
 
     let newImage = NewClothingImage(
       id: UUID(),
-      clothing_id: clothingId,
-      user_id: user.id,
-      original_url: originalUrl,
-      mask_url: maskUrl,
-      result_url: resultUrl,
-      created_at: ISO8601DateFormatter().string(from: Date())
+      clothingID: clothingId,
+      userID: user.id,
+      originalURL: originalUrl,
+      maskURL: maskUrl,
+      resultURL: resultUrl,
+      createdAt: ISO8601DateFormatter().string(from: Date())
     )
 
     _ =
@@ -135,7 +135,7 @@ class SupabaseService {
         "name": clothing.name,
         "category": clothing.category,
         "color": clothing.color,
-        "created_at": clothing.created_at,
+        "created_at": clothing.createdAt,
       ])
       .execute()
   }
@@ -196,10 +196,20 @@ class SupabaseService {
 
 private struct NewClothingImage: Encodable {
   let id: UUID
-  let clothing_id: UUID
-  let user_id: UUID
-  let original_url: String
-  let mask_url: String?
-  let result_url: String?
-  let created_at: String
+  let clothingID: UUID
+  let userID: UUID
+  let originalURL: String
+  let maskURL: String?
+  let resultURL: String?
+  let createdAt: String
+
+  enum CodingKeys: String, CodingKey {
+    case id
+    case clothingID = "clothing_id"
+    case userID = "user_id"
+    case originalURL = "original_url"
+    case maskURL = "mask_url"
+    case resultURL = "result_url"
+    case createdAt = "created_at"
+  }
 }
