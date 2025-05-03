@@ -14,7 +14,7 @@
 					<key>payload</key>
 					<dict>
 						<key>relative-path</key>
-						<string>MyApp.xcodeproj</string>
+						<string>Picklet.xcodeproj</string>
 					</dict>
 				</dict>
 				<key>type</key>

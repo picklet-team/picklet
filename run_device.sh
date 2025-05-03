@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # === 必須設定 ===============================
-SCHEME="MyApp"                      # あなたのXcodeのスキーム名に変更
-BUNDLE_ID="com.example.MyApp"       # あなたのアプリのバンドルIDに変更
+SCHEME="Picklet"                      # あなたのXcodeのスキーム名に変更
+BUNDLE_ID="Reiji.Picklet"       # あなたのアプリのバンドルIDに変更
 DEVICE_UDID="00008101-000968C90E28001E" # あなたのiPhoneのUDIDに差し替え
 # ============================================
 

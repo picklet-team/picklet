@@ -1,6 +1,6 @@
 //
 //  PhotoLibraryPickerView.swift
-//  MyApp
+//  Picklet
 //
 //  Updated: keep the same item at the top when column count changes
 //

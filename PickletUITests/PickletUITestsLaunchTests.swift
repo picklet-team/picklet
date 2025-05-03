@@ -1,6 +1,6 @@
 //
-//  MyAppUITestsLaunchTests.swift
-//  MyAppUITests
+//  PickletUITestsLaunchTests.swift
+//  PickletUITests
 //
 //  Created by al dente on 2025/04/12.
 //
