@@ -37,13 +37,12 @@ class WeatherAPIService {
         let currentTime = iso8601DateFormatter.string(from: Date())
         
         return Weather(
-            id: UUID(),
             city: city,
             date: today,
             temperature: weatherResponse.main.temp,
             condition: weatherResponse.weather.first?.description ?? "不明",
             icon: weatherResponse.weather.first?.icon ?? "01d",
-            updated_at: currentTime
+            updatedAt: currentTime
         )
     }
 }

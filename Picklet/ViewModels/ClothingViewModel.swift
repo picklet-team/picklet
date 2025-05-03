@@ -51,11 +51,11 @@ class ClothingViewModel: ObservableObject {
           EditableImageSet(
             id: img.id,
             original: nil,
-            originalUrl: img.original_url,
+            originalUrl: img.originalURL,
             mask: nil,
-            maskUrl: nil,
+            maskUrl: img.maskURL,
             result: nil,
-            resultUrl: nil,
+            resultUrl: img.resultURL,
             isNew: false
           )
         }

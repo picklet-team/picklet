@@ -28,6 +28,8 @@
 			<string></string>
 		</dict>
 	</array>
+	<key>OPENWEATHER_API_KEY</key>
+	<string>a27cc85d4f34ac0e5e5f4fde84d5067f</string>
 	<key>SUPABASE_KEY</key>
 	<string>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsbXdsdmthaXpncmNxenlvbmZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU1MDM0NzAsImV4cCI6MjA2MTA3OTQ3MH0.EymP7N-yMrCHVkBpzEG3sfBWckHjYxYkv9_DvOU6KCI</string>
 	<key>SUPABASE_URL</key>
