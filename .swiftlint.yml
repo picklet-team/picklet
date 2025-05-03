@@ -1,8 +1,53 @@
+included:
+  - Picklet
+excluded:
+  - Pods
+  - Picklet/Preview Content
+  - PickletTests
+  - PickletUITests
+
+# デフォルトルールの有効化・無効化
 disabled_rules:
-  - trailing_whitespace
-  - line_length
-  - force_cast
+  - trailing_whitespace # 行末の空白を許容
+  - unused_optional_binding # if let _ = ... のパターンを許容
+  - multiple_closures_with_trailing_closure # 複数のクロージャの後にトレイリングクロージャを許容
+  - nesting # ネストされた型を許容
 
 opt_in_rules:
-  - force_unwrapping
-  - empty_count
+  - empty_count # isEmpty を使用する
+  - empty_string # isEmpty を使用する
+  - explicit_init # 不必要な .init を避ける
+  - first_where # filter().first の代わりに first(where:) を使用
+  - force_unwrapping # 強制アンラップを避ける
+  - implicitly_unwrapped_optional # 暗黙的にアンラップされたオプショナルを避ける
+  - missing_docs # ドキュメントコメントの欠如を検出
+  - sorted_imports # インポート文をアルファベット順に並べる
+  - vertical_whitespace_between_cases # switch 文のケース間に空行を入れる
+
+# ルールのカスタマイズ
+line_length:
+  warning: 120
+  error: 160
+  ignores_comments: true
+  ignores_urls: true
+
+identifier_name:
+  min_length: 2  # 変数名の最小長
+  excluded:
+    - id
+    - x
+    - y
+    - i
+    - j
+    - k
+    - dx
+    - dy
+    - vm
+    - vc
+
+type_name:
+  min_length: 3  # 型名の最小長
+  max_length: 50  # 型名の最大長
+
+# 警告のカスタマイズ
+warning_threshold: 15  # 警告の数がこの閾値を超えるとビルドが失敗
