@@ -7,6 +7,9 @@ struct ClothingItemView: View {
 
   var body: some View {
     ClothingImageCard(imageURL: imageUrl)
+      .onAppear {
+        print("👕 ClothingItemView - clothing: \(clothing.id), imageUrl: \(imageUrl ?? "nil")")
+      }
   }
 }
 
@@ -22,6 +25,9 @@ private struct ClothingImageCard: View {
           .indicator(.activity)
           .transition(.fade(duration: 0.5))
           .scaledToFill()
+          .onAppear {
+            print("🖼️ 有効なURLから画像を読み込み中: \(urlString)")
+          }
       } else {
         Rectangle()
           .fill(
@@ -36,6 +42,13 @@ private struct ClothingImageCard: View {
               .font(.system(size: 40))
               .foregroundColor(.gray.opacity(0.5))
           )
+          .onAppear {
+            if let imageURL = imageURL {
+              print("⚠️ 無効なURL: \(imageURL)")
+            } else {
+              print("⚠️ URLが設定されていません")
+            }
+          }
       }
     }
     .frame(width: 120, height: 120)

@@ -17,6 +17,7 @@ final class ImageStorageService {
                  client: SupabaseClient = AuthService.shared.client) {
         self.defaultBucketName = defaultBucketName
         self.client = client
+        print("🔧 ImageStorageService 初期化: デフォルトバケット = \(defaultBucketName)")
     }
     
     /// カスタムバケット向けのイニシャライザ
@@ -36,24 +37,59 @@ final class ImageStorageService {
         for filename: String,
         bucketName: String? = nil
     ) async throws -> String {
+        print("📤 画像のアップロード開始: filename=\(filename)")
         let resized = image.resized(toMaxPixel: 800)
         guard let data = resized.jpegData(compressionQuality: 0.6) else {
-            throw NSError(domain: "upload", code: 0,
+            let error = NSError(domain: "upload", code: 0,
                           userInfo: [NSLocalizedDescriptionKey: "画像の変換に失敗しました"])
+            print("❌ 画像変換エラー: \(error.localizedDescription)")
+            throw error
         }
+        print("✓ 画像変換成功: \(data.count) bytes")
+        
         let bucket = bucketName ?? defaultBucketName
         let path = "\(filename).jpg"
-        _ = try await client.storage
-            .from(bucket)
-            .upload(path, data: data,
-                    options: FileOptions(contentType: "image/jpeg"))
-        guard let baseURL = Bundle.main
-                .object(forInfoDictionaryKey: "SUPABASE_URL") as? String
-        else {
-            throw NSError(domain: "config", code: 0,
-                          userInfo: [NSLocalizedDescriptionKey: "Supabase URLが見つかりません"])
+        
+        print("🔄 Supabaseへのアップロード開始: bucket=\(bucket), path=\(path)")
+        do {
+            _ = try await client.storage
+                .from(bucket)
+                .upload(path, data: data,
+                        options: FileOptions(contentType: "image/jpeg"))
+            print("✅ Supabaseへのアップロード成功")
+        } catch {
+            print("❌ Supabase アップロードエラー: \(error.localizedDescription)")
+            throw error
         }
-        return "\(baseURL)/storage/v1/object/public/\(bucket)/\(path)"
+        
+        do {
+            guard let baseURL = Bundle.main
+                    .object(forInfoDictionaryKey: "SUPABASE_URL") as? String
+            else {
+                let error = NSError(domain: "config", code: 0,
+                              userInfo: [NSLocalizedDescriptionKey: "Supabase URLが見つかりません"])
+                print("❌ SUPABASE_URL 取得エラー: Info.plistにキーがありません")
+                throw error
+            }
+            
+            print("✓ SUPABASE_URL 取得成功: \(baseURL)")
+            
+            // デバッグログを追加
+            let urlString = "\(baseURL)/storage/v1/object/public/\(bucket)/\(path)"
+            print("📷 画像URL生成完了: \(urlString)")
+            
+            // URL形式の検証
+            if let url = URL(string: urlString) {
+                print("✅ URL形式の検証OK: \(url)")
+            } else {
+                print("⚠️ 無効なURL文字列: \(urlString)")
+            }
+            
+            return urlString
+        } catch {
+            print("❌ URL生成エラー: \(error.localizedDescription)")
+            throw error
+        }
     }
     
 //    /// 指定バケット内のパスからオブジェクト一覧を取得し、URL 配列として返す

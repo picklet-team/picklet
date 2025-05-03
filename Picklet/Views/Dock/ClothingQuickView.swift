@@ -17,18 +17,39 @@ struct ClothingQuickView: View {
   var body: some View {
     VStack(spacing: 12) {
       if let urlStr = imageURL, let url = URL(string: urlStr) {
-        WebImage(url: url, options: [.queryMemoryData, .queryDiskDataSync, .refreshCached]) {
-          phase in
+        // URLをデバッグ出力
+        let _ = print("🖼️ 画像表示リクエスト: \(urlStr)")
+        
+        WebImage(url: url, options: [.queryMemoryData, .queryDiskDataSync, .refreshCached]) { phase in
           switch phase {
-          case .success(let img): img.resizable().scaledToFit()
-          case .failure(_):
+          case .success(let img): 
+            let _ = print("✅ 画像読み込み成功: \(urlStr)")
+            img.resizable().scaledToFit()
+          case .failure(let error):
+            let _ = print("❌ 画像読み込み失敗: \(urlStr) - エラー: \(error.localizedDescription)")
             Image(systemName: "photo").resizable().scaledToFit().foregroundColor(.secondary)
-          default: ProgressView()
+          case .empty:
+            let _ = print("⏳ 画像読み込み中: \(urlStr)")
+            ProgressView()
+          @unknown default:
+            ProgressView()
           }
         }
         .frame(width: 150, height: 150)
         .background(Color.gray.opacity(0.1))
         .cornerRadius(12)
+      } else {
+        // URLが無効な場合
+        let _ = print("⚠️ 画像URLなし")
+        Rectangle()
+          .fill(Color.gray.opacity(0.2))
+          .overlay(
+            Image(systemName: "photo")
+              .font(.system(size: 40))
+              .foregroundColor(.secondary)
+          )
+          .frame(width: 150, height: 150)
+          .cornerRadius(12)
       }
       Text(name).font(.headline)
       Text(category).font(.subheadline).foregroundColor(.secondary)

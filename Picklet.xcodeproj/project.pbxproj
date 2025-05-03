@@ -22,14 +22,14 @@
 			containerPortal = B57C87CE2DAA27A0001C2153 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = B57C87D52DAA27A0001C2153;
-			remoteInfo = MyApp;
+			remoteInfo = Picklet;
 		};
 		B57C87F12DAA27A1001C2153 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = B57C87CE2DAA27A0001C2153 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = B57C87D52DAA27A0001C2153;
-			remoteInfo = MyApp;
+			remoteInfo = Picklet;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -158,7 +158,7 @@
 				B53EF5232DBA8C8B00F5CA39 /* Supabase */,
 				B57CB8AC2DBB457300789BEF /* SDWebImageSwiftUI */,
 			);
-			productName = MyApp;
+			productName = Picklet;
 			productReference = B57C87D62DAA27A0001C2153 /* Picklet.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -181,7 +181,7 @@
 			name = PickletTests;
 			packageProductDependencies = (
 			);
-			productName = MyAppTests;
+			productName = PickletTests;
 			productReference = B57C87E62DAA27A1001C2153 /* PickletTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
@@ -204,7 +204,7 @@
 			name = PickletUITests;
 			packageProductDependencies = (
 			);
-			productName = MyAppUITests;
+			productName = PickletUITests;
 			productReference = B57C87F02DAA27A1001C2153 /* PickletUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
