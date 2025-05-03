@@ -8,13 +8,6 @@
 import Photos
 import SwiftUI
 
-// PreferenceKey to pass each cell's vertical position up the view tree
-private struct CellTopPreferenceKey: PreferenceKey {
-  static var defaultValue: [String: CGFloat] = [:]
-  static func reduce(value: inout [String: CGFloat], nextValue: () -> [String: CGFloat]) {
-    value.merge(nextValue(), uniquingKeysWith: { $1 })
-  }
-}
 
 struct PhotoLibraryPickerView: View {
   let onImagePicked: (UIImage) -> Void
@@ -23,11 +16,13 @@ struct PhotoLibraryPickerView: View {
   @State private var assets: [PHAsset] = []
   private let imageManager = PHCachingImageManager()
 
-  @State private var columnsCount: Int = 4
+  private var columnsCount: Int = 4
   private let spacing: CGFloat = 4
 
-  // id of the cell that was nearest to the top before layout change
-  @State private var topVisibleId: String?
+  /// イニシャライザ
+  init(onImagePicked: @escaping (UIImage) -> Void) {
+      self.onImagePicked = onImagePicked
+  }
 
   var body: some View {
     NavigationView {
@@ -35,70 +30,44 @@ struct PhotoLibraryPickerView: View {
         let totalSpacing = spacing * CGFloat(columnsCount + 1)
         let cellSize = (geo.size.width - totalSpacing) / CGFloat(columnsCount)
 
-        VStack(spacing: spacing) {
-          //                    // Column selection buttons
-          //                    HStack(spacing: spacing) {
-          //                        ForEach([3,4,5,6,7], id: \.self) { count in
-          //                            Button("\(count)列") {
-          //                                // remember the current top cell id before changing layout
-          //                                let currentTop = topVisibleId
-          //                                withAnimation {
-          //                                    columnsCount = count
-          //                                }
-          //                                // after slight delay (layout finished) scroll to saved id
-          //                                if let id = currentTop {
-          //                                    DispatchQueue.main.async {
-          //                                        scrollProxy?.scrollTo(id, anchor: .top)
-          //                                    }
-          //                                }
-          //                            }
-          //                            .font(.subheadline)
-          //                            .padding(.vertical,6)
-          //                            .padding(.horizontal,12)
-          //                            .background(columnsCount==count ? Color.accentColor.opacity(0.2):Color.clear)
-          //                            .cornerRadius(6)
-          //                        }
-          //                    }
-          //                    .padding(.horizontal, spacing)
-          //
-          //                    Divider()
-
-          // Grid
-          ScrollViewReader { proxy in
-            ScrollView {
-              LazyVGrid(
-                columns: Array(
-                  repeating: .init(.fixed(cellSize), spacing: spacing), count: columnsCount),
-                spacing: spacing
-              ) {
-                ForEach(assets, id: \.localIdentifier) { asset in
-                  PhotoThumbnailCell(asset: asset, size: cellSize, manager: imageManager) { image in
-                    onImagePicked(image)
-                    dismiss()
-                  }
-                  .id(asset.localIdentifier)
-                  .background(
-                    GeometryReader { gp in
-                      Color.clear.preference(
-                        key: CellTopPreferenceKey.self,
-                        value: [asset.localIdentifier: gp.frame(in: .named("gridSpace")).minY])
-                    }
-                  )
-                }
+        ScrollView {
+          LazyVGrid(
+            columns: Array( repeating: .init(.fixed(cellSize), spacing: spacing), count: columnsCount),
+            spacing: spacing
+          ) {
+            ForEach(assets, id: \.localIdentifier) { asset in
+              PhotoThumbnailCell(
+                asset: asset,
+                size: cellSize,
+                manager: imageManager
+              ) { image in
+                let square = image.squareCropped()
+                onImagePicked(square)
+                dismiss()
               }
-              .padding(spacing)
+//                  .id(asset.localIdentifier)
+//                  .background(
+//                    GeometryReader { gp in
+//                      Color.clear.preference(
+//                        key: CellTopPreferenceKey.self,
+//                        value: [asset.localIdentifier: gp.frame(in: .named("gridSpace")).minY])
+//                    }
+//                  )
             }
-            .coordinateSpace(name: "gridSpace")
-            .onPreferenceChange(CellTopPreferenceKey.self) { values in
-              // find the smallest non‑negative Y (closest to top)
-              if let (id, _) = values.filter({ $0.value >= 0 }).min(by: { $0.value < $1.value }) {
-                topVisibleId = id
-              }
-            }
-            // expose proxy to outer scope via capture list
-            .onAppear { scrollProxy = proxy }
           }
+          .padding(spacing)
         }
+//            .coordinateSpace(name: "gridSpace")
+//            .onPreferenceChange(CellTopPreferenceKey.self) { values in
+//              // find the smallest non‑negative Y (closest to top)
+//              if let (id, _) = values.filter({ $0.value >= 0 }).min(by: { $0.value < $1.value }) {
+//                topVisibleId = id
+//              }
+//            }
+//             expose proxy to outer scope via capture list
+//            .onAppear { scrollProxy = proxy }
+//          }
+//        }
         .onAppear(perform: fetchAssets)
       }
       //            .navigationTitle("写真を選択")

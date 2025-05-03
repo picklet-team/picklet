@@ -5,78 +5,82 @@ import SwiftUI
 class ClothingViewModel: ObservableObject {
   @Published var clothes: [Clothing] = []
   @Published var isLoading = false
-  @Published var error: String?
+  @Published var errorMessage: String?
 
   @Published var imageSetsMap: [UUID: [EditableImageSet]] = [:]
   
   private let clothingService = SupabaseService.shared
-  private let imageMetadataService = SupabaseService.shared
-  private let imageStorageService = ImageStorageService.shared
+  private let imageMetadataService = ImageMetadataService.shared
+//  private let imageStorageService = ImageStorageService.shared
+  private let originalImageStorageService = ImageStorageService(bucketName: "originals")
+  private let maskImageStorageService = ImageStorageService(bucketName: "masks")
 
   /// 服を保存（新規 or 更新）
   func updateClothing(_ clothing: Clothing, imageSets: [EditableImageSet], isNew: Bool) async {
     do {
       if isNew {
         try await clothingService.addClothing(clothing)
-        print("✅ 新規服登録: \(clothing.name)")
       } else {
         try await clothingService.updateClothing(clothing)
-        print("✅ 服更新: \(clothing.name)")
       }
 
-      for set in imageSets {
-        if set.isNew, let original = set.original {
-          let originalUrl = try await imageStorageService.uploadImage(
-            original, for: UUID().uuidString)
-          try await imageMetadataService.addImage(for: clothing.id, originalUrl: originalUrl)
-          print("✅ 画像アップロード & 登録完了: \(originalUrl)")
+      for idx in imageSets.indices {
+        var set = imageSets[idx]
+        if set.isNew, set.originalUrl == nil {
+          let url = try await originalImageStorageService.uploadImage(set.original, for: set.id.uuidString)
+          try await imageMetadataService.addImage(for: clothing.id, originalUrl: url)
+          set.originalUrl = url
+          set.isNew = false
+        }
+
+        if let mask = set.mask, set.maskUrl == nil {
+          let maskUrl = try await maskImageStorageService.uploadImage(mask, for: set.id.uuidString)
+          try await imageMetadataService.updateImageMask(imageId: set.id, maskUrl: maskUrl)
+          set.maskUrl = maskUrl
         }
       }
     } catch {
-      print("❌ 服の保存エラー: \(error.localizedDescription)")
-      self.error = error.localizedDescription
+      self.errorMessage = error.localizedDescription
     }
   }
 
-  /// すべての服と画像を読み込む（今は画像不要なら削除可）
-  func loadClothes() async {
-    isLoading = true
+  /// 起動時 or 手動で呼び出す「差分だけ同期」メソッド
+  func syncIfNeeded() async {
     do {
-      clothes = try await clothingService.fetchClothes()
-      print("✅ 服データ読み込み完了: \(clothes.count)件")
-
-      for clothing in clothes {
-        let images = try await imageMetadataService.fetchImages(for: clothing.id)
-        let sets = images.map { img in
-          EditableImageSet(
-            id: img.id,
-            original: nil,
-            originalUrl: img.originalURL,
-            mask: nil,
-            maskUrl: img.maskURL,
-            result: nil,
-            resultUrl: img.resultURL,
-            isNew: false
-          )
+      // 1) サーバーから最新リストを取得
+      let remote = try await clothingService.fetchClothes()
+      // 2) 差分検出＆マージ
+      var merged = clothes   // 現在のローカル配列をコピー
+      for item in remote {
+        if let idx = merged.firstIndex(where: { $0.id == item.id }) {
+          // ローカルの方が古ければ置き換え
+          if merged[idx].updatedAt < item.updatedAt {
+            merged[idx] = item
+          }
+        } else {
+          // ローカルにない新規は追加
+          merged.append(item)
         }
-        imageSetsMap[clothing.id] = sets
       }
-
-      print("✅ 画像データ読み込み完了")
+      // 3) ローカルにしかないサーバー削除済アイテムは optional で後処理してもOK
+      self.clothes = merged
     } catch {
-      self.error = error.localizedDescription
+      self.errorMessage = error.localizedDescription
     }
-    isLoading = false
   }
 
   /// 服を削除
   func deleteClothing(_ clothing: Clothing) async {
     do {
       try await clothingService.deleteClothing(clothing)
-      print("🗑️ 削除成功: \(clothing.name)")
-      await loadClothes()
+      // １）ローカル配列から該当アイテムを取り除く
+      if let idx = clothes.firstIndex(where: { $0.id == clothing.id }) {
+        clothes.remove(at: idx)
+      }
+      // ２）マップからも削除
+      imageSetsMap.removeValue(forKey: clothing.id)
     } catch {
-      self.error = error.localizedDescription
+      self.errorMessage = error.localizedDescription
     }
   }
 }

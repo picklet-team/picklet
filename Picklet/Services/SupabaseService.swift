@@ -16,15 +16,6 @@ class SupabaseService {
   static let shared = SupabaseService()
 
   internal let client: SupabaseClient
-  private let storageBucketName = "clothes-images"
-  
-  private let imageStorageService = ImageStorageService.shared
-  
-  // private let authService = AuthService.shared
-  // private let clothingDataService = ClothingDataService.shared
-  // private let imageMetadataService = ImageMetadataService.shared
-  // private let weatherFetchService = WeatherFetchService.shared
-  // private let weatherCacheService = WeatherCacheService.shared
 
   private init() {
     self.client = AuthService.shared.client
@@ -51,63 +42,6 @@ class SupabaseService {
 
   func signOut() async throws {
     try await AuthService.shared.signOut()
-  }
-
-  // MARK: - 服画像データ
-
-  func fetchImages(for clothingId: UUID) async throws -> [ClothingImage] {
-    return
-      try await client
-      .from("clothing_images")
-      .select("*")
-      .eq("clothing_id", value: clothingId.uuidString)
-      .execute()
-      .decoded(to: [ClothingImage].self)
-  }
-
-  func addImage(
-    for clothingId: UUID, originalUrl: String, maskUrl: String? = nil, resultUrl: String? = nil
-  ) async throws {
-    guard let user = currentUser else {
-      throw NSError(
-        domain: "auth", code: 401, userInfo: [NSLocalizedDescriptionKey: "ユーザーが未ログインです"])
-    }
-
-    let newImage = NewClothingImage(
-      id: UUID(),
-      clothingID: clothingId,
-      userID: user.id,
-      originalURL: originalUrl,
-      maskURL: maskUrl,
-      resultURL: resultUrl,
-      createdAt: ISO8601DateFormatter().string(from: Date())
-    )
-
-    _ =
-      try await client
-      .from("clothing_images")
-      .insert(newImage)
-      .execute()
-  }
-
-  func updateImageMaskAndResult(id: UUID, maskUrl: String?, resultUrl: String?) async throws {
-    _ =
-      try await client
-      .from("clothing_images")
-      .update([
-        "mask_url": maskUrl,
-        "result_url": resultUrl,
-      ])
-      .eq("id", value: id.uuidString)
-      .execute()
-  }
-
-  func uploadImage(_ image: UIImage, for filename: String) async throws -> String {
-    return try await ImageStorageService.shared.uploadImage(image, for: filename)
-  }
-
-  func listClothingImageURLs() async throws -> [URL] {
-    return try await ImageStorageService.shared.listClothingImageURLs()
   }
 
   // MARK: - 服データ
