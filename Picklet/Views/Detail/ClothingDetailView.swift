@@ -27,6 +27,7 @@ struct ClothingDetailView: View {
 
             Spacer()
         }
+        .accessibility(identifier: "clothingDetailView")
         .navigationTitle("服の詳細")
         .safeAreaInset(edge: .bottom) {
             PrimaryActionButton(title: "編集する") {
