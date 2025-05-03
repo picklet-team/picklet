@@ -1,6 +1,6 @@
 //
 //  WeatherView.swift
-//  MyApp
+//  Picklet
 //
 //  Created by al dente on 2025/04/25.
 //
@@ -22,12 +22,21 @@ struct WeatherView: View {
           ProgressView()
         }
       }
+      
+      // 場所情報を表示
+      Text(weather.city)
+        .font(.headline)
+        .accessibility(identifier: "locationLabel")
+      
       Text(weather.condition)
         .font(.headline)
+      
       Text("\(weather.temperature, specifier: "%.1f")℃")
         .font(.title)
         .bold()
+        .accessibility(identifier: "temperatureLabel")
     }
     .padding()
+    .accessibility(identifier: "weatherView")
   }
 }

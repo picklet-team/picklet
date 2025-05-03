@@ -1,6 +1,6 @@
 //
 //  CaptureOrLibraryView.swift
-//  MyApp
+//  Picklet
 //
 //  Created by al dente on 2025/04/26.
 //
@@ -9,7 +9,7 @@ import SwiftUI
 
 struct CaptureOrLibraryView: View {
   var onImagePicked: (UIImage) -> Void
-  var onCancel: (() -> Void)? = nil
+  var onCancel: (() -> Void)?
 
   @Environment(\.dismiss) private var dismiss
 
@@ -27,7 +27,6 @@ struct CaptureOrLibraryView: View {
           }
         } else {
           PhotoLibraryPickerView { image in
-            didPickImage = true
             onImagePicked(image)
             dismiss()
           }

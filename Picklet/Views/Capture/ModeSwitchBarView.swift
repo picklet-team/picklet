@@ -1,6 +1,6 @@
 //
 //  ModeSwitchBarView.swift
-//  MyApp
+//  Picklet
 //
 //  Created by al dente on 2025/04/30.
 //
@@ -15,9 +15,12 @@ struct ModeSwitchBarView: View {
   var body: some View {
     HStack {
       modeButton(icon: "camera", title: "カメラ", isSelected: isCameraSelected, action: onCamera)
+        .accessibility(identifier: "cameraButton")
+      
       modeButton(
         icon: "photo.on.rectangle", title: "ライブラリ", isSelected: !isCameraSelected, action: onLibrary
       )
+        .accessibility(identifier: "libraryButton")
     }
     .padding()
     .background(Color(UIColor.systemBackground))

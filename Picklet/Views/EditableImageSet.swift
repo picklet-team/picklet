@@ -1,6 +1,6 @@
 //
 //  EditableImageSet.swift
-//  MyApp
+//  Picklet
 //
 //  Created by al dente on 2025/04/29.
 //
@@ -9,24 +9,31 @@ import SwiftUI
 
 struct EditableImageSet: Identifiable {
   let id: UUID
-  var original: UIImage?
+  let original: UIImage
   var originalUrl: String?
   var mask: UIImage?
   var maskUrl: String?
   var result: UIImage?
   var resultUrl: String?
   var isNew: Bool
-}
 
-extension EditableImageSet {
-  init(original: UIImage) {
-    self.id = UUID()
+  init(
+    id: UUID = UUID(),
+    original: UIImage,
+    originalUrl: String? = nil,
+    mask: UIImage? = nil,
+    maskUrl: String? = nil,
+    result: UIImage? = nil,
+    resultUrl: String? = nil,
+    isNew: Bool = true
+  ) {
+    self.id = id
     self.original = original
-    self.originalUrl = nil
-    self.mask = nil
-    self.maskUrl = nil
-    self.result = nil
-    self.resultUrl = nil
-    self.isNew = true
+    self.originalUrl = originalUrl
+    self.mask = mask
+    self.maskUrl = maskUrl
+    self.result = result
+    self.resultUrl = resultUrl
+    self.isNew = isNew
   }
 }

@@ -1,6 +1,6 @@
 //
 //  ImageEditView.swift
-//  MyApp
+//  Picklet
 //
 //  Created by al dente on 2025/04/29.
 //
@@ -9,55 +9,38 @@
 import SwiftUI
 
 struct CropingMessageView: View {
-  var body: some View {
-    Color.black.opacity(0.4)  // 🔲 全体を暗くする
-      .ignoresSafeArea()
+    var body: some View {
+        Color.black.opacity(0.4) // 🔲 全体を暗くする
+            .ignoresSafeArea()
 
-    VStack {
-      ProgressView("AIが画像を切り抜いています")
+        VStack {
+            ProgressView("AIが画像を切り抜いています")
+                .padding()
+                .background(.ultraThinMaterial)
+                .cornerRadius(12)
+                .foregroundColor(.primary)
+        }
         .padding()
-        .background(.ultraThinMaterial)
-        .cornerRadius(12)
-        .foregroundColor(.primary)
+        .transition(.opacity)
     }
-    .padding()
-    .transition(.opacity)
-  }
 }
 
 struct ImageEditView: View {
-  @Binding var imageSet: EditableImageSet?
+    @StateObject private var viewModel: ImageEditViewModel
+    @Binding var imageSet: EditableImageSet?
 
-  @State private var maskedImage: UIImage?
-  @State private var isCropping = true
+//  @State private var isCropping = true
 
-  var body: some View {
-    ZStack {
-      VStack {
-        if let set = imageSet {
-          if isCropping {
-            ImageView(image: set.original, urlStr: set.originalUrl)
-          } else {
-            ImageView(image: set.mask, urlStr: set.maskUrl)
-          }
-        } else {
-          Text("画像が見つかりません")
+    var body: some View {
+        VStack {
+            if viewModel.isProcessing {
+                ProgressView("処理中…")
+            } else {
+                Image(uiImage: viewModel.imageSet.mask ?? viewModel.imageSet.original)
+                    .resizable()
+                    .scaledToFit()
+            }
         }
-      }
-      .padding()
-      .task {
-        await processImageSet()
-      }
-      if isCropping {
-        CropingMessageView()
-      }
+        .onAppear { viewModel.runSegmentation() }
     }
-  }
-
-  private func processImageSet() async {
-    if let output = await CoreMLService.shared.processImageSet(imageSet: imageSet) {
-      imageSet = output
-      isCropping = false
-    }
-  }
 }

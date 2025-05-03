@@ -1,0 +1,41 @@
+# 一時的に無効化（2025-05-04）
+name: Swift Lint & Format
+
+# on:
+#   push:
+#     branches: [ main ]
+#   pull_request:
+#     branches: [ main ]
+    
+# トリガーを無効化（手動実行のみ）
+on:
+  workflow_dispatch:
+
+jobs:
+  swiftlint:
+    name: SwiftLint
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install SwiftLint
+        run: |
+          brew install swiftlint
+          
+      - name: Run SwiftLint
+        run: |
+          swiftlint --strict --reporter github-actions-logging
+          
+  swiftformat:
+    name: SwiftFormat
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install SwiftFormat
+        run: |
+          brew install swiftformat
+          
+      - name: Run SwiftFormat (Check only)
+        run: |
+          swiftformat --lint . --config .swiftformat --reporter github-actions

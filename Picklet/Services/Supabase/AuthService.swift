@@ -1,5 +1,8 @@
 //
+//  AuthService.swift
+//  Picklet
 //
+//  Created by al dente on 2025/04/25.
 //
 
 import Foundation
@@ -11,7 +14,7 @@ class AuthService {
     
     static let shared = AuthService()
     
-    internal let client: SupabaseClient
+    let client: SupabaseClient
     
     private init() {
         guard
@@ -22,7 +25,7 @@ class AuthService {
             fatalError("❌ Supabaseの設定がInfo.plistにありません")
         }
         
-        self.client = SupabaseClient(supabaseURL: url, supabaseKey: key)
+        client = SupabaseClient(supabaseURL: url, supabaseKey: key)
     }
     
     var currentUser: User? {
