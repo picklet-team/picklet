@@ -40,8 +40,11 @@ final class ImageStorageService {
         print("📤 画像のアップロード開始: filename=\(filename)")
         let resized = image.resized(toMaxPixel: 800)
         guard let data = resized.jpegData(compressionQuality: 0.6) else {
-            let error = NSError(domain: "upload", code: 0,
-                          userInfo: [NSLocalizedDescriptionKey: "画像の変換に失敗しました"])
+            let error = NSError(
+                domain: "upload",
+                code: 0,
+                userInfo: [NSLocalizedDescriptionKey: "画像の変換に失敗しました"]
+            )
             print("❌ 画像変換エラー: \(error.localizedDescription)")
             throw error
         }
@@ -54,8 +57,11 @@ final class ImageStorageService {
         do {
             _ = try await client.storage
                 .from(bucket)
-                .upload(path, data: data,
-                        options: FileOptions(contentType: "image/jpeg"))
+                .upload(
+                    path,
+                    data: data,
+                    options: FileOptions(contentType: "image/jpeg")
+                )
             print("✅ Supabaseへのアップロード成功")
         } catch {
             print("❌ Supabase アップロードエラー: \(error.localizedDescription)")
@@ -64,10 +70,13 @@ final class ImageStorageService {
         
         do {
             guard let baseURL = Bundle.main
-                    .object(forInfoDictionaryKey: "SUPABASE_URL") as? String
+                .object(forInfoDictionaryKey: "SUPABASE_URL") as? String
             else {
-                let error = NSError(domain: "config", code: 0,
-                              userInfo: [NSLocalizedDescriptionKey: "Supabase URLが見つかりません"])
+                let error = NSError(
+                    domain: "config",
+                    code: 0,
+                    userInfo: [NSLocalizedDescriptionKey: "Supabase URLが見つかりません"]
+                )
                 print("❌ SUPABASE_URL 取得エラー: Info.plistにキーがありません")
                 throw error
             }

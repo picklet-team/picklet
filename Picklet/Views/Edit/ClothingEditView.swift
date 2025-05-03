@@ -10,7 +10,7 @@ struct ClothingEditView: View {
     let isNew: Bool
 
     @State private var editingSets: [EditableImageSet] = []
-    @State private var selectedImageSet: EditableImageSet? = nil
+    @State private var selectedImageSet: EditableImageSet?
     @State private var showPhotoPicker = false
     @State private var showImageEditor = false
     @State private var showDeleteConfirm = false

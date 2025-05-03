@@ -144,9 +144,9 @@ final class ImageMetadataService {
                 let newImage = serverImage
                 
                 // 新しい画像をダウンロード
-                var originalLocalPath: String? = nil
-                var maskLocalPath: String? = nil
-                var resultLocalPath: String? = nil
+                var originalLocalPath: String?
+                var maskLocalPath: String?
+                var resultLocalPath: String?
                 
                 if let urlString = newImage.originalUrl, let url = URL(string: urlString) {
                     originalLocalPath = await downloadImage(from: url, id: newImage.id, type: "original")

@@ -9,38 +9,38 @@
 import SwiftUI
 
 struct CropingMessageView: View {
-  var body: some View {
-    Color.black.opacity(0.4)  // 🔲 全体を暗くする
-      .ignoresSafeArea()
+    var body: some View {
+        Color.black.opacity(0.4) // 🔲 全体を暗くする
+            .ignoresSafeArea()
 
-    VStack {
-      ProgressView("AIが画像を切り抜いています")
+        VStack {
+            ProgressView("AIが画像を切り抜いています")
+                .padding()
+                .background(.ultraThinMaterial)
+                .cornerRadius(12)
+                .foregroundColor(.primary)
+        }
         .padding()
-        .background(.ultraThinMaterial)
-        .cornerRadius(12)
-        .foregroundColor(.primary)
+        .transition(.opacity)
     }
-    .padding()
-    .transition(.opacity)
-  }
 }
 
 struct ImageEditView: View {
-  @StateObject private var viewModel: ImageEditViewModel
-  @Binding var imageSet: EditableImageSet?
+    @StateObject private var viewModel: ImageEditViewModel
+    @Binding var imageSet: EditableImageSet?
 
 //  @State private var isCropping = true
 
-  var body: some View {
-    VStack {
-      if viewModel.isProcessing {
-        ProgressView("処理中…")
-      } else {
-        Image(uiImage: viewModel.imageSet.mask ?? viewModel.imageSet.original)
-          .resizable()
-          .scaledToFit()
-      }
+    var body: some View {
+        VStack {
+            if viewModel.isProcessing {
+                ProgressView("処理中…")
+            } else {
+                Image(uiImage: viewModel.imageSet.mask ?? viewModel.imageSet.original)
+                    .resizable()
+                    .scaledToFit()
+            }
+        }
+        .onAppear { viewModel.runSegmentation() }
     }
-    .onAppear { viewModel.runSegmentation() }
-  }
 }

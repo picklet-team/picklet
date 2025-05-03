@@ -1,33 +1,37 @@
+# 一時的に無効化（2025-05-04）
 # ファイルのヘッダコメントは不要
---header strip
+# --header strip
 
 # インデント設定
---indent 4
---tabwidth 4
---smarttabs enabled
+# --indent 4
+# --tabwidth 4
+# --smarttabs enabled
 
 # 中括弧
---allman false
+# --allman false
 
 # 空白とスペース
---trimwhitespace always
---stripunusedargs closure-only
---semicolons never
---commas always
+# --trimwhitespace always
+# --stripunusedargs closure-only
+# --semicolons never
+# --commas always
 
 # コードの整形
---wraparguments before-first
---wrapparameters before-first
---wrapcollections before-first
---closingparen balanced
---elseposition same-line
---extensionacl on-declarations
+# --wraparguments before-first
+# --wrapparameters before-first
+# --wrapcollections before-first
+# --closingparen balanced
+# --elseposition same-line
+# --extensionacl on-declarations
 
 # その他の設定
---swiftversion 5.0
---xcodeindentation enabled
---self remove
---importgrouping alphabetized
+# --swiftversion 5.0
+# --xcodeindentation enabled
+# --self remove
+# --importgrouping alphabetized
 
 # 除外するパス
---exclude Pods,PickletTests,PickletUITests,Picklet/Preview Content
+# --exclude Pods,PickletTests,PickletUITests,Picklet/Preview Content
+
+# 実行を無効化するためにダミー設定
+--disable all
