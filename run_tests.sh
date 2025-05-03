@@ -15,7 +15,7 @@ if [[ "$OS_TYPE" == "Darwin" ]]; then
     xcodebuild test \
         -project Picklet.xcodeproj \
         -scheme Picklet \
-        -destination 'platform=iOS Simulator,name=iPhone 15' \
+        -destination 'platform=iOS Simulator,name=iPhone 16' \
         -resultBundlePath TestResults
     
     TEST_RESULT=$?

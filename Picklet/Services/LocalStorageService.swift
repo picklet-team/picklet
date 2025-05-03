@@ -113,6 +113,7 @@ class LocalStorageService {
             return [
                 "id": image.id.uuidString,
                 "clothingId": image.clothingId.uuidString,
+                "userId": image.userId?.uuidString ?? "",
                 "originalUrl": image.originalUrl ?? "",
                 "maskUrl": image.maskUrl ?? "",
                 "resultUrl": image.resultUrl ?? "",
@@ -150,9 +151,16 @@ class LocalStorageService {
                 return nil
             }
             
+            // ユーザーIDはオプショナル
+            var userId: UUID? = nil
+            if let userIdString = dict["userId"] as? String, !userIdString.isEmpty {
+                userId = UUID(uuidString: userIdString)
+            }
+            
             return ClothingImage(
                 id: id,
                 clothingId: clothingId,
+                userId: userId,
                 originalUrl: dict["originalUrl"] as? String,
                 maskUrl: dict["maskUrl"] as? String,
                 resultUrl: dict["resultUrl"] as? String,
