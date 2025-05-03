@@ -5,7 +5,6 @@
 //  Created by al dente on 2025/05/03.
 //
 
-
 import SwiftUI
 
 struct MaskEditorView: View {
@@ -13,6 +12,7 @@ struct MaskEditorView: View {
     @Environment(\.dismiss) var dismiss
 
     // MARK: - Simplified State
+    
     @State private var zoomScale: CGFloat = 1
     @State private var offset: CGSize = .zero
 

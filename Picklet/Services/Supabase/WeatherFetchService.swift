@@ -1,5 +1,8 @@
 //
+//  WeatherFetchService.swift
+//  Picklet
 //
+//  Created by al dente on 2025/04/25.
 //
 
 import Foundation
@@ -12,7 +15,7 @@ class WeatherFetchService {
     private let client: SupabaseClient
     
     private init() {
-        self.client = AuthService.shared.client
+        client = AuthService.shared.client
     }
     
     func fetchWeatherCache(for city: String) async throws -> Weather {
@@ -20,12 +23,12 @@ class WeatherFetchService {
         
         let response =
             try await client
-            .from("weather_cache")
-            .select("*")
-            .eq("city", value: city)
-            .eq("date", value: today)
-            .limit(1)
-            .execute()
+                .from("weather_cache")
+                .select("*")
+                .eq("city", value: city)
+                .eq("date", value: today)
+                .limit(1)
+                .execute()
         
         return try response.decoded(to: Weather.self)
     }

@@ -56,10 +56,12 @@ private struct ClothingDetailImageView: View {
     var body: some View {
         Group {
             if let urlString = imageURL, let url = URL(string: urlString) {
-                WebImage(url: url,
-                         options: [.queryMemoryData, .queryDiskDataSync, .refreshCached])
-                    .resizable()
-                    .indicator(.activity)
+                WebImage(
+                    url: url,
+                    options: [.queryMemoryData, .queryDiskDataSync, .refreshCached]
+                )
+                .resizable()
+                .indicator(.activity)
             } else {
                 Rectangle().fill(Color.gray.opacity(0.2))
             }

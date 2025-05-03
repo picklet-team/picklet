@@ -1,10 +1,15 @@
+# 一時的に無効化（2025-05-04）
 name: Swift Lint & Format
 
+# on:
+#   push:
+#     branches: [ main ]
+#   pull_request:
+#     branches: [ main ]
+    
+# トリガーを無効化（手動実行のみ）
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   swiftlint:

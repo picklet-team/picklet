@@ -9,7 +9,7 @@ import SwiftUI
 
 struct CaptureOrLibraryView: View {
   var onImagePicked: (UIImage) -> Void
-  var onCancel: (() -> Void)? = nil
+  var onCancel: (() -> Void)?
 
   @Environment(\.dismiss) private var dismiss
 

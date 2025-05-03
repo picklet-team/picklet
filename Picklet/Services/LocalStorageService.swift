@@ -152,7 +152,7 @@ class LocalStorageService {
             }
             
             // ユーザーIDはオプショナル
-            var userId: UUID? = nil
+            var userId: UUID?
             if let userIdString = dict["userId"] as? String, !userIdString.isEmpty {
                 userId = UUID(uuidString: userIdString)
             }
