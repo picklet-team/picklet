@@ -10,6 +10,7 @@ struct ClothingListView: View {
   var body: some View {
     NavigationStack {
       ClothingDockView().environmentObject(viewModel)
+        .accessibility(identifier: "clothingListView")
         .navigationTitle("My Clothes")
         .safeAreaInset(edge: .bottom) {
           PrimaryActionButton(title: "写真から服を追加") {
@@ -27,6 +28,7 @@ struct ClothingListView: View {
               navigateToEdit = true
             }
           }
+          .accessibility(identifier: "addClothingButton")
         }
         .navigationDestination(isPresented: $navigateToEdit) {
           if let editingClothing = editingClothing {

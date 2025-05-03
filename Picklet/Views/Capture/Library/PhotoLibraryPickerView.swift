@@ -57,17 +57,7 @@ struct PhotoLibraryPickerView: View {
           }
           .padding(spacing)
         }
-//            .coordinateSpace(name: "gridSpace")
-//            .onPreferenceChange(CellTopPreferenceKey.self) { values in
-//              // find the smallest non‑negative Y (closest to top)
-//              if let (id, _) = values.filter({ $0.value >= 0 }).min(by: { $0.value < $1.value }) {
-//                topVisibleId = id
-//              }
-//            }
-//             expose proxy to outer scope via capture list
-//            .onAppear { scrollProxy = proxy }
-//          }
-//        }
+        .accessibility(identifier: "photoLibraryPicker")
         .onAppear(perform: fetchAssets)
       }
       //            .navigationTitle("写真を選択")

@@ -21,9 +21,11 @@ struct LoginView: View {
         .autocapitalization(.none)
         .textFieldStyle(RoundedBorderTextFieldStyle())
         .keyboardType(.emailAddress)
+        .accessibility(identifier: "emailTextField")
 
       SecureField("パスワード", text: $viewModel.password)
         .textFieldStyle(RoundedBorderTextFieldStyle())
+        .accessibility(identifier: "passwordTextField")
 
       if let error = viewModel.errorMessage {
         Text(error)
@@ -40,10 +42,12 @@ struct LoginView: View {
           await viewModel.login()
         }
       }
+      .accessibility(identifier: "loginButton")
 
       Button("新規登録") {
         Task { await viewModel.signUp() }
       }
+      .accessibility(identifier: "signUpButton")
     }
     .padding()
   }
