@@ -60,20 +60,6 @@ jobs:
       with:
         xcode-version: latest-stable
     
-    # CIビルド専用の修正を追加（CoreMLコンパイルをスキップする）
-    - name: Prepare for CI Build
-      run: |
-        echo "Setting up build for CI environment"
-        
-        # xcconfig ファイルを作成して CoreML コンパイルをスキップするオプションを設定
-        cat > ci_build.xcconfig << EOF
-        // Skip CoreML model compilation for CI
-        ENABLE_COREML_COMPILATION = NO
-        EOF
-        
-        echo "Created xcconfig file:"
-        cat ci_build.xcconfig
-    
     # Swift Packageのダウンロードを別ステップとして分離し、出力を最小限に
     - name: Resolve Swift Packages
       run: |
@@ -86,11 +72,11 @@ jobs:
     - name: Build
       run: |
         # CIビルド用の xcconfig ファイルを使用
-        set -o pipefail && xcodebuild build -project Picklet.xcodeproj -scheme Picklet -xcconfig ci_build.xcconfig -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO COMPILER_INDEX_STORE_ENABLE=NO -quiet | xcpretty -c --simple --no-utf
+        set -o pipefail && xcodebuild build -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO COMPILER_INDEX_STORE_ENABLE=NO -quiet | xcpretty -c --simple --no-utf
 
     # テストが必要な場合のみ実行
     - name: Test
       if: github.event_name == 'pull_request' || contains(github.ref, 'main')
       run: |
         # CIビルド用の xcconfig ファイルを使用
-        set -o pipefail && xcodebuild test -project Picklet.xcodeproj -scheme Picklet -xcconfig ci_build.xcconfig -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' -skip-testing:PickletUITests COMPILER_INDEX_STORE_ENABLE=NO -quiet | xcpretty -c --test --no-utf
+        set -o pipefail && xcodebuild test -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' -skip-testing:PickletUITests COMPILER_INDEX_STORE_ENABLE=NO -quiet | xcpretty -c --test --no-utf

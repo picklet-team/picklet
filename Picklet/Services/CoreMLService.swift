@@ -10,38 +10,17 @@ import SwiftUI
 
 class CoreMLService {
     static let shared = CoreMLService()
-    private var model: ISNet?
-    private let isCIEnvironment: Bool
-    
+    private let model: ISNet
+
     init() {
-        // CI環境かどうかをチェック
-        self.isCIEnvironment = ProcessInfo.processInfo.environment["CI"] == "true" ||
-                              ProcessInfo.processInfo.environment["GITHUB_ACTIONS"] == "true"
-        
-        // CI環境では、モデル初期化をスキップ
-        if isCIEnvironment {
-            print("⚠️ CIモードで実行中: CoreMLモデルの初期化をスキップします")
-            self.model = nil
-        } else {
-            do {
-                self.model = try ISNet(configuration: MLModelConfiguration())
-            } catch {
-                print("⚠️ ISNetモデルの初期化に失敗しました: \(error.localizedDescription)")
-                self.model = nil
-            }
+        do {
+            self.model = try ISNet(configuration: MLModelConfiguration())
+        } catch {
+            fatalError("ISNetモデルの初期化に失敗しました: \(error.localizedDescription)")
         }
     }
 
     func processImageSet(imageSet: EditableImageSet) async -> EditableImageSet? {
-        // CI環境ではダミーの結果を返す
-        if isCIEnvironment {
-            print("ℹ️ CI環境: ダミーの画像処理結果を返します")
-            var newSet = imageSet
-            newSet.mask = imageSet.original // CIではオリジナル画像を代用
-            newSet.result = imageSet.original
-            return newSet
-        }
-        
         let original = imageSet.original
 
         guard let mask = await self.predictMask(for: original) else {
@@ -61,12 +40,6 @@ class CoreMLService {
     }
 
     func processImage(image: UIImage) async -> UIImage? {
-        // CI環境ではダミーの結果を返す
-        if isCIEnvironment {
-            print("ℹ️ CI環境: ダミーの画像処理結果を返します")
-            return image
-        }
-        
         // 1. 推論
         guard let mask = await self.predictMask(for: image) else {
             print("❌ mask prediction failed")
@@ -84,18 +57,6 @@ class CoreMLService {
         for image: UIImage,
         flipHorizontally: Bool = true
     ) async -> UIImage? {
-        // CI環境ではダミーの結果を返す
-        if isCIEnvironment {
-            print("ℹ️ CI環境: ダミーのマスク予測結果を返します")
-            return image
-        }
-        
-        // モデルが初期化されていない場合はnilを返す
-        guard let model = self.model else {
-            print("❌ CoreMLモデルが初期化されていません")
-            return nil
-        }
-        
         let targetSize = CGSize(width: 1_024, height: 1_024)
 
         // 1. 推論用にリサイズ
