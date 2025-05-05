@@ -49,14 +49,16 @@ struct ClothingImage: Identifiable, Codable {
     let dateFormatter = ISO8601DateFormatter()
 
     if let createdAtString = try container.decodeIfPresent(String.self, forKey: .createdAt),
-       let date = dateFormatter.date(from: createdAtString) {
+       let date = dateFormatter.date(from: createdAtString)
+    {
       createdAt = date
     } else {
       createdAt = Date()
     }
 
     if let updatedAtString = try container.decodeIfPresent(String.self, forKey: .updatedAt),
-       let date = dateFormatter.date(from: updatedAtString) {
+       let date = dateFormatter.date(from: updatedAtString)
+    {
       updatedAt = date
     } else {
       updatedAt = Date()
@@ -128,17 +130,17 @@ struct ClothingImage: Identifiable, Codable {
     resultLocalPath: String? = nil
   ) -> ClothingImage {
     return ClothingImage(
-      id: self.id,
-      clothingId: self.clothingId,
-      userId: self.userId,
-      originalUrl: self.originalUrl,
-      maskUrl: self.maskUrl,
-      resultUrl: self.resultUrl,
+      id: id,
+      clothingId: clothingId,
+      userId: userId,
+      originalUrl: originalUrl,
+      maskUrl: maskUrl,
+      resultUrl: resultUrl,
       originalLocalPath: originalLocalPath ?? self.originalLocalPath,
       maskLocalPath: maskLocalPath ?? self.maskLocalPath,
       resultLocalPath: resultLocalPath ?? self.resultLocalPath,
-      createdAt: self.createdAt,
-      updatedAt: self.updatedAt
+      createdAt: createdAt,
+      updatedAt: updatedAt
     )
   }
 }

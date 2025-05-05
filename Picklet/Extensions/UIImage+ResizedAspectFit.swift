@@ -1,5 +1,5 @@
 //
-//  UIImage+Resized.swift
+//  UIImage+ResizedAspectFit.swift
 //  Picklet
 //
 //  Created by al dente on 2025/04/26.
@@ -31,7 +31,7 @@ extension UIImage {
       x: (targetSize.width - resizedSize.width) / 2,
       y: (targetSize.height - resizedSize.height) / 2
     )
-    self.draw(in: CGRect(origin: origin, size: resizedSize))
+    draw(in: CGRect(origin: origin, size: resizedSize))
 
     // 6. コンテキストから新しいUIImageを取り出す
     let resultImage = UIGraphicsGetImageFromCurrentImageContext()
@@ -39,17 +39,18 @@ extension UIImage {
 
     return resultImage
   }
+
   /// 元画像サイズにマスクを中央合わせでリサイズする
   func resizedMaskCentered(to originalSize: CGSize) -> UIImage? {
     UIGraphicsBeginImageContextWithOptions(originalSize, false, scale)
 
-    let maskSize = self.size.width  // 1024前提
+    let maskSize = size.width // 1024前提
     let targetLongSide = max(originalSize.width, originalSize.height)
     let scaleFactor = targetLongSide / maskSize
 
     let newMaskSize = CGSize(
-      width: self.size.width * scaleFactor,
-      height: self.size.height * scaleFactor
+      width: size.width * scaleFactor,
+      height: size.height * scaleFactor
     )
 
     let origin = CGPoint(
@@ -57,7 +58,7 @@ extension UIImage {
       y: (originalSize.height - newMaskSize.height) / 2
     )
 
-    self.draw(in: CGRect(origin: origin, size: newMaskSize))
+    draw(in: CGRect(origin: origin, size: newMaskSize))
 
     let resizedMask = UIGraphicsGetImageFromCurrentImageContext()
     UIGraphicsEndImageContext()

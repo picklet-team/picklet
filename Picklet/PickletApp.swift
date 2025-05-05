@@ -18,7 +18,7 @@ struct PickletApp: App {
         MainTabView()
           .environmentObject(viewModel)
           .task {
-              await viewModel.syncIfNeeded()
+            await viewModel.syncIfNeeded()
           }
       } else {
         LoginView()

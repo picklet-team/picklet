@@ -12,7 +12,7 @@ extension UIImage {
     let attrs =
       [
         kCVPixelBufferCGImageCompatibilityKey: true,
-        kCVPixelBufferCGBitmapContextCompatibilityKey: true
+        kCVPixelBufferCGBitmapContextCompatibilityKey: true,
       ] as CFDictionary
     var pixelBuffer: CVPixelBuffer?
 
@@ -22,7 +22,8 @@ extension UIImage {
       height,
       kCVPixelFormatType_32ARGB,
       attrs,
-      &pixelBuffer)
+      &pixelBuffer
+    )
 
     guard status == kCVReturnSuccess, let buffer = pixelBuffer else { return nil }
 
@@ -34,12 +35,13 @@ extension UIImage {
       bitsPerComponent: 8,
       bytesPerRow: CVPixelBufferGetBytesPerRow(buffer),
       space: CGColorSpaceCreateDeviceRGB(),
-      bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue)
-    guard let cgImage = self.cgImage else { return nil }
+      bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue
+    )
+    guard let cgImage = cgImage else { return nil }
 
     context?.saveGState()
     context?.translateBy(x: 0, y: CGFloat(height))
-    context?.scaleBy(x: 1.0, y: -1.0)  // 上下反転で正しい方向に描画される
+    context?.scaleBy(x: 1.0, y: -1.0) // 上下反転で正しい方向に描画される
     context?.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
     context?.restoreGState()
 

@@ -31,7 +31,7 @@ struct CameraPreviewView: UIViewControllerRepresentable {
     if triggerCapture {
       uiViewController.capture()
       DispatchQueue.main.async {
-        triggerCapture = false  // reset after shot
+        triggerCapture = false // reset after shot
       }
     }
   }

@@ -8,32 +8,32 @@
 import SwiftUI
 
 struct MaskEditorView: View {
-    @Binding var imageSet: EditableImageSet
-    @Environment(\.dismiss) var dismiss
+  @Binding var imageSet: EditableImageSet
+  @Environment(\.dismiss) var dismiss
 
-    // MARK: - Simplified State
+  // MARK: - Simplified State
 
-    @State private var zoomScale: CGFloat = 1
-    @State private var offset: CGSize = .zero
+  @State private var zoomScale: CGFloat = 1
+  @State private var offset: CGSize = .zero
 
-    var body: some View {
-        GeometryReader { _ in
-            ZStack {
-                // Display only the original image for simplicity
-                Image(uiImage: imageSet.original)
-                    .resizable()
-                    .scaledToFit()
-                    .scaleEffect(zoomScale)
-                    .offset(offset)
-            }
+  var body: some View {
+    GeometryReader { _ in
+      ZStack {
+        // Display only the original image for simplicity
+        Image(uiImage: imageSet.original)
+          .resizable()
+          .scaledToFit()
+          .scaleEffect(zoomScale)
+          .offset(offset)
+      }
 //            .gesture(zoomPanGesture()) // Retain zoom and pan gestures
-        }
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button("完了") { dismiss() } // Simplified toolbar with only a dismiss button
-            }
-        }
     }
+    .toolbar {
+      ToolbarItem(placement: .navigationBarLeading) {
+        Button("完了") { dismiss() } // Simplified toolbar with only a dismiss button
+      }
+    }
+  }
 
 //    /// Simplified zoom and pan gesture
 //    private func zoomPanGesture() -> some Gesture {

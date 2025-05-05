@@ -16,7 +16,6 @@ struct MainTabView: View {
         .tabItem {
           //                    Label("クローゼット", systemImage: "tshirt")
           Image(systemName: "tshirt")
-
         }
 
       WeatherLoaderView()

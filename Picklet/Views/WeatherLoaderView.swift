@@ -31,7 +31,6 @@ struct WeatherLoaderView: View {
         await loadWeather()
       }
     }
-
   }
 
   private func loadWeather() async {
@@ -56,13 +55,12 @@ struct WeatherLoaderView: View {
 
     do {
       let fetchedWeather = try await WeatherManager.shared.fetchWeather(for: city)
-      self.weather = fetchedWeather
+      weather = fetchedWeather
     } catch {
-      self.errorMessage = "天気情報の取得に失敗しました: \(error.localizedDescription)"
+      errorMessage = "天気情報の取得に失敗しました: \(error.localizedDescription)"
       print("❌ 天気取得失敗: \(error)")
     }
 
     isLoading = false
   }
-
 }

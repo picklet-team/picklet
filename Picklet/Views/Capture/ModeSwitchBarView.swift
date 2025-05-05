@@ -20,7 +20,7 @@ struct ModeSwitchBarView: View {
       modeButton(
         icon: "photo.on.rectangle", title: "ライブラリ", isSelected: !isCameraSelected, action: onLibrary
       )
-        .accessibility(identifier: "libraryButton")
+      .accessibility(identifier: "libraryButton")
     }
     .padding()
     .background(Color(UIColor.systemBackground))

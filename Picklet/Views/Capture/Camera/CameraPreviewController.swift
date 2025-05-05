@@ -25,8 +25,8 @@ class CameraPreviewController: UIViewController, AVCapturePhotoCaptureDelegate {
     captureSession?.sessionPreset = .high
 
     guard let backCamera = AVCaptureDevice.default(for: .video),
-      let input = try? AVCaptureDeviceInput(device: backCamera),
-      let captureSession = captureSession
+          let input = try? AVCaptureDeviceInput(device: backCamera),
+          let captureSession = captureSession
     else { return }
     if captureSession.canAddInput(input) {
       captureSession.addInput(input)
@@ -61,10 +61,9 @@ class CameraPreviewController: UIViewController, AVCapturePhotoCaptureDelegate {
     didFinishProcessingPhoto photo: AVCapturePhoto,
     error: Error?
   ) {
-
     guard let data = photo.fileDataRepresentation(),
-      let image = UIImage(data: data),
-      let layer = previewLayer
+          let image = UIImage(data: data),
+          let layer = previewLayer
     else { return }
 
     // プレビューに写っていた矩形(0-1正規化) → 画像座標へ変換
@@ -78,7 +77,7 @@ class CameraPreviewController: UIViewController, AVCapturePhotoCaptureDelegate {
     ).integral
 
     guard let cropped = cgImage.cropping(to: crop) else {
-      onImageCaptured?(image)  // 失敗時はオリジナル
+      onImageCaptured?(image) // 失敗時はオリジナル
       return
     }
 
@@ -86,7 +85,8 @@ class CameraPreviewController: UIViewController, AVCapturePhotoCaptureDelegate {
       UIImage(
         cgImage: cropped,
         scale: image.scale,
-        orientation: image.imageOrientation))
+        orientation: image.imageOrientation
+      ))
   }
 
   override func viewDidLayoutSubviews() {

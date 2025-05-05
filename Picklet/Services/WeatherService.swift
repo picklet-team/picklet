@@ -12,10 +12,10 @@ import Foundation
 import Supabase
 
 func getOpenWeatherApiKey() -> String {
-    guard let apiKey = Bundle.main.object(forInfoDictionaryKey: "OPENWEATHER_API_KEY") as? String else {
-        fatalError("❌ OpenWeather APIキーがInfo.plistにありません")
-    }
-    return apiKey
+  guard let apiKey = Bundle.main.object(forInfoDictionaryKey: "OPENWEATHER_API_KEY") as? String else {
+    fatalError("❌ OpenWeather APIキーがInfo.plistにありません")
+  }
+  return apiKey
 }
 
 struct OpenWeatherResponse: Codable {
@@ -23,15 +23,16 @@ struct OpenWeatherResponse: Codable {
     let description: String
     let icon: String
   }
+
   struct Main: Codable {
     let temp: Double
   }
+
   let weather: [WeatherItem]
   let main: Main
 }
 
 class WeatherManager {
-
   static let shared = WeatherManager()
 
   func fetchWeather(for city: String) async throws -> Weather {
