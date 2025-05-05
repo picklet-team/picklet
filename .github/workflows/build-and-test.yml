@@ -22,20 +22,10 @@ jobs:
         fetch-depth: 0
         token: ${{ github.token }}  # 明示的にトークンを指定
     
-    # LFSファイルのキャッシュを設定
-    - name: Cache LFS files
-      uses: actions/cache@v3
-      with:
-        path: .git/lfs
-        key: ${{ runner.os }}-lfs-${{ hashFiles('.lfsconfig') }}
-        restore-keys: |
-          ${{ runner.os }}-lfs-
-    
-    - name: Fetch LFS files
+    - name: Pull LFS files
       run: |
         git lfs install
-        git lfs fetch --all
-        git lfs checkout
+        git lfs pull
     
     # モデルファイルの健全性を検証
     - name: Verify LFS file integrity
