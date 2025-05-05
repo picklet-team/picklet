@@ -13,7 +13,7 @@ on:
 jobs:
   build:
     runs-on: macos-latest
-    
+
     steps:
     - name: Checkout repository with token
       uses: actions/checkout@v3
@@ -21,19 +21,19 @@ jobs:
         lfs: true
         fetch-depth: 0
         token: ${{ github.token }}  # 明示的にトークンを指定
-    
+
     - name: Pull LFS files
       run: |
         git lfs install
         git lfs pull
-    
+
     # モデルファイルの健全性を検証
     - name: Verify LFS file integrity
       run: |
         echo "Checking ISNet.mlmodel file size and type:"
         du -h Picklet/Models/ISNet.mlmodel
         file Picklet/Models/ISNet.mlmodel
-        
+
         # ファイルが小さすぎる場合はエラーを表示
         FILE_SIZE=$(du -k Picklet/Models/ISNet.mlmodel | cut -f1)
         if [ $FILE_SIZE -lt 10000 ]; then
@@ -44,16 +44,22 @@ jobs:
         else
           echo "✅ ISNet.mlmodel size looks good: $FILE_SIZE KB"
         fi
-    
+
+    - name: Dump MLModel header
+      run: |
+        echo "First 16 bytes of ISNet.mlmodel:"
+        head -c 16 Picklet/Models/ISNet.mlmodel | xxd
+
+
     # Swift Packageのダウンロードを別ステップとして分離し、出力を最小限に
     - name: Resolve Swift Packages
       run: |
         xcodebuild -resolvePackageDependencies -project Picklet.xcodeproj -scheme Picklet | grep -v "^$" | grep -v "Creating working copy" | grep -v "Fetching from" | grep -v "Checking out"
-    
+
     - name: Clean
       run: |
         xcodebuild clean -project Picklet.xcodeproj -scheme Picklet -quiet
-    
+
     - name: Build
       run: |
         # CIビルド用の xcconfig ファイルを使用
