@@ -2,7 +2,7 @@ name: Build and Test
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, 79-loadimage ]  # 現在のブランチも対象に追加
   pull_request:
     branches: [ main ]
 
@@ -30,4 +30,8 @@ jobs:
     
     - name: Build and Test
       run: |
-        xcodebuild -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' build test
+        # 利用可能なシミュレーター一覧を表示
+        xcrun simctl list devices
+        
+        # iPhone 16を使用（利用可能なシミュレーターに基づいて選択）
+        xcodebuild -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' build test
