@@ -1,0 +1,32 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        lfs: true  # LFSファイルを明示的に取得
+    
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+    
+    - name: List LFS files (verify checkout)
+      run: |
+        # LFSファイルが正しく取得できているか確認
+        echo "Checking ISNet.mlmodel file size:"
+        du -h Picklet/Models/ISNet.mlmodel
+    
+    - name: Build and Test
+      run: |
+        xcodebuild -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' build test
