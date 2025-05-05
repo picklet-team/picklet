@@ -1,12 +1,16 @@
 # SwiftLint と SwiftFormat を自動実行するワークフロー
 name: Swift Lint & Format
 
-# プッシュとプルリクエスト時に自動実行されるよう再有効化
+# プッシュとプルリクエスト時に自動実行されるよう設定
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
+    paths:
+      - '**.swift'
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
+    paths:
+      - '**.swift'
   # 手動実行も可能に設定
   workflow_dispatch:
 
@@ -24,6 +28,15 @@ jobs:
       - name: Run SwiftLint
         run: |
           swiftlint --strict --reporter github-actions-logging
+
+      # 結果を表示する場合は以下のステップを追加
+      - name: Upload SwiftLint Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: swiftlint-results
+          path: swiftlint.txt
+          retention-days: 7
 
   swiftformat:
     name: SwiftFormat

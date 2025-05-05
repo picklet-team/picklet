@@ -93,13 +93,16 @@ final class PickletUITests: XCTestCase {
       XCTAssertTrue(true, "タブバーが表示されています")
 
       // タブをタップしようとするが、失敗してもテスト自体は失敗させない
+      // swiftlint:disable:next empty_count
       if app.tabBars.buttons.count > 0 {
         app.tabBars.buttons.element(boundBy: 0).tap()
       }
     }
 
     // 何らかの要素が表示されていることを確認
+    // swiftlint:disable empty_count
     let anyUIExists = app.staticTexts.count > 0 || app.images.count > 0 || app.buttons.count > 0
+    // swiftlint:enable empty_count
     XCTAssertTrue(anyUIExists, "画面上に何らかのUI要素が表示されています")
   }
 
@@ -130,7 +133,9 @@ final class PickletUITests: XCTestCase {
     }
 
     // アプリが動作していることを確認
+    // swiftlint:disable empty_count
     let anyUIExists = app.staticTexts.count > 0 || app.images.count > 0 || app.buttons.count > 0
+    // swiftlint:enable empty_count
     XCTAssertTrue(anyUIExists, "画面上に要素が表示されています")
   }
 
@@ -199,10 +204,13 @@ final class PickletUITests: XCTestCase {
 
     // 3. 天気情報が読み込まれない場合でも、何らかのUIが表示されていれば良しとする
     if result == .completed {
+      // swiftlint:disable:next empty_count
       XCTAssertTrue(weatherTexts.count > 0, "天気関連の情報が表示されています")
     } else {
       // 天気テキストが見つからなくても、画面に何らかの要素が表示されていればOK
+      // swiftlint:disable empty_count
       XCTAssertFalse(app.staticTexts.count == 0 && app.images.count == 0, "画面上に何らかのUI要素が表示されています")
+      // swiftlint:enable empty_count
     }
   }
 
