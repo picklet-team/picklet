@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ClothingCardView: View {
-    @EnvironmentObject private var vm: ClothingViewModel
+    @EnvironmentObject private var viewModel: ClothingViewModel
     @Binding var clothing: Clothing
 
     let imageURL: String?
@@ -21,7 +21,7 @@ struct ClothingCardView: View {
 
     var body: some View {
         ClothingItemView(clothing: clothing, imageUrl: imageURL)
-            .environmentObject(vm)
+            .environmentObject(viewModel)
             .frame(width: 120)
             .rotation3DEffect(angle, axis: (0, -1, 0), perspective: 0.7)
             .scaleEffect(scale)

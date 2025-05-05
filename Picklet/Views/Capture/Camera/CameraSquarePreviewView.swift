@@ -24,12 +24,12 @@ struct CameraSquarePreviewView: View {
           Spacer()
           Button(action: {
             shouldCapture = true
-          }) {
+          }, label: {
             Circle()
               .fill(Color.white)
               .frame(width: 70, height: 70)
               .shadow(radius: 4)
-          }
+          })
           .padding(.bottom, 40)
         }
       }

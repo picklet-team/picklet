@@ -50,7 +50,7 @@ struct MaskEditCanvasView: UIViewRepresentable {
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
       guard let point = touches.first?.location(in: self), let last = lastPoint else { return }
-      lines.append(Line(from: last, to: point, color: penColor, width: penWidth))
+      lines.append(Line(from: last, toPoint: point, color: penColor, width: penWidth))
       lastPoint = point
       setNeedsDisplay()
     }
@@ -62,7 +62,7 @@ struct MaskEditCanvasView: UIViewRepresentable {
         context.setLineWidth(line.width)
         context.setLineCap(.round)
         context.move(to: line.from)
-        context.addLine(to: line.to)
+        context.addLine(to: line.toPoint)
         context.strokePath()
       }
     }
@@ -78,7 +78,7 @@ struct MaskEditCanvasView: UIViewRepresentable {
 
   struct Line {
     let from: CGPoint
-    let to: CGPoint
+    let toPoint: CGPoint
     let color: UIColor
     let width: CGFloat
   }

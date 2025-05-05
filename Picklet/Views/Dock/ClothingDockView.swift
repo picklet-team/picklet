@@ -9,10 +9,10 @@ struct IdentifiableUUID: Identifiable, Hashable { let id: UUID }
 
 /// Exponential‑moving‑average cursor smoother
 private struct CursorSmoother {
-    private(set) var raw: CGFloat = -1000  // last tapped / dragged target X
-    private(set) var ema: CGFloat = -1000  // smoothed X used for UI
+    private(set) var raw: CGFloat = -1_000  // last tapped / dragged target X
+    private(set) var ema: CGFloat = -1_000  // smoothed X used for UI
     private let alpha: CGFloat = 0.25  // smoothing factor (0‥1)
-    mutating func setTarget(_ x: CGFloat) { raw = x }
+    mutating func setTarget(_ targetX: CGFloat) { raw = targetX }
     mutating func step() { ema += alpha * (raw - ema) }
     var reachedTarget: Bool { abs(raw - ema) < 0.5 }
 }
@@ -20,7 +20,7 @@ private struct CursorSmoother {
 // MARK: - Dock View
 
 struct ClothingDockView: View {
-    @EnvironmentObject private var vm: ClothingViewModel
+    @EnvironmentObject private var viewModel: ClothingViewModel
 
     // configuration
     private let maxCards = 20
@@ -42,26 +42,26 @@ struct ClothingDockView: View {
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                let items = Array(vm.clothes.prefix(maxCards))
+                let items = Array(viewModel.clothes.prefix(maxCards))
                 let centreX = geo.size.width / 2
 
-                ForEach(Array(zip(vm.clothes.indices, $vm.clothes)), id: \.1.id) { idx, $clothing in
+                ForEach(Array(zip(viewModel.clothes.indices, $viewModel.clothes)), id: \.1.id) { idx, $clothing in
                     let baseX = baseOffsetX(idx: idx, total: items.count, width: geo.size.width)
-                    let dx = smoother.ema - baseX
-                    let t = clamp(1 - abs(dx) / influence, 0, 1)
-                    let angle = Angle(radians: -Double(atan(dx / (cardWidth / 2))))
-                    let scale = 1 / (2 - t)
+                    let deltaX = smoother.ema - baseX
+                    let tValue = clamp(1 - abs(deltaX) / influence, 0, 1)
+                    let angle = Angle(radians: -Double(atan(deltaX / (cardWidth / 2))))
+                    let scale = 1 / (2 - tValue)
 
                     ClothingCardView(
                         clothing: $clothing,
-                        imageURL: vm.imageSetsMap[clothing.id]?.first?.originalUrl,
+                        imageURL: viewModel.imageSetsMap[clothing.id]?.first?.originalUrl,
                         angle: angle,
                         scale: scale,
                         xOffset: baseX - centreX,
-                        zIndex: Double(t),
+                        zIndex: Double(tValue),
                         onPeek: { previewId = IdentifiableUUID(id: clothing.id) },
                         onPopAttempt: {}
-                        //onPopAttempt: { commitIfFront(id: clothing.id, dx: dx) }
+                        // onPopAttempt: { commitIfFront(id: clothing.id, dx: dx) }
                     )
                 }
             }
@@ -70,7 +70,7 @@ struct ClothingDockView: View {
             .contentShape(Rectangle())
             .gesture(
                 DragGesture(minimumDistance: 0)
-                    .onChanged { v in setCursor(to: v.location.x) }
+                    .onChanged { value in setCursor(to: value.location.x) }
             )
             // smoother tick
             .onReceive(tick) { _ in stepSmoother() }
@@ -80,7 +80,7 @@ struct ClothingDockView: View {
             .navigationDestination(item: $commitId) { id in
                 if let binding = bindingFor(id: id) {
                     ClothingDetailView(clothing: binding, clothingId: id)
-                        .environmentObject(vm)
+                        .environmentObject(viewModel)
                 }
             }
             .task {  // initial centre
@@ -90,9 +90,9 @@ struct ClothingDockView: View {
     }
 
     // MARK: – Cursor helpers
-    
-    private func setCursor(to x: CGFloat) {
-        smoother.setTarget(x)
+
+    private func setCursor(to cursorX: CGFloat) {
+        smoother.setTarget(cursorX)
         smoothingOn = true
     }
     private func stepSmoother() {
@@ -102,16 +102,16 @@ struct ClothingDockView: View {
     }
 
     // MARK: – Peek / Pop helpers
-    
+
     private func overlayQuickView() -> some View {
         Group {
             if let wrap = previewId,
-               let cloth = vm.clothes.first(where: { $0.id == wrap.id }) {
+               let cloth = viewModel.clothes.first(where: { $0.id == wrap.id }) {
                 ZStack {
                     Color.black.opacity(0.5).ignoresSafeArea()
                         .onTapGesture { previewId = nil }
                     ClothingQuickView(
-                        imageURL: vm.imageSetsMap[cloth.id]?.first?.originalUrl,
+                        imageURL: viewModel.imageSetsMap[cloth.id]?.first?.originalUrl,
                         name: cloth.name,
                         category: cloth.category,
                         color: cloth.color
@@ -131,16 +131,18 @@ struct ClothingDockView: View {
     }
 
     // MARK: – Utilities
-    
+
     private func baseOffsetX(idx: Int, total: Int, width: CGFloat) -> CGFloat {
         let usable = width * (1 - 2 * sideMargin)
         return width * sideMargin + usable * CGFloat(idx) / CGFloat(max(total - 1, 1))
     }
 
     private func bindingFor(id: UUID) -> Binding<Clothing>? {
-        guard let i = vm.clothes.firstIndex(where: { $0.id == id }) else { return nil }
-        return $vm.clothes[i]
+        guard let index = viewModel.clothes.firstIndex(where: { $0.id == id }) else { return nil }
+        return $viewModel.clothes[index]
     }
 
-    private func clamp<T: Comparable>(_ v: T, _ lo: T, _ hi: T) -> T { min(max(v, lo), hi) }
+    private func clamp<T: Comparable>(_ value: T, _ minValue: T, _ maxValue: T) -> T {
+        min(max(value, minValue), maxValue)
+    }
 }

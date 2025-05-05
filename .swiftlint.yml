@@ -1,57 +1,66 @@
-# 一時的に無効化（2025-05-04）
-# included:
-#   - Picklet
-# excluded:
-#   - Pods
-#   - Picklet/Preview Content
-#   - PickletTests
-#   - PickletUITests
+included:
+  - Picklet
+  - PickletTests
+  - PickletUITests
 
-# デフォルトルールの有効化・無効化
-# disabled_rules:
-#   - trailing_whitespace # 行末の空白を許容
-#   - unused_optional_binding # if let _ = ... のパターンを許容
-#   - multiple_closures_with_trailing_closure # 複数のクロージャの後にトレイリングクロージャを許容
-#   - nesting # ネストされた型を許容
+excluded:
+  - Pods
+  - Carthage
+  - vendor
+  - DerivedData
+  - fastlane
 
-# opt_in_rules:
-#   - empty_count # isEmpty を使用する
-#   - empty_string # isEmpty を使用する
-#   - explicit_init # 不必要な .init を避ける
-#   - first_where # filter().first の代わりに first(where:) を使用
-#   - force_unwrapping # 強制アンラップを避ける
-#   - implicitly_unwrapped_optional # 暗黙的にアンラップされたオプショナルを避ける
-#   - missing_docs # ドキュメントコメントの欠如を検出
-#   - sorted_imports # インポート文をアルファベット順に並べる
-#   - vertical_whitespace_between_cases # switch 文のケース間に空行を入れる
+# デフォルトルールの中で無効化するもの
+disabled_rules:
+  - todo
+  - trailing_whitespace # 必要に応じて有効化
+  
+# オプショナルルールの中で有効化するもの
+opt_in_rules:
+  - empty_count
+  - explicit_init
+  - closure_spacing
+  - redundant_nil_coalescing
+  - private_outlet
+  - nimble_operator
+  - first_where
+  - sorted_imports
+  - object_literal
+  - number_separator
 
-# ルールのカスタマイズ
-# line_length:
-#   warning: 120
-#   error: 160
-#   ignores_comments: true
-#   ignores_urls: true
+# カスタム値
+line_length: 
+  warning: 120
+  error: 150
+  ignores_comments: true
+  
+file_length:
+  warning: 400
+  error: 500
+  
+function_body_length:
+  warning: 50
+  error: 100
 
-# identifier_name:
-#   min_length: 2  # 変数名の最小長
-#   excluded:
-#     - id
-#     - x
-#     - y
-#     - i
-#     - j
-#     - k
-#     - dx
-#     - dy
-#     - vm
-#     - vc
-
-# type_name:
-#   min_length: 3  # 型名の最小長
-#   max_length: 50  # 型名の最大長
-
-# 警告のカスタマイズ
-# warning_threshold: 15  # 警告の数がこの閾値を超えるとビルドが失敗
-
-# 空の設定を追加して無効化
-disabled_rules: all
+type_body_length:
+  warning: 350
+  error: 500
+  
+large_tuple:
+  warning: 3
+  error: 4
+  
+# 変数名の長さ
+identifier_name:
+  min_length: 2
+  excluded:
+    - id
+    - up
+    - x
+    - y
+    - z
+    - i
+    - j
+    - n
+    
+reporter: "xcode"

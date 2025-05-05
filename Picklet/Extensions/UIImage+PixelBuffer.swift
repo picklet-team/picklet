@@ -12,7 +12,7 @@ extension UIImage {
     let attrs =
       [
         kCVPixelBufferCGImageCompatibilityKey: true,
-        kCVPixelBufferCGBitmapContextCompatibilityKey: true,
+        kCVPixelBufferCGBitmapContextCompatibilityKey: true
       ] as CFDictionary
     var pixelBuffer: CVPixelBuffer?
 

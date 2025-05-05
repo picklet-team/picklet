@@ -11,13 +11,13 @@ import Supabase
 
 class WeatherCacheService {
     static let shared = WeatherCacheService()
-    
+
     private let client: SupabaseClient
-    
+
     private init() {
         client = AuthService.shared.client
     }
-    
+
     func insertWeatherCache(_ weather: Weather) async throws {
         _ =
             try await client

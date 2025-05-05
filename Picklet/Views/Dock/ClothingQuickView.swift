@@ -5,8 +5,8 @@
 //  Created by al dente on 2025/05/03.
 //
 
-import SwiftUI
 import SDWebImageSwiftUI
+import SwiftUI
 
 struct ClothingQuickView: View {
   let imageURL: String?
@@ -17,20 +17,23 @@ struct ClothingQuickView: View {
   var body: some View {
     VStack(spacing: 12) {
       if let urlStr = imageURL, let url = URL(string: urlStr) {
-        // URLをデバッグ出力
-        let _ = print("🖼️ 画像表示リクエスト: \(urlStr)")
-        
         WebImage(url: url, options: [.queryMemoryData, .queryDiskDataSync, .refreshCached]) { phase in
           switch phase {
-          case .success(let img): 
-            let _ = print("✅ 画像読み込み成功: \(urlStr)")
+          case .success(let img):
             img.resizable().scaledToFit()
+              .onAppear {
+                print("✅ 画像読み込み成功: \(urlStr)")
+              }
           case .failure(let error):
-            let _ = print("❌ 画像読み込み失敗: \(urlStr) - エラー: \(error.localizedDescription)")
             Image(systemName: "photo").resizable().scaledToFit().foregroundColor(.secondary)
+              .onAppear {
+                print("❌ 画像読み込み失敗: \(urlStr) - エラー: \(error.localizedDescription)")
+              }
           case .empty:
-            let _ = print("⏳ 画像読み込み中: \(urlStr)")
             ProgressView()
+              .onAppear {
+                print("⏳ 画像読み込み中: \(urlStr)")
+              }
           @unknown default:
             ProgressView()
           }
@@ -38,9 +41,10 @@ struct ClothingQuickView: View {
         .frame(width: 150, height: 150)
         .background(Color.gray.opacity(0.1))
         .cornerRadius(12)
+        .onAppear {
+          print("🖼️ 画像表示リクエスト: \(urlStr)")
+        }
       } else {
-        // URLが無効な場合
-        let _ = print("⚠️ 画像URLなし")
         Rectangle()
           .fill(Color.gray.opacity(0.2))
           .overlay(
@@ -50,11 +54,14 @@ struct ClothingQuickView: View {
           )
           .frame(width: 150, height: 150)
           .cornerRadius(12)
+          .onAppear {
+            print("⚠️ 画像URLなし")
+          }
       }
       Text(name).font(.headline)
       Text(category).font(.subheadline).foregroundColor(.secondary)
-      if let c = color {
-        Text(c).font(.caption).padding(.horizontal, 8).padding(.vertical, 4)
+      if let colorValue = color {
+        Text(colorValue).font(.caption).padding(.horizontal, 8).padding(.vertical, 4)
           .background(Color(.secondarySystemBackground)).cornerRadius(6)
       }
     }

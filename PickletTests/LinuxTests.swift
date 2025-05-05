@@ -5,15 +5,15 @@
 //  Created on 2025/05/02.
 //
 
-import XCTest
 @testable import Picklet
+import XCTest
 
 final class LinuxCompatibleTests: XCTestCase {
-    
+
     func testClothingModel() {
         // テスト用の日付文字列
         let dateStr = "2025-04-30T10:00:00Z"
-        
+
         // Clothingインスタンスの作成テスト
         let id = UUID()
         let userId = UUID()
@@ -26,7 +26,7 @@ final class LinuxCompatibleTests: XCTestCase {
           createdAt: dateStr,
           updatedAt: dateStr
         )
-        
+
         // 各プロパティが正しく設定されているかテスト
         XCTAssertEqual(clothing.id, id)
         XCTAssertEqual(clothing.userID, userId)
@@ -36,7 +36,7 @@ final class LinuxCompatibleTests: XCTestCase {
         XCTAssertEqual(clothing.createdAt, dateStr)
         XCTAssertEqual(clothing.updatedAt, dateStr)
     }
-    
+
     func testWeatherModel() {
         let weather = Weather(
           city: "東京",
@@ -46,7 +46,7 @@ final class LinuxCompatibleTests: XCTestCase {
           icon: "clear-day",
           updatedAt: "2025-05-01T08:00:00Z"
         )
-        
+
         XCTAssertEqual(weather.city, "東京")
         XCTAssertEqual(weather.date, "2025-05-01")
         XCTAssertEqual(weather.temperature, 25.5)
@@ -54,14 +54,14 @@ final class LinuxCompatibleTests: XCTestCase {
         XCTAssertEqual(weather.icon, "clear-day")
         XCTAssertEqual(weather.updatedAt, "2025-05-01T08:00:00Z")
     }
-    
+
     // Linux環境ではClothingImageモデルがPickletモジュールに含まれていない可能性があるためiOSとmacOS環境のみでテスト
     #if os(macOS) || os(iOS)
     func testClothingImageModel() {
         // テスト用の日付
         let createdDate = Date()
         let updatedDate = Date()
-        
+
         // ClothingImageインスタンスの作成テスト
         let id = UUID()
         let clothingId = UUID()
@@ -76,7 +76,7 @@ final class LinuxCompatibleTests: XCTestCase {
           createdAt: createdDate,
           updatedAt: updatedDate
         )
-        
+
         // 各プロパティが正しく設定されているかテスト
         XCTAssertEqual(clothingImage.id, id)
         XCTAssertEqual(clothingImage.clothingId, clothingId)
@@ -86,7 +86,7 @@ final class LinuxCompatibleTests: XCTestCase {
         XCTAssertEqual(clothingImage.resultUrl, "https://example.com/result.jpg")
         XCTAssertEqual(clothingImage.createdAt, createdDate)
         XCTAssertEqual(clothingImage.updatedAt, updatedDate)
-        
+
         let clothingImageWithNil = ClothingImage(
           id: id,
           clothingId: clothingId,
@@ -97,14 +97,14 @@ final class LinuxCompatibleTests: XCTestCase {
           createdAt: createdDate,
           updatedAt: updatedDate
         )
-        
+
         XCTAssertNil(clothingImageWithNil.maskUrl)
         XCTAssertNil(clothingImageWithNil.resultUrl)
     }
     #endif
-    
+
     // Linux環境で動作しない可能性の高いテストケースは除外
-    
+
     // Linux環境でもテストが実行されるようにするための特別なセットアップ
     static var allTests = [
         ("testClothingModel", testClothingModel),

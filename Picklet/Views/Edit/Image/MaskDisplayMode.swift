@@ -12,12 +12,12 @@ struct MaskEditorView: View {
     @Environment(\.dismiss) var dismiss
 
     // MARK: - Simplified State
-    
+
     @State private var zoomScale: CGFloat = 1
     @State private var offset: CGSize = .zero
 
     var body: some View {
-        GeometryReader { geo in
+        GeometryReader { _ in
             ZStack {
                 // Display only the original image for simplicity
                 Image(uiImage: imageSet.original)

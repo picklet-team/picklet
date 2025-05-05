@@ -1,0 +1,67 @@
+name: Build and Test
+
+on:
+  push:
+    branches-ignore:
+      - 'gh-pages'
+      - 'docs/**'
+  pull_request:
+    branches:
+      - 'main'
+      - 'develop'
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout repository with token
+      uses: actions/checkout@v3
+      with:
+        lfs: true
+        fetch-depth: 0
+        token: ${{ github.token }}  # 明示的にトークンを指定
+    
+    - name: Pull LFS files
+      run: |
+        git lfs install
+        git lfs pull
+    
+    # モデルファイルの健全性を検証
+    - name: Verify LFS file integrity
+      run: |
+        echo "Checking ISNet.mlmodel file size and type:"
+        du -h Picklet/Models/ISNet.mlmodel
+        file Picklet/Models/ISNet.mlmodel
+        
+        # ファイルが小さすぎる場合はエラーを表示
+        FILE_SIZE=$(du -k Picklet/Models/ISNet.mlmodel | cut -f1)
+        if [ $FILE_SIZE -lt 10000 ]; then
+          echo "::error::ISNet.mlmodel is too small ($FILE_SIZE KB), likely not properly fetched from LFS"
+          echo "File contents:"
+          head -n 20 Picklet/Models/ISNet.mlmodel
+          exit 1
+        else
+          echo "✅ ISNet.mlmodel size looks good: $FILE_SIZE KB"
+        fi
+    
+    # Swift Packageのダウンロードを別ステップとして分離し、出力を最小限に
+    - name: Resolve Swift Packages
+      run: |
+        xcodebuild -resolvePackageDependencies -project Picklet.xcodeproj -scheme Picklet | grep -v "^$" | grep -v "Creating working copy" | grep -v "Fetching from" | grep -v "Checking out"
+    
+    - name: Clean
+      run: |
+        xcodebuild clean -project Picklet.xcodeproj -scheme Picklet -quiet
+    
+    - name: Build
+      run: |
+        # CIビルド用の xcconfig ファイルを使用
+        set -o pipefail && xcodebuild build -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO COMPILER_INDEX_STORE_ENABLE=NO -quiet | xcpretty -c --simple --no-utf
+
+    # テストが必要な場合のみ実行
+    - name: Test
+      if: github.event_name == 'pull_request' || contains(github.ref, 'main')
+      run: |
+        # CIビルド用の xcconfig ファイルを使用
+        set -o pipefail && xcodebuild test -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' -skip-testing:PickletUITests COMPILER_INDEX_STORE_ENABLE=NO -quiet | xcpretty -c --test --no-utf

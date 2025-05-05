@@ -57,7 +57,7 @@ class CoreMLService {
         for image: UIImage,
         flipHorizontally: Bool = true
     ) async -> UIImage? {
-        let targetSize = CGSize(width: 1024, height: 1024)
+        let targetSize = CGSize(width: 1_024, height: 1_024)
 
         // 1. 推論用にリサイズ
         guard let resizedInput = image.resizedAspectFitWithTransparentPadding(to: targetSize),

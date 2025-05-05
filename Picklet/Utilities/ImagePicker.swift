@@ -40,7 +40,7 @@ struct ImagePicker: UIViewControllerRepresentable {
 
       guard let provider = results.first?.itemProvider else { return }
       if provider.canLoadObject(ofClass: UIImage.self) {
-        provider.loadObject(ofClass: UIImage.self) { image, error in
+        provider.loadObject(ofClass: UIImage.self) { image, _ in
           if let uiImage = image as? UIImage {
             DispatchQueue.main.async {
               self.parent.onImagePicked(uiImage)

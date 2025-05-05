@@ -26,7 +26,7 @@ class SupabaseService {
         get { AuthService.shared.isLoggedIn }
         set { AuthService.shared.isLoggedIn = newValue }
     }
-    
+
     var currentUser: User? {
         AuthService.shared.currentUser
     }
@@ -57,8 +57,8 @@ class SupabaseService {
     func addClothing(_ clothing: Clothing) async throws {
         guard let user = currentUser else {
             throw NSError(
-                domain: "auth", 
-                code: 401, 
+                domain: "auth",
+                code: 401,
                 userInfo: [NSLocalizedDescriptionKey: "ユーザーが未ログインです"]
             )
         }
@@ -127,23 +127,4 @@ class SupabaseService {
                 .execute()
     }
 }
-
-private struct NewClothingImage: Encodable {
-    let id: UUID
-    let clothingID: UUID
-    let userID: UUID
-    let originalURL: String
-    let maskURL: String?
-    let resultURL: String?
-    let createdAt: String
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case clothingID = "clothing_id"
-        case userID = "user_id"
-        case originalURL = "original_url"
-        case maskURL = "mask_url"
-        case resultURL = "result_url"
-        case createdAt = "created_at"
-    }
-}
+// NewClothingImage 構造体は Helpers/NewClothingImage.swift に移動したため削除
