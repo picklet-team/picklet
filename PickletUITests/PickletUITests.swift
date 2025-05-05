@@ -93,13 +93,13 @@ final class PickletUITests: XCTestCase {
       XCTAssertTrue(true, "タブバーが表示されています")
 
       // タブをタップしようとするが、失敗してもテスト自体は失敗させない
-      if !app.tabBars.buttons.isEmpty {
+      if app.tabBars.buttons.count > 0 {
         app.tabBars.buttons.element(boundBy: 0).tap()
       }
     }
 
     // 何らかの要素が表示されていることを確認
-    let anyUIExists = !app.staticTexts.isEmpty || !app.images.isEmpty || !app.buttons.isEmpty
+    let anyUIExists = app.staticTexts.count > 0 || app.images.count > 0 || app.buttons.count > 0
     XCTAssertTrue(anyUIExists, "画面上に何らかのUI要素が表示されています")
   }
 
@@ -130,7 +130,7 @@ final class PickletUITests: XCTestCase {
     }
 
     // アプリが動作していることを確認
-    let anyUIExists = !app.staticTexts.isEmpty || !app.images.isEmpty || !app.buttons.isEmpty
+    let anyUIExists = app.staticTexts.count > 0 || app.images.count > 0 || app.buttons.count > 0
     XCTAssertTrue(anyUIExists, "画面上に要素が表示されています")
   }
 
@@ -190,7 +190,7 @@ final class PickletUITests: XCTestCase {
 
     // 2. 長めのタイムアウトで待機（ネットワークリクエストなどの時間を考慮）
     let weatherExpectation = XCTNSPredicateExpectation(
-      predicate: NSPredicate(format: "!isEmpty"),
+      predicate: NSPredicate(format: "count > 0"),
       object: weatherTexts
     )
 
@@ -199,10 +199,10 @@ final class PickletUITests: XCTestCase {
 
     // 3. 天気情報が読み込まれない場合でも、何らかのUIが表示されていれば良しとする
     if result == .completed {
-      XCTAssertFalse(weatherTexts.isEmpty, "天気関連の情報が表示されています")
+      XCTAssertTrue(weatherTexts.count > 0, "天気関連の情報が表示されています")
     } else {
       // 天気テキストが見つからなくても、画面に何らかの要素が表示されていればOK
-      XCTAssertFalse(app.staticTexts.isEmpty && app.images.isEmpty, "画面上に何らかのUI要素が表示されています")
+      XCTAssertFalse(app.staticTexts.count == 0 && app.images.count == 0, "画面上に何らかのUI要素が表示されています")
     }
   }
 
@@ -236,6 +236,8 @@ final class PickletUITests: XCTestCase {
     // バージョン情報を表示するラベルを検索（テキスト内容で判断）
     let versionPredicate = NSPredicate(format: "label CONTAINS 'バージョン' OR label CONTAINS 'Version'")
     let versionTexts = app.staticTexts.matching(versionPredicate)
+    // 未使用変数の警告を解消
+    _ = versionTexts
 
     // 設定画面の基本要素の存在を確認
     // トグルまたはログアウトボタンのどちらかがあればOK

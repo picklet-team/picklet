@@ -1,14 +1,13 @@
-# 一時的に無効化（2025-05-04）
+# SwiftLint と SwiftFormat を自動実行するワークフロー
 name: Swift Lint & Format
 
-# on:
-#   push:
-#     branches: [ main ]
-#   pull_request:
-#     branches: [ main ]
-    
-# トリガーを無効化（手動実行のみ）
+# プッシュとプルリクエスト時に自動実行されるよう再有効化
 on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  # 手動実行も可能に設定
   workflow_dispatch:
 
 jobs:
@@ -17,25 +16,25 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install SwiftLint
         run: |
           brew install swiftlint
-          
+
       - name: Run SwiftLint
         run: |
           swiftlint --strict --reporter github-actions-logging
-          
+
   swiftformat:
     name: SwiftFormat
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install SwiftFormat
         run: |
           brew install swiftformat
-          
+
       - name: Run SwiftFormat (Check only)
         run: |
           swiftformat --lint . --config .swiftformat --reporter github-actions
