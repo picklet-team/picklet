@@ -22,14 +22,14 @@ jobs:
           fetch-depth: 0
           token: ${{ github.token }}  # 明示的にトークンを指定
 
-      - name: Set up Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: '16.2'
-
-      - name: Install xcpretty
+      # xcprettyがインストールされているか確認し、なければユーザー権限でインストール
+      - name: Check and install xcpretty
         run: |
-          gem install xcpretty
+          if ! command -v xcpretty &> /dev/null; then
+            echo "xcpretty not found, installing with user permissions..."
+            gem install --user-install xcpretty
+            export PATH="$HOME/.gem/ruby/$(ruby -e 'puts RUBY_VERSION.match(/\d+\.\d+/)[0]')/bin:$PATH"
+          fi
           xcpretty --version
 
       - name: Pull LFS files
@@ -60,7 +60,6 @@ jobs:
           echo "First 16 bytes of ISNet.mlmodel:"
           head -c 16 Picklet/Models/ISNet.mlmodel | xxd
 
-
       # Swift Packageのダウンロードを別ステップとして分離し、出力を最小限に
       - name: Resolve Swift Packages
         run: |
@@ -72,16 +71,16 @@ jobs:
 
       - name: List available simulators
         run: |
-          xcrun simctl list devices available
+          xcrun simctl list devices available | grep -E 'iPhone|iPad'
 
       - name: Build
         run: |
           # CIビルド用の xcconfig ファイルを使用
-          set -o pipefail && xcodebuild build -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.3.1' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO COMPILER_INDEX_STORE_ENABLE=NO -quiet | xcpretty -c --simple --no-utf
+          xcodebuild build -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.3.1' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO COMPILER_INDEX_STORE_ENABLE=NO -quiet
 
       # テストが必要な場合のみ実行
       - name: Test
         if: github.event_name == 'pull_request' || contains(github.ref, 'main')
         run: |
           # CIビルド用の xcconfig ファイルを使用
-          set -o pipefail && xcodebuild test -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.3.1' -skip-testing:PickletUITests COMPILER_INDEX_STORE_ENABLE=NO -quiet | xcpretty -c --test --no-utf
+          xcodebuild test -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.3.1' -skip-testing:PickletUITests COMPILER_INDEX_STORE_ENABLE=NO -quiet
