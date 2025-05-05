@@ -79,6 +79,14 @@ class CoreMLService {
 
       // ---ここからマスク加工---
 
+      // 警告: 画像サイズは大きくないか確認
+      if let cgImage = image.cgImage {
+        let imageSize = cgImage.width * cgImage.height
+        if imageSize > 2_000_000 { // 2_000_000ピクセル (例: 1_400x1_400)
+          print("⚠️ 画像サイズが大きすぎます: \(cgImage.width)x\(cgImage.height) = \(imageSize)ピクセル")
+        }
+      }
+
       // 4. マスクを元画像サイズにリサイズ（元画像と同じ）
       guard let resizedMask = maskImage.resizedMaskCentered(to: image.size) else {
         print("❌ マスクリサイズ失敗")

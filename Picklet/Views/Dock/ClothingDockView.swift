@@ -20,6 +20,10 @@ private struct CursorSmoother {
 // MARK: - Dock View
 
 struct ClothingDockView: View {
+  let itemWidth = UIScreen.main.bounds.width * 0.38
+  let itemHeight = UIScreen.main.bounds.width * 0.38
+  let horizontalPadding = 15.0
+
   @EnvironmentObject private var viewModel: ClothingViewModel
 
   // configuration

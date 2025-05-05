@@ -277,11 +277,23 @@ final class ImageMetadataService {
   /// Function to get image from an existing record
   func getImage(imageId: UUID) async throws -> ClothingImage? {
     // サーバー上のデータを検索
+    guard let imageId = UUID(uuidString: imageId.uuidString) else {
+      throw NSError(domain: "ImageMetadata", code: 400, userInfo: ["error": "無効な画像ID"])
+    }
+
     let response = try await client
       .from("clothing_images")
       .select("*")
       .eq("id", value: imageId.uuidString)
       .execute()
+
+    if let clothingImageResponse = try? await fetchClothingImages(for: imageId) {
+      let remoteImages = clothingImageResponse
+
+      if let image = remoteImages.first(where: { $0.id == imageId }) {
+        return image
+      }
+    }
 
     return try response.decoded(to: [ClothingImage].self).first
   }
