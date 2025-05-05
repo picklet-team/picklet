@@ -26,6 +26,7 @@ jobs:
         # LFSファイルが正しく取得できているか確認
         echo "Checking ISNet.mlmodel file size:"
         du -h Picklet/Models/ISNet.mlmodel
+        echo "Making sure LFS files are properly fetched"
     
     - name: Build and Test
       run: |
