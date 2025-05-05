@@ -27,6 +27,11 @@ jobs:
         with:
           xcode-version: '16.2'
 
+      - name: Install xcpretty
+        run: |
+          gem install xcpretty
+          xcpretty --version
+
       - name: Pull LFS files
         run: |
           git lfs install
@@ -65,14 +70,18 @@ jobs:
         run: |
           xcodebuild clean -project Picklet.xcodeproj -scheme Picklet -quiet
 
+      - name: List available simulators
+        run: |
+          xcrun simctl list devices available
+
       - name: Build
         run: |
           # CIビルド用の xcconfig ファイルを使用
-          set -o pipefail && xcodebuild build -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO COMPILER_INDEX_STORE_ENABLE=NO -quiet | xcpretty -c --simple --no-utf
+          set -o pipefail && xcodebuild build -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.3.1' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO COMPILER_INDEX_STORE_ENABLE=NO -quiet | xcpretty -c --simple --no-utf
 
       # テストが必要な場合のみ実行
       - name: Test
         if: github.event_name == 'pull_request' || contains(github.ref, 'main')
         run: |
           # CIビルド用の xcconfig ファイルを使用
-          set -o pipefail && xcodebuild test -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' -skip-testing:PickletUITests COMPILER_INDEX_STORE_ENABLE=NO -quiet | xcpretty -c --test --no-utf
+          set -o pipefail && xcodebuild test -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.3.1' -skip-testing:PickletUITests COMPILER_INDEX_STORE_ENABLE=NO -quiet | xcpretty -c --test --no-utf
