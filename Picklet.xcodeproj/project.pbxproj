@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 76;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -244,7 +244,7 @@
 				B53EF5172DBA8AD700F5CA39 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 				B53EF53B2DBB3F6700F5CA39 /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */,
 			);
-			preferredProjectObjectVersion = 77;
+			preferredProjectObjectVersion = 76;
 			productRefGroup = B57C87D72DAA27A0001C2153 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
