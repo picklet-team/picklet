@@ -1,3 +1,2 @@
 *.mlmodel filter=lfs diff=lfs merge=lfs -text
 *.mlmodelc/** filter=lfs diff=lfs merge=lfs -text
-Picklet/Models/ISNet.mlmodelc/** filter=lfs diff=lfs merge=lfs -text
