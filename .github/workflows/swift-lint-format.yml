@@ -51,3 +51,14 @@ jobs:
       - name: Run SwiftFormat (Check only)
         run: |
           swiftformat --lint . --config .swiftformat --reporter github-actions-log
+
+      - name: Run SwiftFormat (Auto-format)
+        # プルリクエスト時は自動フォーマットを行う
+        if: github.event_name == 'pull_request'
+        run: |
+          swiftformat . --config .swiftformat
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          git add .
+          git diff --staged --quiet || git commit -m "🤖 SwiftFormat による自動フォーマット"
+          git push
