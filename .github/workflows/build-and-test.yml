@@ -31,14 +31,23 @@ jobs:
         echo "Checking ISNet.mlmodel file size:"
         du -h Picklet/Models/ISNet.mlmodel
     
+    # Swift Packageのダウンロードを別ステップとして分離し、出力を最小限に
+    - name: Resolve Swift Packages
+      run: |
+        xcodebuild -resolvePackageDependencies -project Picklet.xcodeproj -scheme Picklet | grep -v "^$" | grep -v "Creating working copy" | grep -v "Fetching from" | grep -v "Checking out"
+    
+    - name: Clean
+      run: |
+        xcodebuild clean -project Picklet.xcodeproj -scheme Picklet -quiet
+    
     - name: Build
       run: |
-        # ビルドのみ (テストなし) - より高速で簡潔な出力
-        xcodebuild -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO | xcpretty
+        # ログ出力を最小限にする
+        set -o pipefail && xcodebuild build -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO -quiet | xcpretty -c --simple --no-utf
 
     # テストが必要な場合のみ実行
     - name: Test
       if: github.event_name == 'pull_request' || contains(github.ref, 'main')
       run: |
-        # xcprettyを使用してログ出力を整理
-        xcodebuild -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' test | xcpretty --color
+        # テストのみ実行、ログ出力を最小限にする
+        set -o pipefail && xcodebuild test -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' -skip-testing:PickletUITests -quiet | xcpretty -c --test --no-utf
