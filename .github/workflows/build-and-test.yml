@@ -2,9 +2,13 @@ name: Build and Test
 
 on:
   push:
-    branches: [ main, 79-loadimage ]  # 現在のブランチも対象に追加
+    branches-ignore:
+      - 'gh-pages'
+      - 'docs/**'
   pull_request:
-    branches: [ main ]
+    branches:
+      - 'main'
+      - 'develop'
 
 jobs:
   build:
@@ -21,17 +25,20 @@ jobs:
       with:
         xcode-version: latest-stable
     
-    - name: List LFS files (verify checkout)
+    - name: Verify LFS files
       run: |
         # LFSファイルが正しく取得できているか確認
         echo "Checking ISNet.mlmodel file size:"
         du -h Picklet/Models/ISNet.mlmodel
-        echo "Making sure LFS files are properly fetched"
     
-    - name: Build and Test
+    - name: Build
       run: |
-        # 利用可能なシミュレーター一覧を表示
-        xcrun simctl list devices
-        
-        # iPhone 16を使用（利用可能なシミュレーターに基づいて選択）
-        xcodebuild -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' build test
+        # ビルドのみ (テストなし) - より高速で簡潔な出力
+        xcodebuild -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO | xcpretty
+
+    # テストが必要な場合のみ実行
+    - name: Test
+      if: github.event_name == 'pull_request' || contains(github.ref, 'main')
+      run: |
+        # xcprettyを使用してログ出力を整理
+        xcodebuild -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' test | xcpretty --color
