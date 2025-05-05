@@ -22,15 +22,27 @@ jobs:
           fetch-depth: 0
           token: ${{ github.token }}  # 明示的にトークンを指定
 
-      # xcprettyがインストールされているか確認し、なければユーザー権限でインストール
-      - name: Check and install xcpretty
+      # xcprettyがインストールされているか確認し、PATHに追加
+      - name: Set up Ruby environment
         run: |
+          echo "Setting up Ruby environment..."
+          export GEM_HOME="$HOME/.gem/ruby/$(ruby -e 'puts RUBY_VERSION.match(/\d+\.\d+/)[0]')"
+          export PATH="$GEM_HOME/bin:$PATH"
+          echo "Ruby version: $(ruby --version)"
+          echo "Gem path: $GEM_HOME"
+          echo "PATH: $PATH"
+          echo "GEM_HOME=$GEM_HOME" >> $GITHUB_ENV
+          echo "$GEM_HOME/bin" >> $GITHUB_PATH
+
+      - name: Install xcpretty if needed
+        run: |
+          gem environment
           if ! command -v xcpretty &> /dev/null; then
-            echo "xcpretty not found, installing with user permissions..."
+            echo "Installing xcpretty..."
             gem install --user-install xcpretty
-            export PATH="$HOME/.gem/ruby/$(ruby -e 'puts RUBY_VERSION.match(/\d+\.\d+/)[0]')/bin:$PATH"
           fi
-          xcpretty --version
+          echo "xcpretty path: $(which xcpretty || echo 'Not found')"
+          echo "xcpretty version: $(xcpretty --version || echo 'Failed to get version')"
 
       - name: Pull LFS files
         run: |
@@ -75,12 +87,12 @@ jobs:
 
       - name: Build
         run: |
-          # CIビルド用の xcconfig ファイルを使用
+          # xcprettyを使わない構成に変更
           xcodebuild build -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.3.1' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO COMPILER_INDEX_STORE_ENABLE=NO -quiet
 
       # テストが必要な場合のみ実行
       - name: Test
         if: github.event_name == 'pull_request' || contains(github.ref, 'main')
         run: |
-          # CIビルド用の xcconfig ファイルを使用
+          # xcprettyを使わない構成に変更
           xcodebuild test -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.3.1' -skip-testing:PickletUITests COMPILER_INDEX_STORE_ENABLE=NO -quiet

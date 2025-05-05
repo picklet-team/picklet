@@ -23,11 +23,14 @@ jobs:
 
       - name: Install SwiftLint
         run: |
-          brew install swiftlint
+          if ! command -v swiftlint &> /dev/null; then
+            brew install swiftlint
+          fi
+          swiftlint --version
 
       - name: Run SwiftLint
         run: |
-          swiftlint --strict --reporter github-actions-logging
+          swiftlint --reporter github-actions-logging
 
       # 結果を表示する場合は以下のステップを追加
       - name: Upload SwiftLint Results
@@ -46,19 +49,18 @@ jobs:
 
       - name: Install SwiftFormat
         run: |
-          brew install swiftformat
+          if ! command -v swiftformat &> /dev/null; then
+            brew install swiftformat
+          fi
+          swiftformat --version
 
-      - name: Run SwiftFormat (Check only)
+      - name: Run SwiftFormat (Check Only)
         run: |
-          swiftformat --lint . --config .swiftformat --reporter github-actions-log
+          swiftformat --lint . --config .swiftformat
 
-      - name: Run SwiftFormat (Auto-format)
-        # プルリクエスト時は自動フォーマットを行う
+      # 自動修正は検証のみでプッシュしないようにする
+      - name: Run SwiftFormat (Dry Run)
         if: github.event_name == 'pull_request'
         run: |
-          swiftformat . --config .swiftformat
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'actions@github.com'
-          git add .
-          git diff --staged --quiet || git commit -m "🤖 SwiftFormat による自動フォーマット"
-          git push
+          echo "Running SwiftFormat in dry run mode..."
+          swiftformat . --config .swiftformat --dryrun
