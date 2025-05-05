@@ -13,7 +13,13 @@ class WeatherAPIService {
         let apiKey = getOpenWeatherApiKey()
         let encodedCity = city.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? city
 
-        guard let url = URL(string: "https://api.openweathermap.org/data/2.5/weather?q=\(encodedCity)&appid=\(apiKey)&units=metric&lang=ja") else {
+        let urlString = "https://api.openweathermap.org/data/2.5/weather" +
+                        "?q=\(encodedCity)" +
+                        "&appid=\(apiKey)" +
+                        "&units=metric" +
+                        "&lang=ja"
+        
+        guard let url = URL(string: urlString) else {
             throw NSError(
                 domain: "weather", code: 400, userInfo: [NSLocalizedDescriptionKey: "無効な都市名です"])
         }

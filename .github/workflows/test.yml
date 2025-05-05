@@ -26,8 +26,8 @@ jobs:
     
     - name: Build
       run: |
-        xcodebuild clean build -project Picklet.xcodeproj -scheme Picklet -destination "platform=iOS Simulator,name=iPhone 14" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
+        xcodebuild clean build -project Picklet.xcodeproj -scheme Picklet -destination "platform=iOS Simulator,name=iPhone 16" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
         
     - name: Test
       run: |
-        xcodebuild test -project Picklet.xcodeproj -scheme Picklet -destination "platform=iOS Simulator,name=iPhone 14" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
+        xcodebuild test -project Picklet.xcodeproj -scheme Picklet -destination "platform=iOS Simulator,name=iPhone 16" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO

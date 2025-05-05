@@ -91,7 +91,11 @@ class LocalStorageService {
             }
 
             guard let data = data, let image = UIImage(data: data) else {
-                let error = NSError(domain: "LocalStorageService", code: 1, userInfo: [NSLocalizedDescriptionKey: "画像データの変換に失敗しました"])
+                let error = NSError(
+                    domain: "LocalStorageService", 
+                    code: 1, 
+                    userInfo: [NSLocalizedDescriptionKey: "画像データの変換に失敗しました"]
+                )
                 completion(nil, error)
                 return
             }
