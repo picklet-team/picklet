@@ -15,28 +15,64 @@ jobs:
     runs-on: macos-latest
     
     steps:
-    - name: Checkout repository
+    - name: Checkout repository with token
       uses: actions/checkout@v3
       with:
-        lfs: true  # LFSファイルを明示的に取得
-        fetch-depth: 0  # 全履歴を取得
+        lfs: true
+        fetch-depth: 0
+        token: ${{ github.token }}  # 明示的にトークンを指定
+    
+    # LFSファイルのキャッシュを設定
+    - name: Cache LFS files
+      uses: actions/cache@v3
+      with:
+        path: .git/lfs
+        key: ${{ runner.os }}-lfs-${{ hashFiles('.lfsconfig') }}
+        restore-keys: |
+          ${{ runner.os }}-lfs-
     
     - name: Fetch LFS files
       run: |
+        git lfs install
         git lfs fetch --all
         git lfs checkout
+    
+    # モデルファイルの健全性を検証
+    - name: Verify LFS file integrity
+      run: |
+        echo "Checking ISNet.mlmodel file size and type:"
+        du -h Picklet/Models/ISNet.mlmodel
+        file Picklet/Models/ISNet.mlmodel
+        
+        # ファイルが小さすぎる場合はエラーを表示
+        FILE_SIZE=$(du -k Picklet/Models/ISNet.mlmodel | cut -f1)
+        if [ $FILE_SIZE -lt 10000 ]; then
+          echo "::error::ISNet.mlmodel is too small ($FILE_SIZE KB), likely not properly fetched from LFS"
+          echo "File contents:"
+          head -n 20 Picklet/Models/ISNet.mlmodel
+          exit 1
+        else
+          echo "✅ ISNet.mlmodel size looks good: $FILE_SIZE KB"
+        fi
     
     - name: Setup Xcode
       uses: maxim-lobanov/setup-xcode@v1
       with:
         xcode-version: latest-stable
     
-    - name: Verify LFS files
+    # CIビルド専用の修正を追加（CoreMLコンパイルをスキップする）
+    - name: Prepare for CI Build
       run: |
-        # LFSファイルが正しく取得できているか確認
-        echo "Checking ISNet.mlmodel file size and type:"
-        du -h Picklet/Models/ISNet.mlmodel
-        file Picklet/Models/ISNet.mlmodel
+        echo "Setting up build for CI environment"
+        
+        # xcconfig ファイルを作成して CoreML コンパイルをスキップするオプションを設定
+        cat > ci_build.xcconfig << EOF
+        // Skip CoreML model compilation for CI
+        ENABLE_COREML_COMPILATION = NO
+        EOF
+        
+        echo "Created xcconfig file:"
+        cat ci_build.xcconfig
     
     # Swift Packageのダウンロードを別ステップとして分離し、出力を最小限に
     - name: Resolve Swift Packages
@@ -49,20 +85,12 @@ jobs:
     
     - name: Build
       run: |
-        # CI環境であることを明示
-        export CI=true
-        export GITHUB_ACTIONS=true
-        
-        # ログ出力を最小限にする
-        set -o pipefail && xcodebuild build -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO -quiet | xcpretty -c --simple --no-utf
+        # CIビルド用の xcconfig ファイルを使用
+        set -o pipefail && xcodebuild build -project Picklet.xcodeproj -scheme Picklet -xcconfig ci_build.xcconfig -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO COMPILER_INDEX_STORE_ENABLE=NO -quiet | xcpretty -c --simple --no-utf
 
     # テストが必要な場合のみ実行
     - name: Test
       if: github.event_name == 'pull_request' || contains(github.ref, 'main')
       run: |
-        # CI環境であることを明示
-        export CI=true
-        export GITHUB_ACTIONS=true
-        
-        # テストのみ実行、ログ出力を最小限にする
-        set -o pipefail && xcodebuild test -project Picklet.xcodeproj -scheme Picklet -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' -skip-testing:PickletUITests -quiet | xcpretty -c --test --no-utf
+        # CIビルド用の xcconfig ファイルを使用
+        set -o pipefail && xcodebuild test -project Picklet.xcodeproj -scheme Picklet -xcconfig ci_build.xcconfig -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' -skip-testing:PickletUITests COMPILER_INDEX_STORE_ENABLE=NO -quiet | xcpretty -c --test --no-utf
