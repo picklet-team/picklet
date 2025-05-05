@@ -64,7 +64,7 @@ struct PhotoLibraryPickerView: View {
     }
 
     // MARK: - Scroll proxy holder
-    
+
     @State private var scrollProxy: ScrollViewProxy?
 
     private func fetchAssets() {

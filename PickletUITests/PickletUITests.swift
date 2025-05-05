@@ -40,83 +40,83 @@ final class PickletUITests: XCTestCase {
       }
     }
   }
-  
+
   @MainActor
   func testLoginScreen() throws {
     let app = XCUIApplication()
     app.launch()
-    
+
     // 基本的な画面要素の確認（識別子に依存しない）
     XCTAssertTrue(app.textFields.firstMatch.exists, "テキストフィールドが表示されていません")
     XCTAssertTrue(app.secureTextFields.firstMatch.exists, "パスワードフィールドが表示されていません")
     XCTAssertTrue(app.buttons.firstMatch.exists, "ボタンが表示されていません")
-    
+
     // メールアドレス入力
     let emailField = app.textFields.firstMatch
     emailField.tap()
     emailField.typeText("test@example.com")
-    
+
     // パスワード入力
     let passwordField = app.secureTextFields.firstMatch
     passwordField.tap()
     passwordField.typeText("password123")
-    
+
     // キーボードを閉じる（"Return"ボタンがなければタップしない）
     if app.buttons["Return"].exists {
       app.buttons["Return"].tap()
     } else {
       app.tap() // 画面の他の場所をタップしてキーボードを閉じる
     }
-    
+
     // ログインボタンをタップ（テキストで識別）
     let loginButton = app.buttons.matching(NSPredicate(format: "label CONTAINS 'ログイン'")).firstMatch
     XCTAssertTrue(loginButton.exists, "ログインボタンが見つかりません")
     loginButton.tap()
-    
+
     // 5秒待機してタブバーが表示されるか確認
     let tabBar = app.tabBars.firstMatch
     XCTAssertTrue(tabBar.waitForExistence(timeout: 5.0), "ログイン後にタブバーが表示されていません")
   }
-  
+
   @MainActor
   func testClothingList() throws {
     let app = XCUIApplication()
     // アプリを既にログイン状態で起動する
     app.launchArguments = ["UI_TESTING", "LOGGED_IN"]
     app.launch()
-    
+
     // アプリが起動したことを確認する最小限のテスト
     XCTAssertTrue(app.exists, "アプリが起動しました")
-    
+
     // タブバーが表示されることを確認（長めのタイムアウト）
     if app.tabBars.firstMatch.waitForExistence(timeout: 15.0) {
       XCTAssertTrue(true, "タブバーが表示されています")
-      
+
       // タブをタップしようとするが、失敗してもテスト自体は失敗させない
       if app.tabBars.buttons.count > 0 {
         app.tabBars.buttons.element(boundBy: 0).tap()
       }
     }
-    
+
     // 何らかの要素が表示されていることを確認
     let anyUIExists = app.staticTexts.count > 0 || app.images.count > 0 || app.buttons.count > 0
     XCTAssertTrue(anyUIExists, "画面上に何らかのUI要素が表示されています")
   }
-  
+
   @MainActor
   func testCaptureFlow() throws {
     let app = XCUIApplication()
     // アプリを既にログイン状態で起動
     app.launchArguments = ["UI_TESTING", "LOGGED_IN"]
     app.launch()
-    
+
     // アプリが起動したことを確認する最小限のテスト
     XCTAssertTrue(app.exists, "アプリが起動しました")
-    
+
     // タブバーが表示されることを確認（長めのタイムアウト）
     if app.tabBars.firstMatch.waitForExistence(timeout: 15.0) {
       XCTAssertTrue(true, "タブバーが表示されています")
-      
+
       // 真ん中のタブをタップ（通常はカメラ/キャプチャータブ）が存在する場合のみ
       let middleIndex = app.tabBars.buttons.count / 2
       if middleIndex < app.tabBars.buttons.count {
@@ -128,46 +128,46 @@ final class PickletUITests: XCTestCase {
         }
       }
     }
-    
+
     // アプリが動作していることを確認
     let anyUIExists = app.staticTexts.count > 0 || app.images.count > 0 || app.buttons.count > 0
     XCTAssertTrue(anyUIExists, "画面上に要素が表示されています")
   }
-  
+
   @MainActor
   func testWeatherView() throws {
     let app = XCUIApplication()
     // アプリを既にログイン状態で起動
     app.launchArguments = ["UI_TESTING", "LOGGED_IN"]
     app.launch()
-    
+
     // タブバーが表示されることを確認
     XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 2.0), "タブバーが表示されていません")
-    
+
     // 天気タブに移動（タブの順番で判断）
     var weatherTabFound = false
-    
+
     // 候補となるタブインデックス（UI構造によって変わる可能性がある）
     let possibleWeatherTabIndices = [2, 3, app.tabBars.buttons.count - 1]
-    
+
     for index in possibleWeatherTabIndices where index < app.tabBars.buttons.count {
       let potentialWeatherTab = app.tabBars.buttons.element(boundBy: index)
       if potentialWeatherTab.exists {
         potentialWeatherTab.tap()
         weatherTabFound = true
-        
+
         // タップ後、UIの更新を待つ
         sleep(1)
         break
       }
     }
-    
+
     // いずれかのタブがタップできたか確認
     XCTAssertTrue(weatherTabFound, "天気関連のタブが見つかりませんでした")
-    
+
     // 天気情報が表示されるまで待機
     // 画面に天気関連のテキストが表示されるのを待つ（柔軟な方法で検索）
-    
+
     // 1. 温度や気象関連のテキストを探す（°C, ℃, 度, 晴れ,曇り, 雨など）
     let weatherPatterns = [
       "label CONTAINS '°'",
@@ -184,19 +184,19 @@ final class PickletUITests: XCTestCase {
       "label CONTAINS 'weather'",
       "label CONTAINS '天気'"
     ]
-    
+
     let weatherPredicate = NSPredicate(format: weatherPatterns.joined(separator: " OR "))
     let weatherTexts = app.staticTexts.matching(weatherPredicate)
-    
+
     // 2. 長めのタイムアウトで待機（ネットワークリクエストなどの時間を考慮）
     let weatherExpectation = XCTNSPredicateExpectation(
       predicate: NSPredicate(format: "count > 0"),
       object: weatherTexts
     )
-    
+
     // 10秒待機
     let result = XCTWaiter.wait(for: [weatherExpectation], timeout: 10.0)
-    
+
     // 3. 天気情報が読み込まれない場合でも、何らかのUIが表示されていれば良しとする
     if result == .completed {
       XCTAssertTrue(weatherTexts.count > 0, "天気関連の情報が表示されています")
@@ -205,35 +205,35 @@ final class PickletUITests: XCTestCase {
       XCTAssertTrue(app.staticTexts.count > 0 || app.images.count > 0, "画面上に何らかのUI要素が表示されています")
     }
   }
-  
+
   @MainActor
   func testSettingsView() throws {
     let app = XCUIApplication()
     // アプリを既にログイン状態で起動
     app.launchArguments = ["UI_TESTING", "LOGGED_IN"]
     app.launch()
-    
+
     // 設定タブに移動（タブの順番で判断、通常は最後のタブ）
     let settingsTab = app.tabBars.buttons.element(boundBy: app.tabBars.buttons.count - 1)
     XCTAssertTrue(settingsTab.waitForExistence(timeout: 2.0), "設定タブが表示されていません")
     settingsTab.tap()
-    
+
     // 設定画面の要素を確認
     // ナビゲーションタイトルや設定関連のテキストを探す
     let navTitle = app.navigationBars.staticTexts.firstMatch
     XCTAssertTrue(navTitle.exists, "設定画面のタイトルが表示されていません")
-    
+
     // トグルやスイッチの存在を確認
     let toggleExists = app.switches.firstMatch.waitForExistence(timeout: 2.0)
-    
+
     // ログアウト関連のボタンを検索（テキスト内容で判断）
     let logoutPredicate = NSPredicate(format: "label CONTAINS 'ログアウト' OR label CONTAINS 'サインアウト' OR label CONTAINS 'Logout' OR label CONTAINS 'Sign out'")
     let logoutButton = app.buttons.matching(logoutPredicate).firstMatch
-    
+
     // バージョン情報を表示するラベルを検索（テキスト内容で判断）
     let versionPredicate = NSPredicate(format: "label CONTAINS 'バージョン' OR label CONTAINS 'Version'")
     let versionTexts = app.staticTexts.matching(versionPredicate)
-    
+
     // 設定画面の基本要素の存在を確認
     // トグルまたはログアウトボタンのどちらかがあればOK
     XCTAssertTrue(toggleExists || logoutButton.exists, "設定画面の基本要素が表示されていません")

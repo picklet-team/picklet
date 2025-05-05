@@ -26,7 +26,7 @@ class SupabaseService {
         get { AuthService.shared.isLoggedIn }
         set { AuthService.shared.isLoggedIn = newValue }
     }
-    
+
     var currentUser: User? {
         AuthService.shared.currentUser
     }
@@ -57,8 +57,8 @@ class SupabaseService {
     func addClothing(_ clothing: Clothing) async throws {
         guard let user = currentUser else {
             throw NSError(
-                domain: "auth", 
-                code: 401, 
+                domain: "auth",
+                code: 401,
                 userInfo: [NSLocalizedDescriptionKey: "ユーザーが未ログインです"]
             )
         }

@@ -7,11 +7,11 @@ import UIKit
 final class ImageStorageService {
     /// デフォルトバケット名を使うシングルトン
     static let shared = ImageStorageService()
-    
+
     private let client: SupabaseClient
     /// デフォルトバケット名
     private let defaultBucketName: String
-    
+
     /// 内部用イニシャライザ
     private init(defaultBucketName: String = "originals",
                  client: SupabaseClient = AuthService.shared.client) {
@@ -19,12 +19,12 @@ final class ImageStorageService {
         self.client = client
         print("🔧 ImageStorageService 初期化: デフォルトバケット = \(defaultBucketName)")
     }
-    
+
     /// カスタムバケット向けのイニシャライザ
     convenience init(bucketName: String) {
         self.init(defaultBucketName: bucketName)
     }
-    
+
     /// 画像をアップロードし、公開 URL を返す
     /// - Parameters:
     ///   - image: アップロードする UIImage
@@ -49,10 +49,10 @@ final class ImageStorageService {
             throw error
         }
         print("✓ 画像変換成功: \(data.count) bytes")
-        
+
         let bucket = bucketName ?? defaultBucketName
         let path = "\(filename).jpg"
-        
+
         print("🔄 Supabaseへのアップロード開始: bucket=\(bucket), path=\(path)")
         do {
             _ = try await client.storage
@@ -67,7 +67,7 @@ final class ImageStorageService {
             print("❌ Supabase アップロードエラー: \(error.localizedDescription)")
             throw error
         }
-        
+
         do {
             guard let baseURL = Bundle.main
                 .object(forInfoDictionaryKey: "SUPABASE_URL") as? String
@@ -80,27 +80,27 @@ final class ImageStorageService {
                 print("❌ SUPABASE_URL 取得エラー: Info.plistにキーがありません")
                 throw error
             }
-            
+
             print("✓ SUPABASE_URL 取得成功: \(baseURL)")
-            
+
             // デバッグログを追加
             let urlString = "\(baseURL)/storage/v1/object/public/\(bucket)/\(path)"
             print("📷 画像URL生成完了: \(urlString)")
-            
+
             // URL形式の検証
             if let url = URL(string: urlString) {
                 print("✅ URL形式の検証OK: \(url)")
             } else {
                 print("⚠️ 無効なURL文字列: \(urlString)")
             }
-            
+
             return urlString
         } catch {
             print("❌ URL生成エラー: \(error.localizedDescription)")
             throw error
         }
     }
-    
+
 //    /// 指定バケット内のパスからオブジェクト一覧を取得し、URL 配列として返す
 //    /// - Parameters:
 //    ///   - path: バケット内のリスト対象パス（例: ユーザID）

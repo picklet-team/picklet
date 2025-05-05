@@ -8,31 +8,31 @@ class ClothingViewModel: ObservableObject {
   @Published var errorMessage: String?
 
   @Published var imageSetsMap: [UUID: [EditableImageSet]] = [:]
-  
+
   private let clothingService = SupabaseService.shared
   private let imageMetadataService = ImageMetadataService.shared
 //  private let imageStorageService = ImageStorageService.shared
   private let originalImageStorageService = ImageStorageService(bucketName: "originals")
   private let maskImageStorageService = ImageStorageService(bucketName: "masks")
   private let localStorageService = LocalStorageService.shared
-  
+
   init() {
     print("🧠 ClothingViewModel 初期化")
     Task {
       await printDebugInfo()
     }
   }
-  
+
   // デバッグ情報を出力する関数
   func printDebugInfo() async {
     print("🔍 ClothingViewModel デバッグ情報:")
     print("🧵 clothes 数: \(clothes.count)")
     print("🖼️ imageSetsMap エントリー数: \(imageSetsMap.count)")
-    
+
     // 各服の情報をデバッグ
     for clothing in clothes {
       print("👕 服ID: \(clothing.id), 名前: \(clothing.name)")
-      
+
       // 服に関連する画像セットを表示
       if let imageSets = imageSetsMap[clothing.id] {
         print("  📸 関連画像セット数: \(imageSets.count)")
@@ -70,10 +70,10 @@ class ClothingViewModel: ObservableObject {
           // ローカルに画像を保存
           if let localPath = localStorageService.saveImage(originalImage, id: set.id, type: "original") {
             print("✅ 画像をローカルに保存: \(localPath)")
-            
+
             // サーバーにアップロード
             let url = try await originalImageStorageService.uploadImage(originalImage, for: set.id.uuidString)
-            
+
             // メタデータを追加（ローカルパス情報も含む）
             let newImage = ClothingImage(
                 id: set.id,
@@ -83,14 +83,14 @@ class ClothingViewModel: ObservableObject {
                 createdAt: Date(),
                 updatedAt: Date()
             )
-            
+
             var localImages = localStorageService.loadImageMetadata(for: clothing.id)
             localImages.append(newImage)
             localStorageService.saveImageMetadata(for: clothing.id, imageMetadata: localImages)
-            
+
             // サーバーメタデータを更新
             try await imageMetadataService.addImage(for: clothing.id, originalUrl: url)
-            
+
             // EditableImageSetは可変なのでプロパティを更新
             set.originalUrl = url
             set.isNew = false
@@ -103,10 +103,10 @@ class ClothingViewModel: ObservableObject {
           // ローカルにマスク画像を保存
           if let localPath = localStorageService.saveImage(mask, id: set.id, type: "mask") {
             print("✅ マスク画像をローカルに保存: \(localPath)")
-            
+
             // サーバーにアップロード
             let maskUrl = try await maskImageStorageService.uploadImage(mask, for: set.id.uuidString)
-            
+
             // ローカルメタデータを更新
             var localImages = localStorageService.loadImageMetadata(for: clothing.id)
             if let index = localImages.firstIndex(where: { $0.id == set.id }) {
@@ -128,17 +128,17 @@ class ClothingViewModel: ObservableObject {
                 localImages[index] = updatedImage
                 localStorageService.saveImageMetadata(for: clothing.id, imageMetadata: localImages)
             }
-            
+
             // サーバーメタデータを更新
             try await imageMetadataService.updateImageMask(imageId: set.id, maskUrl: maskUrl)
-            
+
             // EditableImageSetは可変なのでプロパティを更新
             set.maskUrl = maskUrl
             print("✅ マスクアップロード完了: URL=\(maskUrl)")
           }
         }
       }
-      
+
       // 更新後のデバッグ情報を表示
       await printDebugInfo()
     } catch {
@@ -154,7 +154,7 @@ class ClothingViewModel: ObservableObject {
       // 1) サーバーから最新リストを取得
       let remote = try await clothingService.fetchClothes()
       print("📥 サーバーから受信: \(remote.count)件")
-      
+
       // 2) 差分検出＆マージ
       var merged = clothes   // 現在のローカル配列をコピー
       for item in remote {
@@ -173,7 +173,7 @@ class ClothingViewModel: ObservableObject {
       // 3) ローカルにしかないサーバー削除済アイテムは optional で後処理してもOK
       self.clothes = merged
       print("✅ 同期完了: 最終件数=\(merged.count)")
-      
+
       // 同期後に画像のロードも行う
       await loadAllImages()
     } catch {
@@ -186,20 +186,20 @@ class ClothingViewModel: ObservableObject {
   func loadAllImages() async {
     print("🖼️ loadAllImages 開始")
     var newMap: [UUID: [EditableImageSet]] = [:]
-    
+
     // プレースホルダー画像を作成
     let placeholderImage = UIImage(systemName: "photo") ?? UIImage()
-    
+
     for clothing in clothes {
       do {
         // ImageMetadataServiceの更新版fetchImagesを使用（オフラインファーストアプローチ）
         let images = try await imageMetadataService.fetchImages(for: clothing.id)
         print("📷 \(clothing.id)の画像を取得: \(images.count)件")
-        
+
         let imageSets = images.map { image -> EditableImageSet in
           var original: UIImage = placeholderImage
           var mask: UIImage? = nil
-          
+
           // ローカルパスから画像を読み込む
           if let originalPath = image.originalLocalPath {
             if let loadedImage = localStorageService.loadImage(from: originalPath) {
@@ -207,14 +207,14 @@ class ClothingViewModel: ObservableObject {
               print("📲 ローカルから画像を読み込み: \(originalPath)")
             }
           }
-          
+
           if let maskPath = image.maskLocalPath {
             if let loadedMask = localStorageService.loadImage(from: maskPath) {
               mask = loadedMask
               print("📲 ローカルからマスク画像を読み込み: \(maskPath)")
             }
           }
-          
+
           // EditableImageSetを構築
           let set = EditableImageSet(
             id: image.id,
@@ -224,17 +224,17 @@ class ClothingViewModel: ObservableObject {
             maskUrl: image.maskUrl,
             isNew: false
           )
-          
+
           print("  🔗 画像セット: ID=\(set.id), originalUrl=\(image.originalUrl ?? "nil"), maskUrl=\(image.maskUrl ?? "nil")")
           return set
         }
-        
+
         newMap[clothing.id] = imageSets
       } catch {
         print("❌ \(clothing.id)の画像読み込みエラー: \(error.localizedDescription)")
       }
     }
-    
+
     self.imageSetsMap = newMap
     print("✅ 全画像読み込み完了: \(newMap.count)アイテム")
   }

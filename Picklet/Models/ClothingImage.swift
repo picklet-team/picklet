@@ -14,12 +14,12 @@ struct ClothingImage: Identifiable, Codable {
   let originalUrl: String?
   let maskUrl: String?
   let resultUrl: String?
-  
+
   // ローカル保存パス
   var originalLocalPath: String?
   var maskLocalPath: String?
   var resultLocalPath: String?
-  
+
   let createdAt: Date
   let updatedAt: Date
 
@@ -34,7 +34,7 @@ struct ClothingImage: Identifiable, Codable {
     case updatedAt = "updated_at"
     // ローカルパスはAPIレスポンスにないのでコーディングキーは定義しない
   }
-  
+
   // サーバーからのデータを変換するイニシャライザ
   init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -44,30 +44,30 @@ struct ClothingImage: Identifiable, Codable {
     originalUrl = try container.decodeIfPresent(String.self, forKey: .originalUrl)
     maskUrl = try container.decodeIfPresent(String.self, forKey: .maskUrl)
     resultUrl = try container.decodeIfPresent(String.self, forKey: .resultUrl)
-    
+
     // 日付文字列をDateに変換
     let dateFormatter = ISO8601DateFormatter()
-    
+
     if let createdAtString = try container.decodeIfPresent(String.self, forKey: .createdAt),
        let date = dateFormatter.date(from: createdAtString) {
       createdAt = date
     } else {
       createdAt = Date()
     }
-    
+
     if let updatedAtString = try container.decodeIfPresent(String.self, forKey: .updatedAt),
        let date = dateFormatter.date(from: updatedAtString) {
       updatedAt = date
     } else {
       updatedAt = Date()
     }
-    
+
     // ローカルパスは初期値としてnilを設定
     originalLocalPath = nil
     maskLocalPath = nil
     resultLocalPath = nil
   }
-  
+
   // カスタムイニシャライザ（ローカルデータ用）
   init(
     id: UUID = UUID(),
@@ -94,7 +94,7 @@ struct ClothingImage: Identifiable, Codable {
     self.createdAt = createdAt
     self.updatedAt = updatedAt
   }
-  
+
   // エンコード用メソッド
   func encode(to encoder: Encoder) throws {
     var container = encoder.container(keyedBy: CodingKeys.self)
@@ -104,15 +104,41 @@ struct ClothingImage: Identifiable, Codable {
     try container.encodeIfPresent(originalUrl, forKey: .originalUrl)
     try container.encodeIfPresent(maskUrl, forKey: .maskUrl)
     try container.encodeIfPresent(resultUrl, forKey: .resultUrl)
-    
+
     // 日付をISO8601形式の文字列に変換
     let dateFormatter = ISO8601DateFormatter()
     let createdAtString = dateFormatter.string(from: createdAt)
     let updatedAtString = dateFormatter.string(from: updatedAt)
-    
+
     try container.encode(createdAtString, forKey: .createdAt)
     try container.encode(updatedAtString, forKey: .updatedAt)
-    
+
     // ローカルパスはAPIに送信しないのでエンコードしない
+  }
+
+  /// ローカルパスを更新した新しいインスタンスを返す
+  /// - Parameters:
+  ///   - originalLocalPath: 更新するオリジナル画像のローカルパス
+  ///   - maskLocalPath: 更新するマスク画像のローカルパス
+  ///   - resultLocalPath: 更新する結果画像のローカルパス
+  /// - Returns: 更新された新しい ClothingImage インスタンス
+  func updatingLocalPath(
+    originalLocalPath: String? = nil,
+    maskLocalPath: String? = nil,
+    resultLocalPath: String? = nil
+  ) -> ClothingImage {
+    return ClothingImage(
+      id: self.id,
+      clothingId: self.clothingId,
+      userId: self.userId,
+      originalUrl: self.originalUrl,
+      maskUrl: self.maskUrl,
+      resultUrl: self.resultUrl,
+      originalLocalPath: originalLocalPath ?? self.originalLocalPath,
+      maskLocalPath: maskLocalPath ?? self.maskLocalPath,
+      resultLocalPath: resultLocalPath ?? self.resultLocalPath,
+      createdAt: self.createdAt,
+      updatedAt: self.updatedAt
+    )
   }
 }

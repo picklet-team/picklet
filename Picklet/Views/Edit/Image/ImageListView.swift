@@ -5,7 +5,6 @@
 //  Created by al dente on 2025/05/03.
 //
 
-
 import SwiftUI
 
 /// 画像サムネイル一覧と追加ボタンを表示するサブビュー
@@ -20,7 +19,7 @@ struct ImageListView: View {
         // 既存画像サムネイル
         ForEach(imageSets.indices, id: \.self) { index in
           let set = imageSets[index]
-          Button(action: { onSelect(set) }) {
+          Button(action: { onSelect(set) }, label: {
             ZStack {
               let displayImage = set.result ?? set.original
               Image(uiImage: displayImage)
@@ -30,17 +29,17 @@ struct ImageListView: View {
             .frame(width: 60, height: 60)
             .clipped()
             .cornerRadius(4)
-          }
+          })
         }
         // 追加ボタン
         Button(action: onAdd) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 4)
-                    .stroke(style: StrokeStyle(lineWidth: 2, dash: [5]))
-                    .frame(width: 60, height: 60)
-                Image(systemName: "plus")
-                    .font(.title)
-            }
+          ZStack {
+            RoundedRectangle(cornerRadius: 4)
+              .stroke(style: StrokeStyle(lineWidth: 2, dash: [5]))
+              .frame(width: 60, height: 60)
+            Image(systemName: "plus")
+              .font(.title)
+          }
         }
       }
       .padding(.horizontal)

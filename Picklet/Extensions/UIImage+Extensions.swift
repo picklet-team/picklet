@@ -13,7 +13,7 @@ extension UIImage {
         } else {
             newSize = CGSize(width: maxPixel * aspectRatio, height: maxPixel)
         }
-        
+
         UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
         self.draw(in: CGRect(origin: .zero, size: newSize))
         let resizedImage = UIGraphicsGetImageFromCurrentImageContext()

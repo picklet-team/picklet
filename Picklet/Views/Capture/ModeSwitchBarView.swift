@@ -16,7 +16,7 @@ struct ModeSwitchBarView: View {
     HStack {
       modeButton(icon: "camera", title: "カメラ", isSelected: isCameraSelected, action: onCamera)
         .accessibility(identifier: "cameraButton")
-      
+
       modeButton(
         icon: "photo.on.rectangle", title: "ライブラリ", isSelected: !isCameraSelected, action: onLibrary
       )

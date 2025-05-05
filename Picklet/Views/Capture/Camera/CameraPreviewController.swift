@@ -69,15 +69,15 @@ class CameraPreviewController: UIViewController, AVCapturePhotoCaptureDelegate {
 
     // プレビューに写っていた矩形(0-1正規化) → 画像座標へ変換
     let visible = layer.metadataOutputRectConverted(fromLayerRect: layer.bounds)
-    let cg = image.cgImage!
+    let cgImage = image.cgImage!
     let crop = CGRect(
-      x: visible.origin.x * CGFloat(cg.width),
-      y: visible.origin.y * CGFloat(cg.height),
-      width: visible.size.width * CGFloat(cg.width),
-      height: visible.size.height * CGFloat(cg.height)
+      x: visible.origin.x * CGFloat(cgImage.width),
+      y: visible.origin.y * CGFloat(cgImage.height),
+      width: visible.size.width * CGFloat(cgImage.width),
+      height: visible.size.height * CGFloat(cgImage.height)
     ).integral
 
-    guard let cropped = cg.cropping(to: crop) else {
+    guard let cropped = cgImage.cropping(to: crop) else {
       onImageCaptured?(image)  // 失敗時はオリジナル
       return
     }

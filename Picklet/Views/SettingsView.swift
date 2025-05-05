@@ -10,7 +10,7 @@ import SwiftUI
 struct SettingsView: View {
   @Environment(\.dismiss) var dismiss
   @AppStorage("autoCropEnabled") private var autoCropEnabled: Bool = true
-  
+
   // アプリバージョンを取得
   private var appVersion: String {
     let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "不明"
@@ -34,7 +34,7 @@ struct SettingsView: View {
           }
           .accessibility(identifier: "logoutButton")
         }
-        
+
         Section(header: Text("情報")) {
           Text(appVersion)
             .foregroundColor(.gray)

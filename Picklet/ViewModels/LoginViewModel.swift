@@ -14,9 +14,9 @@ class LoginViewModel: ObservableObject {
   @Published var errorMessage: String?
   @Published var isLoading = false
   @Published var isLoggedIn = false
-  
+
   private let authService = AuthService.shared
-  
+
   func login() async {
     isLoading = true
     do {
@@ -27,7 +27,7 @@ class LoginViewModel: ObservableObject {
     }
     isLoading = false
   }
-  
+
   func signUp() async {
     isLoading = true
     do {

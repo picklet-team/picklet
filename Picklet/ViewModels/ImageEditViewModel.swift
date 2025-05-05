@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-
 final class ImageEditViewModel: ObservableObject {
   @Published var imageSet: EditableImageSet
   @Published var isProcessing = false

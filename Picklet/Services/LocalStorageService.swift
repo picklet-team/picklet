@@ -4,20 +4,20 @@ import UIKit
 /// ローカルストレージを管理するサービス
 class LocalStorageService {
     static let shared = LocalStorageService()
-    
+
     private let fileManager = FileManager.default
     private let documentsDirectory: URL
-    
+
     // 画像保存用のディレクトリ
     private let imagesDirectory: URL
-    
+
     private init() {
         // ドキュメントディレクトリのパスを取得
         documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
-        
+
         // 画像保存用のディレクトリパスを作成
         imagesDirectory = documentsDirectory.appendingPathComponent("images")
-        
+
         // 画像ディレクトリが存在しない場合は作成
         if !fileManager.fileExists(atPath: imagesDirectory.path) {
             do {
@@ -28,9 +28,9 @@ class LocalStorageService {
             }
         }
     }
-    
+
     // MARK: - 画像の保存と読み込み
-    
+
     /// 画像をローカルに保存し、ローカルパスを返す
     /// - Parameters:
     ///   - image: 保存するUIImage
@@ -40,12 +40,12 @@ class LocalStorageService {
     func saveImage(_ image: UIImage, id: UUID, type: String) -> String? {
         let filename = "\(id.uuidString)_\(type).jpg"
         let fileURL = imagesDirectory.appendingPathComponent(filename)
-        
+
         guard let data = image.jpegData(compressionQuality: 0.8) else {
             print("❌ 画像をJPEGデータに変換できませんでした")
             return nil
         }
-        
+
         do {
             try data.write(to: fileURL)
             print("✅ 画像をローカルに保存: \(fileURL.path)")
@@ -55,7 +55,7 @@ class LocalStorageService {
             return nil
         }
     }
-    
+
     /// ローカルパスから画像を読み込む
     /// - Parameter path: ローカルファイルパス
     /// - Returns: 読み込んだUIImage、または失敗時にnil
@@ -64,7 +64,7 @@ class LocalStorageService {
             print("❌ 画像ファイルが存在しません: \(path)")
             return nil
         }
-        
+
         if let image = UIImage(contentsOfFile: path) {
             print("✅ 画像をローカルから読み込み: \(path)")
             return image
@@ -73,7 +73,7 @@ class LocalStorageService {
             return nil
         }
     }
-    
+
     /// URLから画像をダウンロードし、ローカルに保存
     /// - Parameters:
     ///   - url: ダウンロードするURL
@@ -81,28 +81,28 @@ class LocalStorageService {
     ///   - type: 画像タイプ
     ///   - completion: 完了ハンドラ (ローカルパス, エラー)
     func downloadAndSaveImage(from url: URL, id: UUID, type: String, completion: @escaping (String?, Error?) -> Void) {
-        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+        URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
             guard let self = self else { return }
-            
+
             if let error = error {
                 print("❌ 画像ダウンロードエラー: \(error)")
                 completion(nil, error)
                 return
             }
-            
+
             guard let data = data, let image = UIImage(data: data) else {
                 let error = NSError(domain: "LocalStorageService", code: 1, userInfo: [NSLocalizedDescriptionKey: "画像データの変換に失敗しました"])
                 completion(nil, error)
                 return
             }
-            
+
             let localPath = self.saveImage(image, id: id, type: type)
             completion(localPath, nil)
         }.resume()
     }
-    
+
     // MARK: - メタデータの保存
-    
+
     /// ClothingImageメタデータをUserDefaultsに保存
     /// - Parameters:
     ///   - clothingId: 服のID
@@ -124,11 +124,11 @@ class LocalStorageService {
                 "updatedAt": image.updatedAt.timeIntervalSince1970
             ]
         }
-        
+
         UserDefaults.standard.set(metadataArray, forKey: "clothingImages_\(clothingId.uuidString)")
         print("✅ \(clothingId) の画像メタデータを保存: \(metadataArray.count)件")
     }
-    
+
     /// ClothingImageメタデータをUserDefaultsから読み込み
     /// - Parameter clothingId: 服のID
     /// - Returns: 画像メタデータの配列
@@ -138,9 +138,9 @@ class LocalStorageService {
             print("⚠️ \(clothingId) の画像メタデータがローカルに存在しません")
             return []
         }
-        
+
         let imageMetadata = metadataArray.compactMap { dict -> ClothingImage? in
-            guard 
+            guard
                 let idString = dict["id"] as? String,
                 let clothingIdString = dict["clothingId"] as? String,
                 let id = UUID(uuidString: idString),
@@ -150,13 +150,13 @@ class LocalStorageService {
             else {
                 return nil
             }
-            
+
             // ユーザーIDはオプショナル
             var userId: UUID?
             if let userIdString = dict["userId"] as? String, !userIdString.isEmpty {
                 userId = UUID(uuidString: userIdString)
             }
-            
+
             return ClothingImage(
                 id: id,
                 clothingId: clothingId,
@@ -171,16 +171,16 @@ class LocalStorageService {
                 updatedAt: Date(timeIntervalSince1970: updatedAtTimestamp)
             )
         }
-        
+
         print("✅ \(clothingId) の画像メタデータを読み込み: \(imageMetadata.count)件")
         return imageMetadata
     }
-    
+
     /// 全ての服の画像メタデータを削除（キャッシュクリア用）
     func clearAllImageMetadata() {
         let defaults = UserDefaults.standard
         let allKeys = defaults.dictionaryRepresentation().keys
-        
+
         for key in allKeys where key.starts(with: "clothingImages_") {
             defaults.removeObject(forKey: key)
         }
