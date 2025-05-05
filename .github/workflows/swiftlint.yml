@@ -27,7 +27,7 @@ jobs:
       # 結果を表示する場合は以下のステップを追加
       - name: Upload SwiftLint Results
         if: always()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: swiftlint-results
           path: swiftlint.txt
