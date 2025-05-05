@@ -17,7 +17,7 @@ on:
 jobs:
   swiftlint:
     name: SwiftLint
-    runs-on: macos-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
 
@@ -40,7 +40,7 @@ jobs:
 
   swiftformat:
     name: SwiftFormat
-    runs-on: macos-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
 
