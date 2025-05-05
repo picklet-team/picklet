@@ -9,8 +9,8 @@ struct IdentifiableUUID: Identifiable, Hashable { let id: UUID }
 
 /// Exponential‑moving‑average cursor smoother
 private struct CursorSmoother {
-    private(set) var raw: CGFloat = -1000  // last tapped / dragged target X
-    private(set) var ema: CGFloat = -1000  // smoothed X used for UI
+    private(set) var raw: CGFloat = -1_000  // last tapped / dragged target X
+    private(set) var ema: CGFloat = -1_000  // smoothed X used for UI
     private let alpha: CGFloat = 0.25  // smoothing factor (0‥1)
     mutating func setTarget(_ targetX: CGFloat) { raw = targetX }
     mutating func step() { ema += alpha * (raw - ema) }

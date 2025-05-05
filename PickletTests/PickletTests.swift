@@ -5,15 +5,13 @@
 //  Created by al dente on 2025/04/12.
 //
 
-import Testing
-import XCTest
-import CoreLocation
-
 #if canImport(UIKit)
 import UIKit
 #endif
-
+import CoreLocation
 @testable import Picklet
+import Testing
+import XCTest
 
 struct PickletTests {
 

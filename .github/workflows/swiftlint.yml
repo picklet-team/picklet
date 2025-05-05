@@ -1,0 +1,34 @@
+name: SwiftLint
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - '**.swift'
+  pull_request:
+    paths:
+      - '**.swift'
+
+jobs:
+  swiftlint:
+    name: SwiftLint
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install SwiftLint
+        run: |
+          brew install swiftlint
+          
+      - name: Run SwiftLint
+        run: |
+          swiftlint --strict
+          
+      # 結果を表示する場合は以下のステップを追加
+      - name: Upload SwiftLint Results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: swiftlint-results
+          path: swiftlint.txt
+          retention-days: 7

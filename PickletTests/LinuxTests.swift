@@ -5,8 +5,8 @@
 //  Created on 2025/05/02.
 //
 
-import XCTest
 @testable import Picklet
+import XCTest
 
 final class LinuxCompatibleTests: XCTestCase {
 

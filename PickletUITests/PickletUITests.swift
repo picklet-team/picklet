@@ -93,13 +93,13 @@ final class PickletUITests: XCTestCase {
       XCTAssertTrue(true, "タブバーが表示されています")
 
       // タブをタップしようとするが、失敗してもテスト自体は失敗させない
-      if app.tabBars.buttons.count > 0 {
+      if !app.tabBars.buttons.isEmpty {
         app.tabBars.buttons.element(boundBy: 0).tap()
       }
     }
 
     // 何らかの要素が表示されていることを確認
-    let anyUIExists = app.staticTexts.count > 0 || app.images.count > 0 || app.buttons.count > 0
+    let anyUIExists = !app.staticTexts.isEmpty || !app.images.isEmpty || !app.buttons.isEmpty
     XCTAssertTrue(anyUIExists, "画面上に何らかのUI要素が表示されています")
   }
 
@@ -130,7 +130,7 @@ final class PickletUITests: XCTestCase {
     }
 
     // アプリが動作していることを確認
-    let anyUIExists = app.staticTexts.count > 0 || app.images.count > 0 || app.buttons.count > 0
+    let anyUIExists = !app.staticTexts.isEmpty || !app.images.isEmpty || !app.buttons.isEmpty
     XCTAssertTrue(anyUIExists, "画面上に要素が表示されています")
   }
 
@@ -190,7 +190,7 @@ final class PickletUITests: XCTestCase {
 
     // 2. 長めのタイムアウトで待機（ネットワークリクエストなどの時間を考慮）
     let weatherExpectation = XCTNSPredicateExpectation(
-      predicate: NSPredicate(format: "count > 0"),
+      predicate: NSPredicate(format: "!isEmpty"),
       object: weatherTexts
     )
 
@@ -199,10 +199,10 @@ final class PickletUITests: XCTestCase {
 
     // 3. 天気情報が読み込まれない場合でも、何らかのUIが表示されていれば良しとする
     if result == .completed {
-      XCTAssertTrue(weatherTexts.count > 0, "天気関連の情報が表示されています")
+      XCTAssertFalse(weatherTexts.isEmpty, "天気関連の情報が表示されています")
     } else {
       // 天気テキストが見つからなくても、画面に何らかの要素が表示されていればOK
-      XCTAssertTrue(app.staticTexts.count > 0 || app.images.count > 0, "画面上に何らかのUI要素が表示されています")
+      XCTAssertFalse(app.staticTexts.isEmpty && app.images.isEmpty, "画面上に何らかのUI要素が表示されています")
     }
   }
 
@@ -227,7 +227,10 @@ final class PickletUITests: XCTestCase {
     let toggleExists = app.switches.firstMatch.waitForExistence(timeout: 2.0)
 
     // ログアウト関連のボタンを検索（テキスト内容で判断）
-    let logoutPredicate = NSPredicate(format: "label CONTAINS 'ログアウト' OR label CONTAINS 'サインアウト' OR label CONTAINS 'Logout' OR label CONTAINS 'Sign out'")
+    let logoutPredicate = NSPredicate(format: 
+      "label CONTAINS 'ログアウト' OR label CONTAINS 'サインアウト' OR " + 
+      "label CONTAINS 'Logout' OR label CONTAINS 'Sign out'"
+    )
     let logoutButton = app.buttons.matching(logoutPredicate).firstMatch
 
     // バージョン情報を表示するラベルを検索（テキスト内容で判断）
