@@ -37,4 +37,4 @@ jobs:
 
       - name: Run SwiftFormat (Check only)
         run: |
-          swiftformat --lint . --config .swiftformat --reporter github-actions
+          swiftformat --lint . --config .swiftformat --reporter github-actions-log

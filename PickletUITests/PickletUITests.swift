@@ -227,8 +227,8 @@ final class PickletUITests: XCTestCase {
     let toggleExists = app.switches.firstMatch.waitForExistence(timeout: 2.0)
 
     // ログアウト関連のボタンを検索（テキスト内容で判断）
-    let logoutPredicate = NSPredicate(format: 
-      "label CONTAINS 'ログアウト' OR label CONTAINS 'サインアウト' OR " + 
+    let logoutPredicate = NSPredicate(format:
+      "label CONTAINS 'ログアウト' OR label CONTAINS 'サインアウト' OR " +
       "label CONTAINS 'Logout' OR label CONTAINS 'Sign out'"
     )
     let logoutButton = app.buttons.matching(logoutPredicate).firstMatch
