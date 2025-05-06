@@ -56,10 +56,19 @@ struct ClothingEditView: View {
           resultUrl: nil,
           isNew: true)
         editingSets.append(newSet)
+
+        // 画像選択後、即座にViewModelのキャッシュも更新
+        viewModel.updateLocalImagesCache(clothing.id, imageSets: editingSets)
+        print("📸 画像選択後にimageSetsMapを更新: \(clothing.id), 画像数: \(editingSets.count)")
       }
     }
     .sheet(item: $selectedImageSet) { imageSet in
       MaskEditorView(imageSet: bindingFor(imageSet))
+        .onDisappear {
+          // マスク編集後も即座にキャッシュを更新
+          viewModel.updateLocalImagesCache(clothing.id, imageSets: editingSets)
+          print("🎭 マスク編集後にimageSetsMapを更新: \(clothing.id)")
+        }
     }
     .confirmationDialog("本当に削除しますか？", isPresented: $showDeleteConfirm) {
       Button("削除する", role: .destructive) {
@@ -76,7 +85,7 @@ struct ClothingEditView: View {
 
   private func saveChanges() {
     Task {
-      await viewModel.updateClothing(
+      await viewModel.saveClothing(
         clothing,
         imageSets: editingSets,
         isNew: isNew)
