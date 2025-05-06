@@ -11,35 +11,67 @@ struct MaskEditorView: View {
   @Binding var imageSet: EditableImageSet
   @Environment(\.dismiss) var dismiss
 
-  // MARK: - Simplified State
-
+  // MARK: - State
   @State private var zoomScale: CGFloat = 1
   @State private var offset: CGSize = .zero
+  @State private var displayImage: UIImage? // 表示用画像を追跡
 
   var body: some View {
-    GeometryReader { _ in
-      ZStack {
-        // Display only the original image for simplicity
-        Image(uiImage: imageSet.original)
-          .resizable()
-          .scaledToFit()
-          .scaleEffect(zoomScale)
-          .offset(offset)
+    NavigationView {
+      GeometryReader { geo in
+        ZStack {
+          // 背景
+          Color(.systemBackground).edgesIgnoringSafeArea(.all)
+
+          // 画像表示 - Optionalバインディングのエラー修正
+          let imageToDisplay = displayImage ?? imageSet.original
+          Image(uiImage: imageToDisplay)
+            .resizable()
+            .scaledToFit()
+            .scaleEffect(zoomScale)
+            .offset(offset)
+            .frame(width: geo.size.width, height: geo.size.height)
+        }
       }
-//            .gesture(zoomPanGesture()) // Retain zoom and pan gestures
-    }
-    .toolbar {
-      ToolbarItem(placement: .navigationBarLeading) {
-        Button("完了") { dismiss() } // Simplified toolbar with only a dismiss button
+      .navigationTitle("画像編集")
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .navigationBarLeading) {
+          Button("キャンセル") { dismiss() }
+        }
+        ToolbarItem(placement: .navigationBarTrailing) {
+          Button("完了") {
+            // 変更があれば適用して閉じる
+            dismiss()
+          }
+        }
+      }
+      .onAppear {
+        // 画像ロード確認用デバッグ
+        print("🖼️ MaskEditorView表示 - ID: \(imageSet.id)")
+        print("👁️ 画像情報: originalURL=\(imageSet.originalUrl ?? "nil"), isNew=\(imageSet.isNew)")
+
+        // 表示用画像を設定（original画像が確実に存在するはず）
+        displayImage = imageSet.original
+
+        if imageSet.original.size.width < 50 || imageSet.original.size.height < 50 {
+          print("⚠️ 警告: 不適切なサイズの画像です: \(imageSet.original.size)")
+        }
       }
     }
   }
 
-//    /// Simplified zoom and pan gesture
-//    private func zoomPanGesture() -> some Gesture {
-//        SimultaneousGesture(
-//            MagnificationGesture().onChanged { zoomScale = $0 },
-//            DragGesture().onChanged { offset = $0.translation }
-//        )
-//    }
+  // ズームとパン用ジェスチャー (必要に応じて実装)
+  private func zoomPanGesture() -> some Gesture {
+    SimultaneousGesture(
+      MagnificationGesture()
+        .onChanged { value in
+          zoomScale = value
+        },
+      DragGesture()
+        .onChanged { value in
+          offset = value.translation
+        }
+    )
+  }
 }

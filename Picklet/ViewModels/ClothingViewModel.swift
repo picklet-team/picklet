@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import SDWebImageSwiftUI
 
 @MainActor
 class ClothingViewModel: ObservableObject {
@@ -9,11 +10,15 @@ class ClothingViewModel: ObservableObject {
 
   @Published var imageSetsMap: [UUID: [EditableImageSet]] = [:]
 
-  private let clothingService = SupabaseService.shared
-  private let imageMetadataService = ImageMetadataService.shared
-  private let originalImageStorageService = ImageStorageService(bucketName: "originals")
-  private let maskImageStorageService = ImageStorageService(bucketName: "masks")
-  private let localStorageService = LocalStorageService.shared
+  // 外部からアクセスできるようにprivateを削除
+  let clothingService = SupabaseService.shared
+  let imageMetadataService = ImageMetadataService.shared
+  let originalImageStorageService = ImageStorageService(bucketName: "originals")
+  let maskImageStorageService = ImageStorageService(bucketName: "masks")
+  let localStorageService = LocalStorageService.shared
+
+  // デバッグ用
+  @Published var imageLoadStatus: [String: String] = [:]
 
   init() {
     print("🧠 ClothingViewModel 初期化")
@@ -233,8 +238,6 @@ class ClothingViewModel: ObservableObject {
   /// ------------------------------------------------------------
   /// データ同期・画像読み込み
   /// ------------------------------------------------------------
-
-  /// 起動時 or 手動で呼び出す「差分だけ同期」メソッド
   func syncIfNeeded() async {
     print("🔄 syncIfNeeded 開始")
     do {
@@ -292,6 +295,11 @@ class ClothingViewModel: ObservableObject {
             if let loadedImage = localStorageService.loadImage(from: originalPath) {
               original = loadedImage
               print("📲 ローカルから画像を読み込み: \(originalPath)")
+            } else if let originalUrl = image.originalUrl, let url = URL(string: originalUrl) {
+              if let data = try? Data(contentsOf: url), let downloadedImage = UIImage(data: data) {
+                original = downloadedImage
+                print("🌐 URLから画像をダウンロード: \(originalUrl)")
+              }
             }
           }
 
@@ -299,6 +307,11 @@ class ClothingViewModel: ObservableObject {
             if let loadedMask = localStorageService.loadImage(from: maskPath) {
               mask = loadedMask
               print("📲 ローカルからマスク画像を読み込み: \(maskPath)")
+            } else if let maskUrl = image.maskUrl, let url = URL(string: maskUrl) {
+              if let data = try? Data(contentsOf: url), let downloadedMask = UIImage(data: data) {
+                mask = downloadedMask
+                print("🌐 URLからマスク画像をダウンロード: \(maskUrl)")
+              }
             }
           }
 
@@ -344,12 +357,22 @@ class ClothingViewModel: ObservableObject {
         if let originalPath = image.originalLocalPath {
           if let loadedImage = localStorageService.loadImage(from: originalPath) {
             original = loadedImage
+          } else if let originalUrl = image.originalUrl, let url = URL(string: originalUrl) {
+            if let data = try? Data(contentsOf: url), let downloadedImage = UIImage(data: data) {
+              original = downloadedImage
+              print("🌐 URLから画像をダウンロード: \(originalUrl)")
+            }
           }
         }
 
         if let maskPath = image.maskLocalPath {
           if let loadedMask = localStorageService.loadImage(from: maskPath) {
             mask = loadedMask
+          } else if let maskUrl = image.maskUrl, let url = URL(string: maskUrl) {
+            if let data = try? Data(contentsOf: url), let downloadedMask = UIImage(data: data) {
+              mask = downloadedMask
+              print("🌐 URLからマスク画像をダウンロード: \(maskUrl)")
+            }
           }
         }
 
@@ -367,7 +390,7 @@ class ClothingViewModel: ObservableObject {
       imageSetsMap[id] = imageSets
       print("✅ 指定服の画像読み込み完了: \(id)")
     } catch {
-      print("❌ \(id)の画像読み込みエラー: \(error.localizedDescription)")
+      print("❌ 指定服の画像読み込みエラー: \(error.localizedDescription)")
     }
   }
 
