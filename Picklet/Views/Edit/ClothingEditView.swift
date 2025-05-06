@@ -28,7 +28,7 @@ struct ClothingEditView: View {
           addAction: { showPhotoPicker = true },
           selectAction: { set in
             // 画像編集前に確実に最新のデータを取得
-            if !set.isNew && set.originalUrl != nil {
+            if !set.isNew, set.originalUrl != nil {
               // 既存の服の画像の場合、編集前にオリジナル画像が読み込まれていることを確認
               loadImageFromUrlIfNeeded(set) { updatedSet in
                 selectedImageSet = updatedSet
@@ -141,7 +141,7 @@ struct ClothingEditView: View {
     SDWebImageManager.shared.loadImage(
       with: url,
       options: [.refreshCached],
-      progress: nil) { (image, _, _, _, _, _) in
+      progress: nil) { image, _, _, _, _, _ in
         guard let downloadedImage = image else {
           print("⚠️ URLからの画像読み込み失敗: \(urlString)")
           return
@@ -159,8 +159,7 @@ struct ClothingEditView: View {
             maskUrl: set.maskUrl,
             result: set.result,
             resultUrl: set.resultUrl,
-            isNew: false
-          )
+            isNew: false)
 
           if index < self.editingSets.count {
             self.editingSets[index] = updatedSet
@@ -189,7 +188,7 @@ struct ClothingEditView: View {
       SDWebImageManager.shared.loadImage(
         with: url,
         options: [.refreshCached],
-        progress: nil) { (image, _, _, _, _, _) in
+        progress: nil) { image, _, _, _, _, _ in
           guard let downloadedImage = image else {
             print("⚠️ URLからの画像読み込み失敗: \(urlString)")
             completion(set) // 失敗した場合は元のセットを返す
@@ -206,8 +205,7 @@ struct ClothingEditView: View {
             maskUrl: set.maskUrl,
             result: set.result,
             resultUrl: set.resultUrl,
-            isNew: false
-          )
+            isNew: false)
 
           // 編集中の配列も更新
           if let idx = self.editingSets.firstIndex(where: { $0.id == set.id }) {
@@ -253,8 +251,7 @@ struct ClothingEditView: View {
               maskUrl: image.maskUrl,
               result: set.result,
               resultUrl: image.resultUrl,
-              isNew: false
-            )
+              isNew: false)
 
             // 編集中の配列も更新
             if let idx = editingSets.firstIndex(where: { $0.id == set.id }) {

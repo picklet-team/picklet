@@ -1,6 +1,6 @@
 import Foundation
-import SwiftUI
 import SDWebImageSwiftUI
+import SwiftUI
 
 @MainActor
 class ClothingViewModel: ObservableObject {

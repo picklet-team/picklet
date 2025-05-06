@@ -12,6 +12,7 @@ struct MaskEditorView: View {
   @Environment(\.dismiss) var dismiss
 
   // MARK: - State
+
   @State private var zoomScale: CGFloat = 1
   @State private var offset: CGSize = .zero
   @State private var displayImage: UIImage? // 表示用画像を追跡
@@ -71,7 +72,6 @@ struct MaskEditorView: View {
       DragGesture()
         .onChanged { value in
           offset = value.translation
-        }
-    )
+        })
   }
 }
