@@ -17,9 +17,9 @@ enum ColorSchemeSelection: String, CaseIterable, Identifiable {
 
   var displayName: String {
     switch self {
-    case .light: return "常にライト"
-    case .dark: return "常にダーク"
-    case .system: return "時間に合わせて変わる"
+    case .light: return "Light"
+    case .dark: return "Dark"
+    case .system: return "System"
     }
   }
 
