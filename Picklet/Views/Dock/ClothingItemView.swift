@@ -37,7 +37,7 @@ private struct ClothingImageCard: View {
               endPoint: .bottomTrailing))
           .overlay(
             Image(systemName: "tshirt")
-              .font(.system(size: 40))
+              .font(.system(size: 50))
               .foregroundColor(.gray.opacity(0.5)))
           .onAppear {
             if let imageURL = imageURL {
@@ -48,12 +48,16 @@ private struct ClothingImageCard: View {
           }
       }
     }
-    .frame(width: 120, height: 120)
+    .frame(width: 150, height: 150) // サイズを大きくする
     .clipped()
-    .cornerRadius(12)
+    .cornerRadius(15) // 角の丸みを若干大きく
     .background(
-      RoundedRectangle(cornerRadius: 12)
+      RoundedRectangle(cornerRadius: 15)
         .fill(Color(.secondarySystemBackground)))
-    .shadow(color: Color.black.opacity(0.2), radius: 4, x: 0, y: 2)
+    .overlay(
+      RoundedRectangle(cornerRadius: 15)
+        .stroke(Color.primary.opacity(0.3), lineWidth: 2.0) // 線を太く、やや濃く
+    )
+    .shadow(color: Color.black.opacity(0.25), radius: 6, x: 0, y: 3) // 影を強調
   }
 }
