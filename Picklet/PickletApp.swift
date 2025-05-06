@@ -10,7 +10,12 @@ import SwiftUI
 @main
 struct PickletApp: App {
   @AppStorage("isLoggedIn") var isLoggedIn = false
+  @AppStorage("colorSchemePreference") private var colorSchemePreference: String = ColorSchemeSelection.system.rawValue
   @StateObject private var viewModel = ClothingViewModel()
+
+  private var selectedColorScheme: ColorSchemeSelection {
+    ColorSchemeSelection(rawValue: colorSchemePreference) ?? .system
+  }
 
   var body: some Scene {
     WindowGroup {
@@ -20,8 +25,10 @@ struct PickletApp: App {
           .task {
             await viewModel.syncIfNeeded()
           }
+          .preferredColorScheme(selectedColorScheme.colorScheme)
       } else {
         LoginView()
+          .preferredColorScheme(selectedColorScheme.colorScheme)
       }
     }
   }

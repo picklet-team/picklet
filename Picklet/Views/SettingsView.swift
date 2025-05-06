@@ -10,6 +10,13 @@ import SwiftUI
 struct SettingsView: View {
   @Environment(\.dismiss) var dismiss
   @AppStorage("autoCropEnabled") private var autoCropEnabled: Bool = true
+  @AppStorage("colorSchemePreference") private var colorSchemePreference: String = ColorSchemeSelection.system.rawValue
+
+  @Environment(\.colorScheme) var systemColorScheme
+
+  private var selectedColorScheme: ColorSchemeSelection {
+    ColorSchemeSelection(rawValue: colorSchemePreference) ?? .system
+  }
 
   // アプリバージョンを取得
   private var appVersion: String {
@@ -23,6 +30,15 @@ struct SettingsView: View {
       Form {
         Section(header: Text("切り抜き設定")) {
           Toggle("自動で切り抜く", isOn: $autoCropEnabled)
+        }
+
+        Section(header: Text("カラースキーム")) {
+          Picker("カラースキーム", selection: $colorSchemePreference) {
+            ForEach(ColorSchemeSelection.allCases) { scheme in
+              Text(scheme.displayName).tag(scheme.rawValue)
+            }
+          }
+          .pickerStyle(SegmentedPickerStyle())
         }
 
         Section {
