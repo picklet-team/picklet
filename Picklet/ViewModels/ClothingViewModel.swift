@@ -11,7 +11,6 @@ class ClothingViewModel: ObservableObject {
 
   private let clothingService = SupabaseService.shared
   private let imageMetadataService = ImageMetadataService.shared
-//  private let imageStorageService = ImageStorageService.shared
   private let originalImageStorageService = ImageStorageService(bucketName: "originals")
   private let maskImageStorageService = ImageStorageService(bucketName: "masks")
   private let localStorageService = LocalStorageService.shared
@@ -48,46 +47,97 @@ class ClothingViewModel: ObservableObject {
     }
   }
 
-  /// 服を保存（新規 or 更新）
-  func updateClothing(_ clothing: Clothing, imageSets: [EditableImageSet], isNew: Bool) async {
-    print("📝 updateClothing 開始: ID=\(clothing.id), isNew=\(isNew)")
+  /// ------------------------------------------------------------
+  /// 服管理の主要フロー
+  /// ------------------------------------------------------------
+
+  /// メインエントリーポイント - 服の保存（新規 or 更新）
+  func saveClothing(_ clothing: Clothing, imageSets: [EditableImageSet], isNew: Bool) async {
+    print("📝 saveClothing 開始: ID=\(clothing.id), isNew=\(isNew)")
     do {
-      // 1. 服情報を保存
-      try await saveClothingData(clothing, isNew: isNew)
+      isLoading = true
 
-      // 2. 画像セットを処理
-      for idx in imageSets.indices {
-        var set = imageSets[idx]
+      // ステップ1: 服データをデータベースに保存
+      try await saveClothingToDatabase(clothing, isNew: isNew)
 
-        // 3. オリジナル画像の処理
-        if set.isNew, set.originalUrl == nil {
-          await processOriginalImage(set: &set, clothing: clothing)
-        }
+      // ステップ2: UIの即時更新用に画像をメモリにキャッシュ
+      updateLocalImagesCache(clothing.id, imageSets: imageSets)
 
-        // 4. マスク画像の処理
-        if let mask = set.mask, set.maskUrl == nil {
-          await processMaskImage(mask: mask, set: &set, clothing: clothing)
-        }
-      }
+      // ステップ3: バックグラウンドでの画像処理を開始（戻り値の配列は処理済みのセット）
+      let processedSets = await processAllImages(clothing, imageSets: imageSets)
 
-      // 更新後のデバッグ情報を表示
+      // ステップ4: 処理後の最終画像を更新
+      updateProcessedImages(clothing.id, imageSets: processedSets)
+
+      isLoading = false
       await printDebugInfo()
     } catch {
-      print("❌ updateClothing エラー: \(error.localizedDescription)")
+      print("❌ saveClothing エラー: \(error.localizedDescription)")
       errorMessage = error.localizedDescription
+      isLoading = false
     }
   }
 
-  /// 服データを保存（新規作成または更新）
-  private func saveClothingData(_ clothing: Clothing, isNew: Bool) async throws {
+  /// ステップ1: 服データをDBに保存し、必要ならローカルリストも更新
+  private func saveClothingToDatabase(_ clothing: Clothing, isNew: Bool) async throws {
     if isNew {
       try await clothingService.addClothing(clothing)
       print("✅ 新規服を追加しました: \(clothing.id)")
+
+      // 新規の場合はUIの配列にも追加
+      if !clothes.contains(where: { $0.id == clothing.id }) {
+        clothes.append(clothing)
+        print("✅ UIに新規服を追加しました: \(clothing.id)")
+      }
     } else {
       try await clothingService.updateClothing(clothing)
+      // 既存の場合は必要ならローカルも更新
+      if let index = clothes.firstIndex(where: { $0.id == clothing.id }) {
+        clothes[index] = clothing
+      }
       print("✅ 既存服を更新しました: \(clothing.id)")
     }
   }
+
+  /// ステップ2: UIの即時更新のためにメモリ内の画像キャッシュを更新
+  public func updateLocalImagesCache(_ clothingId: UUID, imageSets: [EditableImageSet]) {
+    // 編集中の画像をすぐに表示できるようにキャッシュ
+    imageSetsMap[clothingId] = imageSets
+    print("✅ 即時表示用に画像キャッシュ更新: \(clothingId)")
+  }
+
+  /// ステップ3: すべての画像を処理（アップロード）
+  private func processAllImages(_ clothing: Clothing, imageSets: [EditableImageSet]) async -> [EditableImageSet] {
+    print("🔄 画像処理を開始: \(clothing.id)")
+    var processedSets: [EditableImageSet] = []
+
+    for var set in imageSets {
+      // 新規オリジナル画像の処理
+      if set.isNew, set.originalUrl == nil {
+        await processOriginalImage(set: &set, clothing: clothing)
+      }
+
+      // マスク画像の処理
+      if let mask = set.mask, set.maskUrl == nil {
+        await processMaskImage(mask: mask, set: &set, clothing: clothing)
+      }
+
+      processedSets.append(set)
+    }
+
+    print("✅ 画像処理完了: \(clothing.id)")
+    return processedSets
+  }
+
+  /// ステップ4: 処理後の最終画像を更新
+  private func updateProcessedImages(_ clothingId: UUID, imageSets: [EditableImageSet]) {
+    imageSetsMap[clothingId] = imageSets
+    print("✅ 処理済み最終画像を更新: \(clothingId)")
+  }
+
+  /// ------------------------------------------------------------
+  /// 画像処理の詳細実装
+  /// ------------------------------------------------------------
 
   /// オリジナル画像を処理・アップロード
   private func processOriginalImage(set: inout EditableImageSet, clothing: Clothing) async {
@@ -180,6 +230,10 @@ class ClothingViewModel: ObservableObject {
     }
   }
 
+  /// ------------------------------------------------------------
+  /// データ同期・画像読み込み
+  /// ------------------------------------------------------------
+
   /// 起動時 or 手動で呼び出す「差分だけ同期」メソッド
   func syncIfNeeded() async {
     print("🔄 syncIfNeeded 開始")
@@ -270,6 +324,56 @@ class ClothingViewModel: ObservableObject {
     imageSetsMap = newMap
     print("✅ 全画像読み込み完了: \(newMap.count)アイテム")
   }
+
+  /// 指定したIDの服の画像のみを読み込む（個別更新用）
+  func loadImagesForClothing(id: UUID) async {
+    print("🖼️ 指定服の画像読み込み開始: \(id)")
+
+    // プレースホルダー画像を作成
+    let placeholderImage = UIImage(systemName: "photo") ?? UIImage()
+
+    do {
+      let images = try await imageMetadataService.fetchImages(for: id)
+      print("📷 \(id)の画像を取得: \(images.count)件")
+
+      let imageSets = images.map { image -> EditableImageSet in
+        var original: UIImage = placeholderImage
+        var mask: UIImage?
+
+        // ローカルパスから画像を読み込む
+        if let originalPath = image.originalLocalPath {
+          if let loadedImage = localStorageService.loadImage(from: originalPath) {
+            original = loadedImage
+          }
+        }
+
+        if let maskPath = image.maskLocalPath {
+          if let loadedMask = localStorageService.loadImage(from: maskPath) {
+            mask = loadedMask
+          }
+        }
+
+        // EditableImageSetを構築
+        return EditableImageSet(
+          id: image.id,
+          original: original,
+          originalUrl: image.originalUrl,
+          mask: mask,
+          maskUrl: image.maskUrl,
+          isNew: false)
+      }
+
+      // 既存のマップを更新
+      imageSetsMap[id] = imageSets
+      print("✅ 指定服の画像読み込み完了: \(id)")
+    } catch {
+      print("❌ \(id)の画像読み込みエラー: \(error.localizedDescription)")
+    }
+  }
+
+  /// ------------------------------------------------------------
+  /// 削除処理
+  /// ------------------------------------------------------------
 
   /// 服を削除
   func deleteClothing(_ clothing: Clothing) async {
