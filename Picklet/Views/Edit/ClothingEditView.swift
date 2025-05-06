@@ -100,11 +100,13 @@ private struct ImageListSection: View {
   let selectAction: (EditableImageSet) -> Void
 
   var body: some View {
-    Section(header: Text("画像")) {
-      ImageListView(
-        imageSets: $imageSets,
-        onAdd: addAction,
-        onSelect: selectAction)
+    VStack(alignment: .leading) {
+      // バインディング対応の共通コンポーネントを使用
+      ClothingImageGalleryView(
+        imageSets: $imageSets, // $を使ってバインディングを渡す
+        showAddButton: true,
+        onSelectImage: selectAction,
+        onAddButtonTap: addAction)
     }
   }
 }

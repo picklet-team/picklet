@@ -12,15 +12,11 @@ struct ClothingDetailView: View {
 
   var body: some View {
     VStack {
-      ScrollView(.horizontal, showsIndicators: false) {
-        HStack(spacing: 12) {
-          // ViewModel の imageSetsMap からサムネイルを表示
-          ForEach(viewModel.imageSetsMap[clothingId] ?? []) { set in
-            ClothingDetailImageView(imageURL: set.originalUrl)
-          }
-        }
-        .padding()
-      }
+      // 共通コンポーネントを使用（プラスボタンなし）
+      ClothingImageGalleryView(
+        imageSets: viewModel.imageSetsMap[clothingId] ?? [],
+        showAddButton: false // プラスボタンは表示しない
+      )
 
       Text(clothing.name)
         .font(.title)
@@ -47,26 +43,5 @@ struct ClothingDetailView: View {
         dismiss()
       }
     }
-  }
-}
-
-private struct ClothingDetailImageView: View {
-  let imageURL: String?
-  var body: some View {
-    Group {
-      if let urlString = imageURL, let url = URL(string: urlString) {
-        WebImage(
-          url: url,
-          options: [.queryMemoryData, .queryDiskDataSync, .refreshCached])
-          .resizable()
-          .indicator(.activity)
-      } else {
-        Rectangle().fill(Color.gray.opacity(0.2))
-      }
-    }
-    .scaledToFill()
-    .frame(width: 150, height: 150)
-    .clipped()
-    .cornerRadius(8)
   }
 }
