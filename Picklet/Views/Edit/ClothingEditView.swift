@@ -100,12 +100,10 @@ private struct ImageListSection: View {
   let selectAction: (EditableImageSet) -> Void
 
   var body: some View {
-    Section(header: Text("画像")) {
-      ImageListView(
-        imageSets: $imageSets,
-        onAdd: addAction,
-        onSelect: selectAction)
-    }
+    ImageListView(
+      imageSets: $imageSets,
+      onAdd: addAction,
+      onSelect: selectAction)
   }
 }
 
