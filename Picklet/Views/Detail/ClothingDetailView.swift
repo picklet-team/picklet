@@ -39,9 +39,8 @@ struct ClothingDetailView: View {
         clothing: $clothing,
         openPhotoPickerOnAppear: false,
         canDelete: true,
-        isNew: false
-      )
-      .environmentObject(viewModel)
+        isNew: false)
+        .environmentObject(viewModel)
     }
     .onChange(of: viewModel.clothes) { _, newClothes in
       if !newClothes.contains(where: { $0.id == clothingId }) {
@@ -58,10 +57,9 @@ private struct ClothingDetailImageView: View {
       if let urlString = imageURL, let url = URL(string: urlString) {
         WebImage(
           url: url,
-          options: [.queryMemoryData, .queryDiskDataSync, .refreshCached]
-        )
-        .resizable()
-        .indicator(.activity)
+          options: [.queryMemoryData, .queryDiskDataSync, .refreshCached])
+          .resizable()
+          .indicator(.activity)
       } else {
         Rectangle().fill(Color.gray.opacity(0.2))
       }

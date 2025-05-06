@@ -20,8 +20,7 @@ extension UIImage {
     // 3. リサイズ後の画像サイズを決定
     let resizedSize = CGSize(
       width: size.width * scaleFactor,
-      height: size.height * scaleFactor
-    )
+      height: size.height * scaleFactor)
 
     // 4. 描画コンテキストをターゲットサイズで作成（背景は透明）
     UIGraphicsBeginImageContextWithOptions(targetSize, false, scale)
@@ -29,8 +28,7 @@ extension UIImage {
     // 5. リサイズ後の画像を中央に配置
     let origin = CGPoint(
       x: (targetSize.width - resizedSize.width) / 2,
-      y: (targetSize.height - resizedSize.height) / 2
-    )
+      y: (targetSize.height - resizedSize.height) / 2)
     draw(in: CGRect(origin: origin, size: resizedSize))
 
     // 6. コンテキストから新しいUIImageを取り出す
@@ -50,13 +48,11 @@ extension UIImage {
 
     let newMaskSize = CGSize(
       width: size.width * scaleFactor,
-      height: size.height * scaleFactor
-    )
+      height: size.height * scaleFactor)
 
     let origin = CGPoint(
       x: (originalSize.width - newMaskSize.width) / 2,
-      y: (originalSize.height - newMaskSize.height) / 2
-    )
+      y: (originalSize.height - newMaskSize.height) / 2)
 
     draw(in: CGRect(origin: origin, size: newMaskSize))
 

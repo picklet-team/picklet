@@ -9,11 +9,14 @@ excluded:
   - vendor
   - DerivedData
   - fastlane
+  - Picklet/Preview Content
 
 # デフォルトルールの中で無効化するもの
 disabled_rules:
   - todo
   - trailing_whitespace # 必要に応じて有効化
+  - indentation_width
+  - for_where
 
 # オプショナルルールの中で有効化するもの
 opt_in_rules:
@@ -27,13 +30,6 @@ opt_in_rules:
   - sorted_imports
   - object_literal
   - number_separator
-
-# UITestのempty_countルール除外設定
-empty_count:
-  severity: error
-  excluded:
-    - PickletUITests/PickletUITests.swift
-    - PickletUITests/PickletUITestsLaunchTests.swift
 
 # カスタム値
 line_length:

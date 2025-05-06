@@ -18,17 +18,15 @@ struct ModeSwitchBarView: View {
         .accessibility(identifier: "cameraButton")
 
       modeButton(
-        icon: "photo.on.rectangle", title: "ライブラリ", isSelected: !isCameraSelected, action: onLibrary
-      )
-      .accessibility(identifier: "libraryButton")
+        icon: "photo.on.rectangle", title: "ライブラリ", isSelected: !isCameraSelected, action: onLibrary)
+        .accessibility(identifier: "libraryButton")
     }
     .padding()
     .background(Color(UIColor.systemBackground))
   }
 
   private func modeButton(
-    icon: String, title: String, isSelected: Bool, action: @escaping () -> Void
-  ) -> some View {
+    icon: String, title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
     Button(action: action) {
       VStack {
         Image(systemName: icon)

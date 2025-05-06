@@ -55,15 +55,13 @@ class CoreMLService {
 
   func predictMask(
     for image: UIImage,
-    flipHorizontally: Bool = true
-  ) async -> UIImage? {
-    let targetSize = CGSize(width: 1024, height: 1024)
+    flipHorizontally: Bool = true) async -> UIImage? {
+    let targetSize = CGSize(width: 1_024, height: 1_024)
 
     // 1. 推論用にリサイズ
     guard let resizedInput = image.resizedAspectFitWithTransparentPadding(to: targetSize),
           let pixelBuffer = resizedInput.pixelBuffer(
-            width: Int(targetSize.width), height: Int(targetSize.height)
-          )
+            width: Int(targetSize.width), height: Int(targetSize.height))
     else {
       print("❌ pixelBuffer生成失敗")
       return nil

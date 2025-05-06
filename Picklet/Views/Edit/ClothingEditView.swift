@@ -23,8 +23,7 @@ struct ClothingEditView: View {
         selectAction: { set in
           selectedImageSet = set
           showImageEditor = true
-        }
-      )
+        })
 
       ClothingFormSection(clothing: $clothing)
 
@@ -33,8 +32,7 @@ struct ClothingEditView: View {
       ActionButtonsSection(
         saveAction: saveChanges,
         deleteAction: { showDeleteConfirm = true },
-        canDelete: canDelete
-      )
+        canDelete: canDelete)
     }
     .navigationTitle("服を編集")
     .onAppear {
@@ -56,8 +54,7 @@ struct ClothingEditView: View {
           maskUrl: nil,
           result: nil,
           resultUrl: nil,
-          isNew: true
-        )
+          isNew: true)
         editingSets.append(newSet)
       }
     }
@@ -82,8 +79,7 @@ struct ClothingEditView: View {
       await viewModel.updateClothing(
         clothing,
         imageSets: editingSets,
-        isNew: isNew
-      )
+        isNew: isNew)
       dismiss()
     }
   }
@@ -108,8 +104,7 @@ private struct ImageListSection: View {
       ImageListView(
         imageSets: $imageSets,
         onAdd: addAction,
-        onSelect: selectAction
-      )
+        onSelect: selectAction)
     }
   }
 }

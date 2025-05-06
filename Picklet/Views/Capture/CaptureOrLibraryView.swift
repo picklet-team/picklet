@@ -37,14 +37,13 @@ struct CaptureOrLibraryView: View {
       ModeSwitchBarView(
         isCameraSelected: showCamera,
         onCamera: { showCamera = true },
-        onLibrary: { showCamera = false }
-      )
-      .ignoresSafeArea()
-      .onDisappear {
-        if !didPickImage {
-          onCancel?()
+        onLibrary: { showCamera = false })
+        .ignoresSafeArea()
+        .onDisappear {
+          if !didPickImage {
+            onCancel?()
+          }
         }
-      }
     }
   }
 }

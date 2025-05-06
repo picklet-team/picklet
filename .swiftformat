@@ -1,30 +1,36 @@
 # インデント設定
 --indent 2
---tabwidth 2
---smarttabs enabled
 
 # 中括弧
 --allman false
+--ifdef no-indent
 
 # 空白とスペース
 --trimwhitespace always
 --stripunusedargs closure-only
 --semicolons never
---commas always
+--commas inline # trailingカンマをなくす
+--operatorfunc spaced
 
 # コードの整形
---wraparguments before-first
---wrapparameters before-first
---wrapcollections before-first
---closingparen balanced
+--wraparguments preserve # 引数の折り返し方法を保持
+--wrapparameters preserve # パラメータの折り返し方法を保持
+--wrapcollections preserve # コレクションの折り返し方法を保持
+--closingparen same-line # 閉じ括弧の位置を同じ行に
 --elseposition same-line
 --extensionacl on-declarations
+--guardelse next-line
+--emptybraces no-space
 
 # その他の設定
 --swiftversion 5.0
 --xcodeindentation enabled
 --self remove
 --importgrouping alphabetized
+
+--maxwidth 120 # 最大行幅
+--decimalgrouping 3
+--disable wrapMultilineStatementBraces
 
 # 除外するパス
 --exclude Pods,PickletTests,PickletUITests,Picklet/Preview Content

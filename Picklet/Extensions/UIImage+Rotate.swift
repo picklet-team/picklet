@@ -28,9 +28,7 @@ extension UIImage {
       cgImage,
       in: CGRect(
         x: -size.width / 2, y: -size.height / 2,
-        width: size.width, height: size.height
-      )
-    )
+        width: size.width, height: size.height))
 
     let rotatedImage = UIGraphicsGetImageFromCurrentImageContext()
     UIGraphicsEndImageContext()

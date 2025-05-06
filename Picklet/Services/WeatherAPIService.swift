@@ -21,8 +21,7 @@ class WeatherAPIService {
 
     guard let url = URL(string: urlString) else {
       throw NSError(
-        domain: "weather", code: 400, userInfo: [NSLocalizedDescriptionKey: "無効な都市名です"]
-      )
+        domain: "weather", code: 400, userInfo: [NSLocalizedDescriptionKey: "無効な都市名です"])
     }
 
     let (data, response) = try await URLSession.shared.data(from: url)
@@ -30,8 +29,7 @@ class WeatherAPIService {
     guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
       throw NSError(
         domain: "weather", code: (response as? HTTPURLResponse)?.statusCode ?? 500,
-        userInfo: [NSLocalizedDescriptionKey: "天気データの取得に失敗しました"]
-      )
+        userInfo: [NSLocalizedDescriptionKey: "天気データの取得に失敗しました"])
     }
 
     let decoder = JSONDecoder()
@@ -50,7 +48,6 @@ class WeatherAPIService {
       temperature: weatherResponse.main.temp,
       condition: weatherResponse.weather.first?.description ?? "不明",
       icon: weatherResponse.weather.first?.icon ?? "01d",
-      updatedAt: currentTime
-    )
+      updatedAt: currentTime)
   }
 }

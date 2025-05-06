@@ -32,7 +32,6 @@ struct ClothingCardView: View {
           .onEnded { _ in
             UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
             onPeek()
-          }
-      )
+          })
   }
 }

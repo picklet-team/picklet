@@ -25,9 +25,8 @@ enum ImageProcessor {
         .applyingFilter(
           "CIBlendWithAlphaMask",
           parameters: [
-            "inputMaskImage": alphaMask,
-          ]
-        )
+            "inputMaskImage": alphaMask
+          ])
 
     let context = CIContext()
     guard let output = context.createCGImage(composited, from: ciOriginal.extent) else {
@@ -56,15 +55,13 @@ enum ImageProcessor {
         .applyingFilter(
           "CIBlendWithAlphaMask",
           parameters: [
-            "inputMaskImage": alphaMask,
-          ]
-        )
+            "inputMaskImage": alphaMask
+          ])
         .applyingFilter(
           "CIColorControls",
           parameters: [
-            "inputBrightness": -1.0, // 黒くする
-          ]
-        )
+            "inputBrightness": -1.0 // 黒くする
+          ])
 
     let context = CIContext()
     guard let output = context.createCGImage(maskedImage, from: ciOriginal.extent) else {

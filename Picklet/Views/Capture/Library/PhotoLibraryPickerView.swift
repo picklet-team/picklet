@@ -32,18 +32,16 @@ struct PhotoLibraryPickerView: View {
         ScrollView {
           LazyVGrid(
             columns: Array(repeating: .init(.fixed(cellSize), spacing: spacing), count: columnsCount),
-            spacing: spacing
-          ) {
-            ForEach(assets, id: \.localIdentifier) { asset in
-              PhotoThumbnailCell(
-                asset: asset,
-                size: cellSize,
-                manager: imageManager
-              ) { image in
-                let square = image.squareCropped()
-                onImagePicked(square)
-                dismiss()
-              }
+            spacing: spacing) {
+              ForEach(assets, id: \.localIdentifier) { asset in
+                PhotoThumbnailCell(
+                  asset: asset,
+                  size: cellSize,
+                  manager: imageManager) { image in
+                    let square = image.squareCropped()
+                    onImagePicked(square)
+                    dismiss()
+                  }
 //                          .id(asset.localIdentifier)
 //                          .background(
 //                              GeometryReader { gp in
@@ -52,9 +50,9 @@ struct PhotoLibraryPickerView: View {
 //                                      value: [asset.localIdentifier: gp.frame(in: .named("gridSpace")).minY])
 //                              }
 //                          )
+              }
             }
-          }
-          .padding(spacing)
+            .padding(spacing)
         }
         .accessibility(identifier: "photoLibraryPicker")
         .onAppear(perform: fetchAssets)

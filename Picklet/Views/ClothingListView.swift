@@ -22,8 +22,7 @@ struct ClothingListView: View {
                 category: "",
                 color: "",
                 createdAt: ISO8601DateFormatter().string(from: Date()),
-                updatedAt: ISO8601DateFormatter().string(from: Date())
-              )
+                updatedAt: ISO8601DateFormatter().string(from: Date()))
               isNewClothing = true
               navigateToEdit = true
             }
@@ -35,13 +34,11 @@ struct ClothingListView: View {
             ClothingEditView(
               clothing: Binding(
                 get: { editingClothing },
-                set: { self.editingClothing = $0 }
-              ),
+                set: { self.editingClothing = $0 }),
               openPhotoPickerOnAppear: true,
               canDelete: false,
-              isNew: true
-            )
-            .environmentObject(viewModel)
+              isNew: true)
+              .environmentObject(viewModel)
           }
         }
         .refreshable {

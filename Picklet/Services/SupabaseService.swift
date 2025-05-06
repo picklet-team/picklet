@@ -59,8 +59,7 @@ class SupabaseService {
       throw NSError(
         domain: "auth",
         code: 401,
-        userInfo: [NSLocalizedDescriptionKey: "ユーザーが未ログインです"]
-      )
+        userInfo: [NSLocalizedDescriptionKey: "ユーザーが未ログインです"])
     }
     _ =
       try await client
@@ -71,7 +70,7 @@ class SupabaseService {
           "name": clothing.name,
           "category": clothing.category,
           "color": clothing.color,
-          "created_at": clothing.createdAt,
+          "created_at": clothing.createdAt
         ])
         .execute()
   }
@@ -83,7 +82,7 @@ class SupabaseService {
         .update([
           "name": clothing.name,
           "category": clothing.category,
-          "color": clothing.color,
+          "color": clothing.color
         ])
         .eq("id", value: clothing.id.uuidString)
         .execute()

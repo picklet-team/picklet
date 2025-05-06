@@ -25,8 +25,7 @@ struct EditableImageSet: Identifiable {
     maskUrl: String? = nil,
     result: UIImage? = nil,
     resultUrl: String? = nil,
-    isNew: Bool = true
-  ) {
+    isNew: Bool = true) {
     self.id = id
     self.original = original
     self.originalUrl = originalUrl

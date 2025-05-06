@@ -113,8 +113,7 @@ class ClothingViewModel: ObservableObject {
         originalUrl: url,
         originalLocalPath: localPath,
         createdAt: Date(),
-        updatedAt: Date()
-      )
+        updatedAt: Date())
 
       // ローカルメタデータを更新
       var localImages = localStorageService.loadImageMetadata(for: clothing.id)
@@ -165,8 +164,7 @@ class ClothingViewModel: ObservableObject {
           maskLocalPath: localPath, // 新しいローカルパス
           resultLocalPath: oldImage.resultLocalPath,
           createdAt: oldImage.createdAt,
-          updatedAt: Date()
-        )
+          updatedAt: Date())
         localImages[index] = updatedImage
         localStorageService.saveImageMetadata(for: clothing.id, imageMetadata: localImages)
       }
@@ -257,8 +255,7 @@ class ClothingViewModel: ObservableObject {
             originalUrl: image.originalUrl,
             mask: mask,
             maskUrl: image.maskUrl,
-            isNew: false
-          )
+            isNew: false)
 
           print("  🔗 画像セット: ID=\(set.id), originalUrl=\(image.originalUrl ?? "nil"), maskUrl=\(image.maskUrl ?? "nil")")
           return set

@@ -59,8 +59,7 @@ class CameraPreviewController: UIViewController, AVCapturePhotoCaptureDelegate {
   func photoOutput(
     _ output: AVCapturePhotoOutput,
     didFinishProcessingPhoto photo: AVCapturePhoto,
-    error: Error?
-  ) {
+    error: Error?) {
     guard let data = photo.fileDataRepresentation(),
           let image = UIImage(data: data),
           let layer = previewLayer
@@ -73,8 +72,7 @@ class CameraPreviewController: UIViewController, AVCapturePhotoCaptureDelegate {
       x: visible.origin.x * CGFloat(cgImage.width),
       y: visible.origin.y * CGFloat(cgImage.height),
       width: visible.size.width * CGFloat(cgImage.width),
-      height: visible.size.height * CGFloat(cgImage.height)
-    ).integral
+      height: visible.size.height * CGFloat(cgImage.height)).integral
 
     guard let cropped = cgImage.cropping(to: crop) else {
       onImageCaptured?(image) // 失敗時はオリジナル
@@ -85,8 +83,7 @@ class CameraPreviewController: UIViewController, AVCapturePhotoCaptureDelegate {
       UIImage(
         cgImage: cropped,
         scale: image.scale,
-        orientation: image.imageOrientation
-      ))
+        orientation: image.imageOrientation))
   }
 
   override func viewDidLayoutSubviews() {

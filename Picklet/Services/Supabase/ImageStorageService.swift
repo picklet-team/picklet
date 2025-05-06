@@ -15,8 +15,7 @@ final class ImageStorageService {
   /// 内部用イニシャライザ
   private init(
     defaultBucketName: String = "originals",
-    client: SupabaseClient = AuthService.shared.client
-  ) {
+    client: SupabaseClient = AuthService.shared.client) {
     self.defaultBucketName = defaultBucketName
     self.client = client
     print("🔧 ImageStorageService 初期化: デフォルトバケット = \(defaultBucketName)")
@@ -37,8 +36,7 @@ final class ImageStorageService {
   func uploadImage(
     _ image: UIImage,
     for filename: String,
-    bucketName: String? = nil
-  ) async throws -> String {
+    bucketName: String? = nil) async throws -> String {
     print("📤 画像のアップロード開始: filename=\(filename)")
 
     // 1. 画像をJPEGデータに変換
@@ -60,8 +58,7 @@ final class ImageStorageService {
       let error = NSError(
         domain: "upload",
         code: 0,
-        userInfo: [NSLocalizedDescriptionKey: "画像の変換に失敗しました"]
-      )
+        userInfo: [NSLocalizedDescriptionKey: "画像の変換に失敗しました"])
       print("❌ 画像変換エラー: \(error.localizedDescription)")
       throw error
     }
@@ -78,8 +75,7 @@ final class ImageStorageService {
         .upload(
           path,
           data: data,
-          options: FileOptions(contentType: "image/jpeg")
-        )
+          options: FileOptions(contentType: "image/jpeg"))
       print("✅ Supabaseへのアップロード成功")
     } catch {
       print("❌ Supabase アップロードエラー: \(error.localizedDescription)")
@@ -95,8 +91,7 @@ final class ImageStorageService {
       let error = NSError(
         domain: "config",
         code: 0,
-        userInfo: [NSLocalizedDescriptionKey: "Supabase URLが見つかりません"]
-      )
+        userInfo: [NSLocalizedDescriptionKey: "Supabase URLが見つかりません"])
       print("❌ SUPABASE_URL 取得エラー: Info.plistにキーがありません")
       throw error
     }

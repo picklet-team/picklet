@@ -40,8 +40,7 @@ final class ImageMetadataUpdater {
           maskLocalPath: oldImage.maskLocalPath,
           resultLocalPath: oldImage.resultLocalPath,
           createdAt: oldImage.createdAt,
-          updatedAt: Date()
-        )
+          updatedAt: Date())
 
         // 配列を更新
         localImages[index] = updatedImage
@@ -80,8 +79,7 @@ final class ImageMetadataUpdater {
           maskLocalPath: oldImage.maskLocalPath,
           resultLocalPath: oldImage.resultLocalPath,
           createdAt: oldImage.createdAt,
-          updatedAt: Date()
-        )
+          updatedAt: Date())
 
         // 配列を更新
         localImages[index] = updatedImage
@@ -94,14 +92,13 @@ final class ImageMetadataUpdater {
   func updateImageMaskAndResult(
     imageId: UUID,
     maskUrl: String?,
-    resultUrl: String?
-  ) async throws {
+    resultUrl: String?) async throws {
     // サーバー上のデータを更新
     _ = try await client
       .from("clothing_images")
       .update([
         "mask_url": maskUrl,
-        "result_url": resultUrl,
+        "result_url": resultUrl
       ])
       .eq("id", value: imageId.uuidString)
       .execute()
@@ -127,8 +124,7 @@ final class ImageMetadataUpdater {
           maskLocalPath: oldImage.maskLocalPath,
           resultLocalPath: oldImage.resultLocalPath,
           createdAt: oldImage.createdAt,
-          updatedAt: Date()
-        )
+          updatedAt: Date())
 
         // 配列を更新
         localImages[index] = updatedImage

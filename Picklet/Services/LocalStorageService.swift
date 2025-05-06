@@ -94,8 +94,7 @@ class LocalStorageService {
         let error = NSError(
           domain: "LocalStorageService",
           code: 1,
-          userInfo: [NSLocalizedDescriptionKey: "画像データの変換に失敗しました"]
-        )
+          userInfo: [NSLocalizedDescriptionKey: "画像データの変換に失敗しました"])
         completion(nil, error)
         return
       }
@@ -125,7 +124,7 @@ class LocalStorageService {
         "maskLocalPath": image.maskLocalPath ?? "",
         "resultLocalPath": image.resultLocalPath ?? "",
         "createdAt": image.createdAt.timeIntervalSince1970,
-        "updatedAt": image.updatedAt.timeIntervalSince1970,
+        "updatedAt": image.updatedAt.timeIntervalSince1970
       ]
     }
 
@@ -172,8 +171,7 @@ class LocalStorageService {
         maskLocalPath: dict["maskLocalPath"] as? String,
         resultLocalPath: dict["resultLocalPath"] as? String,
         createdAt: Date(timeIntervalSince1970: createdAtTimestamp),
-        updatedAt: Date(timeIntervalSince1970: updatedAtTimestamp)
-      )
+        updatedAt: Date(timeIntervalSince1970: updatedAtTimestamp))
     }
 
     print("✅ \(clothingId) の画像メタデータを読み込み: \(imageMetadata.count)件")

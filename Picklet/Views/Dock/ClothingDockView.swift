@@ -9,8 +9,8 @@ struct IdentifiableUUID: Identifiable, Hashable { let id: UUID }
 
 /// Exponential‑moving‑average cursor smoother
 private struct CursorSmoother {
-  private(set) var raw: CGFloat = -1000 // last tapped / dragged target X
-  private(set) var ema: CGFloat = -1000 // smoothed X used for UI
+  private(set) var raw: CGFloat = -1_000 // last tapped / dragged target X
+  private(set) var ema: CGFloat = -1_000 // smoothed X used for UI
   private let alpha: CGFloat = 0.25 // smoothing factor (0‥1)
   mutating func setTarget(_ targetX: CGFloat) { raw = targetX }
   mutating func step() { ema += alpha * (raw - ema) }
@@ -74,8 +74,7 @@ struct ClothingDockView: View {
       .contentShape(Rectangle())
       .gesture(
         DragGesture(minimumDistance: 0)
-          .onChanged { value in setCursor(to: value.location.x) }
-      )
+          .onChanged { value in setCursor(to: value.location.x) })
       // smoother tick
       .onReceive(tick) { _ in stepSmoother() }
       // overlay (peek)
@@ -111,8 +110,7 @@ struct ClothingDockView: View {
   private func overlayQuickView() -> some View {
     Group {
       if let wrap = previewId,
-         let cloth = viewModel.clothes.first(where: { $0.id == wrap.id })
-      {
+         let cloth = viewModel.clothes.first(where: { $0.id == wrap.id }) {
         ZStack {
           Color.black.opacity(0.5).ignoresSafeArea()
             .onTapGesture { previewId = nil }
@@ -120,15 +118,14 @@ struct ClothingDockView: View {
             imageURL: viewModel.imageSetsMap[cloth.id]?.first?.originalUrl,
             name: cloth.name,
             category: cloth.category,
-            color: cloth.color
-          )
-          .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
-          .shadow(radius: 10)
-          .transition(.scale.combined(with: .opacity))
-          .onTapGesture {
-            commitId = cloth.id
-            previewId = nil
-          }
+            color: cloth.color)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+            .shadow(radius: 10)
+            .transition(.scale.combined(with: .opacity))
+            .onTapGesture {
+              commitId = cloth.id
+              previewId = nil
+            }
         }
         .zIndex(20)
         .animation(.spring(), value: previewId)
