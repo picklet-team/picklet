@@ -40,7 +40,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		B53EF5382DBAA65500F5CA39 /* Exceptions for "Picklet" folder in "Picklet" target */ = {
+		B53EF5382DBAA65500F5CA39 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -50,24 +50,9 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		B57C87D82DAA27A0001C2153 /* Picklet */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				B53EF5382DBAA65500F5CA39 /* Exceptions for "Picklet" folder in "Picklet" target */,
-			);
-			path = Picklet;
-			sourceTree = "<group>";
-		};
-		B57C87E92DAA27A1001C2153 /* PickletTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = PickletTests;
-			sourceTree = "<group>";
-		};
-		B57C87F32DAA27A1001C2153 /* PickletUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = PickletUITests;
-			sourceTree = "<group>";
-		};
+		B57C87D82DAA27A0001C2153 /* Picklet */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (B53EF5382DBAA65500F5CA39 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Picklet; sourceTree = "<group>"; };
+		B57C87E92DAA27A1001C2153 /* PickletTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = PickletTests; sourceTree = "<group>"; };
+		B57C87F32DAA27A1001C2153 /* PickletUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = PickletUITests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
