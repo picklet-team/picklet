@@ -12,7 +12,7 @@ final class ImageEditViewModel: ObservableObject {
   @Published var isProcessing = false
 
   init(imageSet: EditableImageSet) {
-      self.imageSet = imageSet
+    self.imageSet = imageSet
   }
 
   func runSegmentation() {

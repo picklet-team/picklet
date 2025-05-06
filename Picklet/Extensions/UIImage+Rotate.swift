@@ -16,13 +16,13 @@ extension UIImage {
       .integral.size
 
     UIGraphicsBeginImageContextWithOptions(newSize, false, scale)
-    guard let context = UIGraphicsGetCurrentContext(), let cgImage = self.cgImage else {
+    guard let context = UIGraphicsGetCurrentContext(), let cgImage = cgImage else {
       return nil
     }
 
     context.translateBy(x: newSize.width / 2, y: newSize.height / 2)
     context.rotate(by: radians)
-    context.scaleBy(x: 1.0, y: -1.0)  // UIKitの上下反転補正
+    context.scaleBy(x: 1.0, y: -1.0) // UIKitの上下反転補正
 
     context.draw(
       cgImage,

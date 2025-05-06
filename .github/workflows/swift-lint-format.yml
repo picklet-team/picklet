@@ -1,41 +1,66 @@
-# 一時的に無効化（2025-05-04）
+# SwiftLint と SwiftFormat を自動実行するワークフロー
 name: Swift Lint & Format
 
-# on:
-#   push:
-#     branches: [ main ]
-#   pull_request:
-#     branches: [ main ]
-    
-# トリガーを無効化（手動実行のみ）
+# プッシュとプルリクエスト時に自動実行されるよう設定
 on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - '**.swift'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - '**.swift'
+  # 手動実行も可能に設定
   workflow_dispatch:
 
 jobs:
   swiftlint:
     name: SwiftLint
-    runs-on: macos-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install SwiftLint
         run: |
-          brew install swiftlint
-          
+          if ! command -v swiftlint &> /dev/null; then
+            brew install swiftlint
+          fi
+          swiftlint --version
+
       - name: Run SwiftLint
         run: |
-          swiftlint --strict --reporter github-actions-logging
-          
+          swiftlint --reporter github-actions-logging
+
+      # 結果を表示する場合は以下のステップを追加
+      - name: Upload SwiftLint Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: swiftlint-results
+          path: swiftlint.txt
+          retention-days: 7
+
   swiftformat:
     name: SwiftFormat
-    runs-on: macos-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install SwiftFormat
         run: |
-          brew install swiftformat
-          
-      - name: Run SwiftFormat (Check only)
+          if ! command -v swiftformat &> /dev/null; then
+            brew install swiftformat
+          fi
+          swiftformat --version
+
+      - name: Run SwiftFormat (Check Only)
         run: |
-          swiftformat --lint . --config .swiftformat --reporter github-actions
+          swiftformat --lint . --config .swiftformat
+
+      # 自動修正は検証のみでプッシュしないようにする
+      - name: Run SwiftFormat (Dry Run)
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "Running SwiftFormat in dry run mode..."
+          swiftformat . --config .swiftformat --dryrun

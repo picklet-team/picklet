@@ -80,8 +80,7 @@ struct ClothingImage: Identifiable, Codable {
     maskLocalPath: String? = nil,
     resultLocalPath: String? = nil,
     createdAt: Date = Date(),
-    updatedAt: Date = Date()
-  ) {
+    updatedAt: Date = Date()) {
     self.id = id
     self.clothingId = clothingId
     self.userId = userId
@@ -125,20 +124,18 @@ struct ClothingImage: Identifiable, Codable {
   func updatingLocalPath(
     originalLocalPath: String? = nil,
     maskLocalPath: String? = nil,
-    resultLocalPath: String? = nil
-  ) -> ClothingImage {
+    resultLocalPath: String? = nil) -> ClothingImage {
     return ClothingImage(
-      id: self.id,
-      clothingId: self.clothingId,
-      userId: self.userId,
-      originalUrl: self.originalUrl,
-      maskUrl: self.maskUrl,
-      resultUrl: self.resultUrl,
+      id: id,
+      clothingId: clothingId,
+      userId: userId,
+      originalUrl: originalUrl,
+      maskUrl: maskUrl,
+      resultUrl: resultUrl,
       originalLocalPath: originalLocalPath ?? self.originalLocalPath,
       maskLocalPath: maskLocalPath ?? self.maskLocalPath,
       resultLocalPath: resultLocalPath ?? self.resultLocalPath,
-      createdAt: self.createdAt,
-      updatedAt: self.updatedAt
-    )
+      createdAt: createdAt,
+      updatedAt: updatedAt)
   }
 }

@@ -14,20 +14,16 @@ struct MainTabView: View {
       ClothingListView()
         .environmentObject(viewModel)
         .tabItem {
-          //                    Label("クローゼット", systemImage: "tshirt")
           Image(systemName: "tshirt")
-
         }
 
       WeatherLoaderView()
         .tabItem {
-//          Label("今日のコーデ", systemImage: "sun.max")
           Image(systemName: "sun.max")
         }
 
       SettingsView()
         .tabItem {
-          //                    Label("設定", systemImage: "gear")
           Image(systemName: "gear")
         }
     }

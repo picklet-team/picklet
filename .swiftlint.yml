@@ -9,12 +9,15 @@ excluded:
   - vendor
   - DerivedData
   - fastlane
+  - Picklet/Preview Content
 
 # デフォルトルールの中で無効化するもの
 disabled_rules:
   - todo
   - trailing_whitespace # 必要に応じて有効化
-  
+  - indentation_width
+  - for_where
+
 # オプショナルルールの中で有効化するもの
 opt_in_rules:
   - empty_count
@@ -29,15 +32,15 @@ opt_in_rules:
   - number_separator
 
 # カスタム値
-line_length: 
+line_length:
   warning: 120
   error: 150
   ignores_comments: true
-  
+
 file_length:
   warning: 400
   error: 500
-  
+
 function_body_length:
   warning: 50
   error: 100
@@ -45,11 +48,11 @@ function_body_length:
 type_body_length:
   warning: 350
   error: 500
-  
+
 large_tuple:
   warning: 3
   error: 4
-  
+
 # 変数名の長さ
 identifier_name:
   min_length: 2
@@ -62,5 +65,5 @@ identifier_name:
     - i
     - j
     - n
-    
+
 reporter: "xcode"

@@ -34,14 +34,11 @@ private struct ClothingImageCard: View {
             LinearGradient(
               gradient: Gradient(colors: [Color.gray.opacity(0.2), Color.gray.opacity(0.1)]),
               startPoint: .topLeading,
-              endPoint: .bottomTrailing
-            )
-          )
+              endPoint: .bottomTrailing))
           .overlay(
             Image(systemName: "tshirt")
               .font(.system(size: 40))
-              .foregroundColor(.gray.opacity(0.5))
-          )
+              .foregroundColor(.gray.opacity(0.5)))
           .onAppear {
             if let imageURL = imageURL {
               print("⚠️ 無効なURL: \(imageURL)")
@@ -56,8 +53,7 @@ private struct ClothingImageCard: View {
     .cornerRadius(12)
     .background(
       RoundedRectangle(cornerRadius: 12)
-        .fill(Color(.secondarySystemBackground))
-    )
+        .fill(Color(.secondarySystemBackground)))
     .shadow(color: Color.black.opacity(0.2), radius: 4, x: 0, y: 2)
   }
 }

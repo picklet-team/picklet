@@ -25,8 +25,8 @@ class CameraPreviewController: UIViewController, AVCapturePhotoCaptureDelegate {
     captureSession?.sessionPreset = .high
 
     guard let backCamera = AVCaptureDevice.default(for: .video),
-      let input = try? AVCaptureDeviceInput(device: backCamera),
-      let captureSession = captureSession
+          let input = try? AVCaptureDeviceInput(device: backCamera),
+          let captureSession = captureSession
     else { return }
     if captureSession.canAddInput(input) {
       captureSession.addInput(input)
@@ -59,12 +59,10 @@ class CameraPreviewController: UIViewController, AVCapturePhotoCaptureDelegate {
   func photoOutput(
     _ output: AVCapturePhotoOutput,
     didFinishProcessingPhoto photo: AVCapturePhoto,
-    error: Error?
-  ) {
-
+    error: Error?) {
     guard let data = photo.fileDataRepresentation(),
-      let image = UIImage(data: data),
-      let layer = previewLayer
+          let image = UIImage(data: data),
+          let layer = previewLayer
     else { return }
 
     // プレビューに写っていた矩形(0-1正規化) → 画像座標へ変換
@@ -74,11 +72,10 @@ class CameraPreviewController: UIViewController, AVCapturePhotoCaptureDelegate {
       x: visible.origin.x * CGFloat(cgImage.width),
       y: visible.origin.y * CGFloat(cgImage.height),
       width: visible.size.width * CGFloat(cgImage.width),
-      height: visible.size.height * CGFloat(cgImage.height)
-    ).integral
+      height: visible.size.height * CGFloat(cgImage.height)).integral
 
     guard let cropped = cgImage.cropping(to: crop) else {
-      onImageCaptured?(image)  // 失敗時はオリジナル
+      onImageCaptured?(image) // 失敗時はオリジナル
       return
     }
 

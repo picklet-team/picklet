@@ -19,12 +19,12 @@ struct ClothingQuickView: View {
       if let urlStr = imageURL, let url = URL(string: urlStr) {
         WebImage(url: url, options: [.queryMemoryData, .queryDiskDataSync, .refreshCached]) { phase in
           switch phase {
-          case .success(let img):
+          case let .success(img):
             img.resizable().scaledToFit()
               .onAppear {
                 print("✅ 画像読み込み成功: \(urlStr)")
               }
-          case .failure(let error):
+          case let .failure(error):
             Image(systemName: "photo").resizable().scaledToFit().foregroundColor(.secondary)
               .onAppear {
                 print("❌ 画像読み込み失敗: \(urlStr) - エラー: \(error.localizedDescription)")
@@ -50,8 +50,7 @@ struct ClothingQuickView: View {
           .overlay(
             Image(systemName: "photo")
               .font(.system(size: 40))
-              .foregroundColor(.secondary)
-          )
+              .foregroundColor(.secondary))
           .frame(width: 150, height: 150)
           .cornerRadius(12)
           .onAppear {

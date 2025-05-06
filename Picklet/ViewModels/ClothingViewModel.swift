@@ -54,16 +54,16 @@ class ClothingViewModel: ObservableObject {
     do {
       // 1. 服情報を保存
       try await saveClothingData(clothing, isNew: isNew)
-      
+
       // 2. 画像セットを処理
       for idx in imageSets.indices {
         var set = imageSets[idx]
-        
+
         // 3. オリジナル画像の処理
         if set.isNew, set.originalUrl == nil {
           await processOriginalImage(set: &set, clothing: clothing)
         }
-        
+
         // 4. マスク画像の処理
         if let mask = set.mask, set.maskUrl == nil {
           await processMaskImage(mask: mask, set: &set, clothing: clothing)
@@ -74,10 +74,10 @@ class ClothingViewModel: ObservableObject {
       await printDebugInfo()
     } catch {
       print("❌ updateClothing エラー: \(error.localizedDescription)")
-      self.errorMessage = error.localizedDescription
+      errorMessage = error.localizedDescription
     }
   }
-  
+
   /// 服データを保存（新規作成または更新）
   private func saveClothingData(_ clothing: Clothing, isNew: Bool) async throws {
     if isNew {
@@ -88,42 +88,41 @@ class ClothingViewModel: ObservableObject {
       print("✅ 既存服を更新しました: \(clothing.id)")
     }
   }
-  
+
   /// オリジナル画像を処理・アップロード
   private func processOriginalImage(set: inout EditableImageSet, clothing: Clothing) async {
     let originalImage = set.original
     print("🔄 新規画像をアップロード中: setID=\(set.id)")
-    
+
     // ローカルに画像を保存
     guard let localPath = localStorageService.saveImage(originalImage, id: set.id, type: "original") else {
       print("❌ ローカル画像保存失敗")
       return
     }
-    
+
     print("✅ 画像をローカルに保存: \(localPath)")
-    
+
     do {
       // サーバーにアップロード
       let url = try await originalImageStorageService.uploadImage(originalImage, for: set.id.uuidString)
-      
+
       // メタデータを追加（ローカルパス情報も含む）
       let newImage = ClothingImage(
-          id: set.id,
-          clothingId: clothing.id,
-          originalUrl: url,
-          originalLocalPath: localPath,
-          createdAt: Date(),
-          updatedAt: Date()
-      )
-      
+        id: set.id,
+        clothingId: clothing.id,
+        originalUrl: url,
+        originalLocalPath: localPath,
+        createdAt: Date(),
+        updatedAt: Date())
+
       // ローカルメタデータを更新
       var localImages = localStorageService.loadImageMetadata(for: clothing.id)
       localImages.append(newImage)
       localStorageService.saveImageMetadata(for: clothing.id, imageMetadata: localImages)
-      
+
       // サーバーメタデータを更新
       try await imageMetadataService.addImage(for: clothing.id, originalUrl: url)
-      
+
       // EditableImageSetは可変なのでプロパティを更新
       set.originalUrl = url
       set.isNew = false
@@ -132,48 +131,47 @@ class ClothingViewModel: ObservableObject {
       print("❌ 画像アップロードエラー: \(error.localizedDescription)")
     }
   }
-  
+
   /// マスク画像を処理・アップロード
   private func processMaskImage(mask: UIImage, set: inout EditableImageSet, clothing: Clothing) async {
     print("🔄 マスク画像をアップロード中: setID=\(set.id)")
-    
+
     // ローカルにマスク画像を保存
     guard let localPath = localStorageService.saveImage(mask, id: set.id, type: "mask") else {
       print("❌ ローカルマスク保存失敗")
       return
     }
-    
+
     print("✅ マスク画像をローカルに保存: \(localPath)")
-    
+
     do {
       // サーバーにアップロード
       let maskUrl = try await maskImageStorageService.uploadImage(mask, for: set.id.uuidString)
-      
+
       // ローカルメタデータを更新
       var localImages = localStorageService.loadImageMetadata(for: clothing.id)
       if let index = localImages.firstIndex(where: { $0.id == set.id }) {
-          // ClothingImageはlet定数を持つので新しいインスタンスを作成して置き換え
-          let oldImage = localImages[index]
-          let updatedImage = ClothingImage(
-              id: oldImage.id,
-              clothingId: oldImage.clothingId,
-              userId: oldImage.userId,
-              originalUrl: oldImage.originalUrl,
-              maskUrl: maskUrl, // 更新されたマスクURL
-              resultUrl: oldImage.resultUrl,
-              originalLocalPath: oldImage.originalLocalPath,
-              maskLocalPath: localPath, // 新しいローカルパス
-              resultLocalPath: oldImage.resultLocalPath,
-              createdAt: oldImage.createdAt,
-              updatedAt: Date()
-          )
-          localImages[index] = updatedImage
-          localStorageService.saveImageMetadata(for: clothing.id, imageMetadata: localImages)
+        // ClothingImageはlet定数を持つので新しいインスタンスを作成して置き換え
+        let oldImage = localImages[index]
+        let updatedImage = ClothingImage(
+          id: oldImage.id,
+          clothingId: oldImage.clothingId,
+          userId: oldImage.userId,
+          originalUrl: oldImage.originalUrl,
+          maskUrl: maskUrl, // 更新されたマスクURL
+          resultUrl: oldImage.resultUrl,
+          originalLocalPath: oldImage.originalLocalPath,
+          maskLocalPath: localPath, // 新しいローカルパス
+          resultLocalPath: oldImage.resultLocalPath,
+          createdAt: oldImage.createdAt,
+          updatedAt: Date())
+        localImages[index] = updatedImage
+        localStorageService.saveImageMetadata(for: clothing.id, imageMetadata: localImages)
       }
-      
+
       // サーバーメタデータを更新
       try await imageMetadataService.updateImageMask(imageId: set.id, maskUrl: maskUrl)
-      
+
       // EditableImageSetは可変なのでプロパティを更新
       set.maskUrl = maskUrl
       print("✅ マスクアップロード完了: URL=\(maskUrl)")
@@ -191,7 +189,7 @@ class ClothingViewModel: ObservableObject {
       print("📥 サーバーから受信: \(remote.count)件")
 
       // 2) 差分検出＆マージ
-      var merged = clothes   // 現在のローカル配列をコピー
+      var merged = clothes // 現在のローカル配列をコピー
       for item in remote {
         if let idx = merged.firstIndex(where: { $0.id == item.id }) {
           // ローカルの方が古ければ置き換え
@@ -206,14 +204,14 @@ class ClothingViewModel: ObservableObject {
         }
       }
       // 3) ローカルにしかないサーバー削除済アイテムは optional で後処理してもOK
-      self.clothes = merged
+      clothes = merged
       print("✅ 同期完了: 最終件数=\(merged.count)")
 
       // 同期後に画像のロードも行う
       await loadAllImages()
     } catch {
       print("❌ syncIfNeeded エラー: \(error.localizedDescription)")
-      self.errorMessage = error.localizedDescription
+      errorMessage = error.localizedDescription
     }
   }
 
@@ -233,7 +231,7 @@ class ClothingViewModel: ObservableObject {
 
         let imageSets = images.map { image -> EditableImageSet in
           var original: UIImage = placeholderImage
-          var mask: UIImage?  // nilの明示的初期化を削除
+          var mask: UIImage? // nilの明示的初期化を削除
 
           // ローカルパスから画像を読み込む
           if let originalPath = image.originalLocalPath {
@@ -257,8 +255,7 @@ class ClothingViewModel: ObservableObject {
             originalUrl: image.originalUrl,
             mask: mask,
             maskUrl: image.maskUrl,
-            isNew: false
-          )
+            isNew: false)
 
           print("  🔗 画像セット: ID=\(set.id), originalUrl=\(image.originalUrl ?? "nil"), maskUrl=\(image.maskUrl ?? "nil")")
           return set
@@ -270,7 +267,7 @@ class ClothingViewModel: ObservableObject {
       }
     }
 
-    self.imageSetsMap = newMap
+    imageSetsMap = newMap
     print("✅ 全画像読み込み完了: \(newMap.count)アイテム")
   }
 
@@ -289,7 +286,7 @@ class ClothingViewModel: ObservableObject {
       print("✅ imageSetsMapからエントリーを削除")
     } catch {
       print("❌ deleteClothing エラー: \(error.localizedDescription)")
-      self.errorMessage = error.localizedDescription
+      errorMessage = error.localizedDescription
     }
   }
 }
