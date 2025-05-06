@@ -106,7 +106,7 @@ struct ImageThumbnailView: View {
     self.imageURL = imageURL
     self.size = size
     self.cornerRadius = cornerRadius
-    self.image = nil
+    image = nil
   }
 
   // 新しいイニシャライザを追加
