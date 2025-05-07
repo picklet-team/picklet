@@ -9,38 +9,34 @@ struct ClothingEditView: View {
   let canDelete: Bool
   let isNew: Bool
 
+  // editingSetsは直接表示に使うデータ（詳細画面と同じデータソースを使用）
   @State private var editingSets: [EditableImageSet] = []
   @State private var selectedImageSet: EditableImageSet?
   @State private var showPhotoPicker = false
   @State private var showImageEditor = false
   @State private var showDeleteConfirm = false
-  @State private var isLoadingImages = false
+  @State private var isBackgroundLoading = false // バックグラウンド処理中フラグ
 
   var body: some View {
     VStack {
-      // 読込中の表示
-      if isLoadingImages {
-        ProgressView("画像を読込中...")
-          .padding()
-      } else {
-        ImageListSection(
-          imageSets: $editingSets,
-          addAction: { showPhotoPicker = true },
-          selectAction: { set in
-            // 画像編集前に確実に最新のデータを取得
-            if !set.isNew, set.originalUrl != nil {
-              // 既存の服の画像の場合、編集前にオリジナル画像が読み込まれていることを確認
-              loadImageFromUrlIfNeeded(set) { updatedSet in
-                selectedImageSet = updatedSet
-                showImageEditor = true
-              }
-            } else {
-              // 新規の場合はそのまま設定
-              selectedImageSet = set
+      ImageListSection(
+        imageSets: $editingSets,
+        addAction: { showPhotoPicker = true },
+        selectAction: { set in
+          // 画像編集前に確実に最新のデータを取得
+          if !set.isNew {
+            // マスク編集の前に、選択された画像を高品質バージョンに更新
+            ensureHighQualityImage(for: set) { updatedSet in
+              selectedImageSet = updatedSet
               showImageEditor = true
             }
-          })
-      }
+          } else {
+            // 新規の場合はそのまま設定
+            selectedImageSet = set
+            showImageEditor = true
+          }
+        },
+        isLoading: isBackgroundLoading)
 
       ClothingFormSection(clothing: $clothing)
 
@@ -53,15 +49,12 @@ struct ClothingEditView: View {
     }
     .navigationTitle("服を編集")
     .onAppear {
-      // 初期ロード
-      if editingSets.isEmpty {
-        // 既存の服データを読み込み
-        editingSets = viewModel.imageSetsMap[clothing.id] ?? []
+      // 初期表示時に詳細画面と同じデータソースを使用（ViewModelから直接）
+      editingSets = viewModel.imageSetsMap[clothing.id] ?? []
 
-        // 既存データの場合はデータを再ロードする
-        if !isNew && !editingSets.isEmpty {
-          loadImagesIfNeeded()
-        }
+      // 既存データかつ1枚以上画像がある場合のみ、バックグラウンドで高品質データを取得
+      if !isNew && !editingSets.isEmpty {
+        enhanceImagesInBackground()
       }
 
       if openPhotoPickerOnAppear {
@@ -79,9 +72,11 @@ struct ClothingEditView: View {
           result: nil,
           resultUrl: nil,
           isNew: true)
+
+        // 新規画像を追加
         editingSets.append(newSet)
 
-        // 画像選択後、即座にViewModelのキャッシュも更新
+        // ViewModelのキャッシュも同時に更新（詳細画面と整合性を保つ）
         viewModel.updateLocalImagesCache(clothing.id, imageSets: editingSets)
         print("📸 画像選択後にimageSetsMapを更新: \(clothing.id), 画像数: \(editingSets.count)")
       }
@@ -89,7 +84,7 @@ struct ClothingEditView: View {
     .sheet(item: $selectedImageSet) { imageSet in
       MaskEditorView(imageSet: bindingFor(imageSet))
         .onDisappear {
-          // マスク編集後も即座にキャッシュを更新
+          // マスク編集後もViewModelのキャッシュを更新
           viewModel.updateLocalImagesCache(clothing.id, imageSets: editingSets)
           print("🎭 マスク編集後にimageSetsMapを更新: \(clothing.id)")
         }
@@ -105,176 +100,170 @@ struct ClothingEditView: View {
     }
   }
 
-  // MARK: - Actions
+  // MARK: - バックグラウンド処理
 
-  // 必要に応じて画像を再読み込み
-  private func loadImagesIfNeeded() {
-    isLoadingImages = true
-    Task {
-      print("🔄 既存の服の画像を再読み込みします: \(clothing.id)")
-      await viewModel.loadImagesForClothing(id: clothing.id)
+  /// バックグラウンドで画像の高品質バージョンを取得
+  private func enhanceImagesInBackground() {
+    // バックグラウンド処理開始（低優先度）
+    isBackgroundLoading = true
 
-      // UIを更新
-      await MainActor.run {
-        editingSets = viewModel.imageSetsMap[clothing.id] ?? []
-        print("📥 画像の再読み込み完了: \(editingSets.count)枚")
+    Task(priority: .low) {
+      print("🔄 バックグラウンドで高品質画像の準備開始: \(clothing.id)")
 
-        // 読み込みが終わっても画像が小さい場合はURLから直接ロードを試みる
-        for (index, set) in editingSets.enumerated() {
-          if set.original.size.width < 50 {
-            loadImageFromURL(set: set, index: index)
+      // サーバーから最新データを取得（UI更新なしで裏で処理）
+      let fetchedImages = try? await viewModel.imageMetadataService.fetchImages(for: clothing.id)
+      guard let images = fetchedImages else {
+        await MainActor.run { isBackgroundLoading = false }
+        print("❌ 画像メタデータの取得に失敗")
+        return
+      }
+
+      // すでに持っている画像IDのセット（重複検出用）
+      let existingIds = Set(editingSets.map { $0.id })
+      var updatedSets: [EditableImageSet] = []
+
+      // ローカル処理（サーバー通信なし）で画像を拡張
+      for image in images {
+        let localStorageService = viewModel.localStorageService
+
+        // 既存の画像があれば高品質版に更新、なければ追加
+        if let idx = editingSets.firstIndex(where: { $0.id == image.id }) {
+          let currentSet = editingSets[idx]
+
+          // 画像サイズチェック - 低品質の場合のみローカルから読み込み
+          if currentSet.original.size.width < 100 || currentSet.original.size.height < 100 {
+            if let originalPath = image.originalLocalPath,
+               let loadedImage = localStorageService.loadImage(from: originalPath) {
+              // 高品質画像で更新（新しいインスタンスを作成）
+              let updatedSet = EditableImageSet(
+                id: currentSet.id,
+                original: loadedImage,
+                originalUrl: currentSet.originalUrl,
+                mask: currentSet.mask,
+                maskUrl: currentSet.maskUrl,
+                result: currentSet.result,
+                resultUrl: currentSet.resultUrl,
+                isNew: currentSet.isNew
+              )
+
+              print("🔄 ローカルから高品質画像で更新: \(image.id)")
+
+              // メインスレッドで更新（UIに影響するため）
+              await MainActor.run {
+                if let stillIdx = editingSets.firstIndex(where: { $0.id == image.id }) {
+                  editingSets[stillIdx] = updatedSet
+                }
+              }
+            }
           }
         }
+      }
 
-        isLoadingImages = false
+      // 画像セットの順序を維持しながら、確実に重複がないようにする
+      await MainActor.run {
+        // ViewModelのキャッシュを同期的に更新（detailViewとの整合性確保）
+        viewModel.updateLocalImagesCache(clothing.id, imageSets: editingSets)
+        isBackgroundLoading = false
+        print("✅ バックグラウンド処理完了: 画像セット数=\(editingSets.count)")
       }
     }
   }
 
-  // URLから直接画像を読み込む（SDWebImageを活用）
-  private func loadImageFromURL(set: EditableImageSet, index: Int) {
-    guard let urlString = set.originalUrl, let url = URL(string: urlString) else { return }
-
-    print("🌐 URLから画像を直接読み込み開始: \(urlString)")
-
-    // SDWebImageを使用して画像をダウンロード
-    SDWebImageManager.shared.loadImage(
-      with: url,
-      options: [.refreshCached],
-      progress: nil) { image, _, _, _, _, _ in
-        guard let downloadedImage = image else {
-          print("⚠️ URLからの画像読み込み失敗: \(urlString)")
-          return
-        }
-
-        print("✅ URLから画像を直接取得: \(urlString), サイズ: \(downloadedImage.size)")
-
-        // 編集中の配列を更新
-        DispatchQueue.main.async {
-          let updatedSet = EditableImageSet(
-            id: set.id,
-            original: downloadedImage,
-            originalUrl: set.originalUrl,
-            mask: set.mask,
-            maskUrl: set.maskUrl,
-            result: set.result,
-            resultUrl: set.resultUrl,
-            isNew: false)
-
-          if index < self.editingSets.count {
-            self.editingSets[index] = updatedSet
-            print("✏️ URLからロードした画像でセットを更新: ID=\(set.id)")
-          }
-        }
-      }
-  }
-
-  // 特定の画像セットが正しく読み込まれているか確認し、URLから直接読み込む
-  private func loadImageFromUrlIfNeeded(_ set: EditableImageSet, completion: @escaping (EditableImageSet) -> Void) {
-    // すでに有効な画像があれば何もしない
-    if set.original.size.width > 50 && set.original.size.height > 50 {
-      print("✅ 既に有効な画像があります: サイズ=\(set.original.size)")
+  /// 特定の画像を高品質バージョンに確実に更新（マスク編集前など）
+  private func ensureHighQualityImage(for set: EditableImageSet, completion: @escaping (EditableImageSet) -> Void) {
+    // すでに十分な品質があれば、そのままコールバック
+    if set.original.size.width >= 100 && set.original.size.height >= 100 {
+      print("✅ 既に十分な品質の画像があります: \(set.id)")
       completion(set)
       return
     }
 
-    print("⚠️ 画像が正しく読み込まれていません: ID=\(set.id)")
+    print("🔍 高品質画像を取得中: \(set.id)")
 
-    // URLから直接読み込みを試みる
-    if let urlString = set.originalUrl, let url = URL(string: urlString) {
-      print("🌐 URL経由で画像を直接読み込みます: \(urlString)")
-
-      // SDWebImageを使用して画像をダウンロード
-      SDWebImageManager.shared.loadImage(
-        with: url,
-        options: [.refreshCached],
-        progress: nil) { image, _, _, _, _, _ in
-          guard let downloadedImage = image else {
-            print("⚠️ URLからの画像読み込み失敗: \(urlString)")
-            completion(set) // 失敗した場合は元のセットを返す
-            return
-          }
-
-          print("✅ URLから画像を直接取得: \(urlString), サイズ: \(downloadedImage.size)")
-
-          let updatedSet = EditableImageSet(
-            id: set.id,
-            original: downloadedImage,
-            originalUrl: set.originalUrl,
-            mask: set.mask,
-            maskUrl: set.maskUrl,
-            result: set.result,
-            resultUrl: set.resultUrl,
-            isNew: false)
-
-          // 編集中の配列も更新
-          if let idx = self.editingSets.firstIndex(where: { $0.id == set.id }) {
-            DispatchQueue.main.async {
-              self.editingSets[idx] = updatedSet
-            }
-          }
-
-          completion(updatedSet)
-        }
-    } else {
-      // URLがない場合や無効な場合はローカルストレージから読み込む
-      ensureImageLoaded(set, completion: completion)
-    }
-  }
-
-  // ローカルストレージから画像を読み込む
-  private func ensureImageLoaded(_ set: EditableImageSet, completion: @escaping (EditableImageSet) -> Void) {
-    // ローカルストレージから画像を直接読み込む
+    // ローカルストレージから最高品質の画像を取得
     Task {
       let imageMetadataService = viewModel.imageMetadataService
       let localStorageService = viewModel.localStorageService
 
-      do {
-        // 画像メタデータを取得
-        let images = try await imageMetadataService.fetchImages(for: clothing.id)
+      // まずローカルストレージをチェック
+      let images = try? await imageMetadataService.fetchImages(for: clothing.id)
+      if let image = images?.first(where: { $0.id == set.id }),
+         let originalPath = image.originalLocalPath,
+         let loadedImage = localStorageService.loadImage(from: originalPath) {
+        // ローカルに高品質画像がある場合は新しいインスタンスを作成
+        let updatedSet = EditableImageSet(
+          id: set.id,
+          original: loadedImage,
+          originalUrl: set.originalUrl,
+          mask: set.mask,
+          maskUrl: set.maskUrl,
+          result: set.result,
+          resultUrl: set.resultUrl,
+          isNew: set.isNew
+        )
 
-        // 対象の画像を探す
-        if let image = images.first(where: { $0.id == set.id }) {
-          var updatedSet = set
+        print("📲 ローカルから高品質画像を取得: \(originalPath)")
 
-          // ローカルパスから画像を読み込む
-          if let originalPath = image.originalLocalPath,
-             let loadedImage = localStorageService.loadImage(from: originalPath) {
-            print("📲 ローカルから画像を読み込みました: \(originalPath)")
-
-            // 更新されたセットを作成
-            updatedSet = EditableImageSet(
-              id: set.id,
-              original: loadedImage,
-              originalUrl: image.originalUrl,
-              mask: set.mask,
-              maskUrl: image.maskUrl,
-              result: set.result,
-              resultUrl: image.resultUrl,
-              isNew: false)
-
-            // 編集中の配列も更新
-            if let idx = editingSets.firstIndex(where: { $0.id == set.id }) {
-              await MainActor.run {
-                editingSets[idx] = updatedSet
-              }
-            }
-          }
-
-          // コールバックを呼び出す
+        // 配列も更新
+        if let idx = editingSets.firstIndex(where: { $0.id == set.id }) {
           await MainActor.run {
-            completion(updatedSet)
-          }
-        } else {
-          // 見つからなかった場合は元のセットを返す
-          await MainActor.run {
-            completion(set)
+            editingSets[idx] = updatedSet
           }
         }
-      } catch {
-        print("❌ 画像読み込みエラー: \(error.localizedDescription)")
+
         await MainActor.run {
-          completion(set) // エラー時は元のセットを返す
+          completion(updatedSet)
+        }
+        return
+      }
+
+      // ローカルになければSDWebImageを使ってネットワークから取得
+      if let urlString = set.originalUrl, let url = URL(string: urlString) {
+        // ネットワーク取得はメインスレッドをブロックしない
+        let options: SDWebImageOptions = [.highPriority, .retryFailed, .refreshCached]
+
+        SDWebImageManager.shared.loadImage(
+          with: url,
+          options: options,
+          progress: nil) { image, _, _, _, _, _ in
+            if let downloadedImage = image {
+              print("🌐 URLから高品質画像を取得: \(urlString)")
+
+              // 新しいインスタンスを作成
+              let updatedSet = EditableImageSet(
+                id: set.id,
+                original: downloadedImage,
+                originalUrl: set.originalUrl,
+                mask: set.mask,
+                maskUrl: set.maskUrl,
+                result: set.result,
+                resultUrl: set.resultUrl,
+                isNew: set.isNew
+              )
+
+              // ローカルに保存して次回以降の高速アクセス用にキャッシュ
+              if let savedPath = localStorageService.saveImage(downloadedImage, id: set.id, type: "original") {
+                print("💾 高品質画像をローカルに保存: \(savedPath)")
+              }
+
+              // 配列も更新
+              if let idx = self.editingSets.firstIndex(where: { $0.id == set.id }) {
+                DispatchQueue.main.async {
+                  self.editingSets[idx] = updatedSet
+                }
+              }
+
+              completion(updatedSet)
+            } else {
+              // 失敗したら元の画像を使用
+              print("⚠️ 高品質画像の取得失敗。元の画像を使用: \(set.id)")
+              completion(set)
+            }
+          }
+      } else {
+        // URLがない場合は現状の画像を使う
+        await MainActor.run {
+          completion(set)
         }
       }
     }
@@ -304,12 +293,27 @@ private struct ImageListSection: View {
   @Binding var imageSets: [EditableImageSet]
   let addAction: () -> Void
   let selectAction: (EditableImageSet) -> Void
+  let isLoading: Bool
 
   var body: some View {
     VStack(alignment: .leading) {
+      // バックグラウンド処理中の表示
+      if isLoading {
+        HStack {
+          Spacer()
+          Text("高品質データを準備中...")
+            .font(.caption)
+            .foregroundColor(.secondary)
+          ProgressView()
+            .scaleEffect(0.7)
+          Spacer()
+        }
+        .padding(.vertical, 4)
+      }
+
       // バインディング対応の共通コンポーネントを使用
       ClothingImageGalleryView(
-        imageSets: $imageSets, // $を使ってバインディングを渡す
+        imageSets: $imageSets,
         showAddButton: true,
         onSelectImage: selectAction,
         onAddButtonTap: addAction)
