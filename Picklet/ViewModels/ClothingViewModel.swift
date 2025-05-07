@@ -1,4 +1,5 @@
 import Foundation
+import SDWebImageSwiftUI
 import SwiftUI
 
 @MainActor
@@ -9,11 +10,15 @@ class ClothingViewModel: ObservableObject {
 
   @Published var imageSetsMap: [UUID: [EditableImageSet]] = [:]
 
-  private let clothingService = SupabaseService.shared
-  private let imageMetadataService = ImageMetadataService.shared
-  private let originalImageStorageService = ImageStorageService(bucketName: "originals")
-  private let maskImageStorageService = ImageStorageService(bucketName: "masks")
-  private let localStorageService = LocalStorageService.shared
+  // 外部からアクセスできるようにprivateを削除
+  let clothingService = SupabaseService.shared
+  let imageMetadataService = ImageMetadataService.shared
+  let originalImageStorageService = ImageStorageService(bucketName: "originals")
+  let maskImageStorageService = ImageStorageService(bucketName: "masks")
+  let localStorageService = LocalStorageService.shared
+
+  // デバッグ用
+  @Published var imageLoadStatus: [String: String] = [:]
 
   init() {
     print("🧠 ClothingViewModel 初期化")
@@ -233,8 +238,6 @@ class ClothingViewModel: ObservableObject {
   /// ------------------------------------------------------------
   /// データ同期・画像読み込み
   /// ------------------------------------------------------------
-
-  /// 起動時 or 手動で呼び出す「差分だけ同期」メソッド
   func syncIfNeeded() async {
     print("🔄 syncIfNeeded 開始")
     do {
@@ -283,15 +286,34 @@ class ClothingViewModel: ObservableObject {
         let images = try await imageMetadataService.fetchImages(for: clothing.id)
         print("📷 \(clothing.id)の画像を取得: \(images.count)件")
 
-        let imageSets = images.map { image -> EditableImageSet in
+        // 画像セットを非同期で作成
+        var imageSets: [EditableImageSet] = []
+
+        for image in images {
           var original: UIImage = placeholderImage
-          var mask: UIImage? // nilの明示的初期化を削除
+          var mask: UIImage?
 
           // ローカルパスから画像を読み込む
           if let originalPath = image.originalLocalPath {
             if let loadedImage = localStorageService.loadImage(from: originalPath) {
               original = loadedImage
               print("📲 ローカルから画像を読み込み: \(originalPath)")
+            } else if let originalUrl = image.originalUrl, let url = URL(string: originalUrl) {
+              // 非同期でURLから画像をダウンロード
+              do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                if let downloadedImage = UIImage(data: data) {
+                  original = downloadedImage
+                  print("🌐 URLから画像を非同期にダウンロード: \(originalUrl)")
+
+                  // ローカルに保存して次回利用できるようにする
+                  if let savedPath = localStorageService.saveImage(downloadedImage, id: image.id, type: "original") {
+                    print("💾 ダウンロードした画像をローカルに保存: \(savedPath)")
+                  }
+                }
+              } catch {
+                print("❌ 画像ダウンロードエラー: \(originalUrl) - \(error.localizedDescription)")
+              }
             }
           }
 
@@ -299,6 +321,22 @@ class ClothingViewModel: ObservableObject {
             if let loadedMask = localStorageService.loadImage(from: maskPath) {
               mask = loadedMask
               print("📲 ローカルからマスク画像を読み込み: \(maskPath)")
+            } else if let maskUrl = image.maskUrl, let url = URL(string: maskUrl) {
+              // 非同期でURLからマスク画像をダウンロード
+              do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                if let downloadedMask = UIImage(data: data) {
+                  mask = downloadedMask
+                  print("🌐 URLからマスク画像を非同期にダウンロード: \(maskUrl)")
+
+                  // ローカルに保存して次回利用できるようにする
+                  if let savedPath = localStorageService.saveImage(downloadedMask, id: image.id, type: "mask") {
+                    print("💾 ダウンロードしたマスク画像をローカルに保存: \(savedPath)")
+                  }
+                }
+              } catch {
+                print("❌ マスク画像ダウンロードエラー: \(maskUrl) - \(error.localizedDescription)")
+              }
             }
           }
 
@@ -311,8 +349,8 @@ class ClothingViewModel: ObservableObject {
             maskUrl: image.maskUrl,
             isNew: false)
 
+          imageSets.append(set)
           print("  🔗 画像セット: ID=\(set.id), originalUrl=\(image.originalUrl ?? "nil"), maskUrl=\(image.maskUrl ?? "nil")")
-          return set
         }
 
         newMap[clothing.id] = imageSets
@@ -336,7 +374,9 @@ class ClothingViewModel: ObservableObject {
       let images = try await imageMetadataService.fetchImages(for: id)
       print("📷 \(id)の画像を取得: \(images.count)件")
 
-      let imageSets = images.map { image -> EditableImageSet in
+      var imageSets: [EditableImageSet] = []
+
+      for image in images {
         var original: UIImage = placeholderImage
         var mask: UIImage?
 
@@ -344,30 +384,66 @@ class ClothingViewModel: ObservableObject {
         if let originalPath = image.originalLocalPath {
           if let loadedImage = localStorageService.loadImage(from: originalPath) {
             original = loadedImage
+            print("📲 ローカルから画像を読み込み: \(originalPath)")
+          } else if let originalUrl = image.originalUrl, let url = URL(string: originalUrl) {
+            // 非同期でURLから画像をダウンロード
+            do {
+              let (data, _) = try await URLSession.shared.data(from: url)
+              if let downloadedImage = UIImage(data: data) {
+                original = downloadedImage
+                print("🌐 URLから画像を非同期にダウンロード: \(originalUrl)")
+
+                // ローカルに保存して次回利用できるようにする
+                if let savedPath = localStorageService.saveImage(downloadedImage, id: image.id, type: "original") {
+                  print("💾 ダウンロードした画像をローカルに保存: \(savedPath)")
+                }
+              }
+            } catch {
+              print("❌ 画像ダウンロードエラー: \(originalUrl) - \(error.localizedDescription)")
+            }
           }
         }
 
         if let maskPath = image.maskLocalPath {
           if let loadedMask = localStorageService.loadImage(from: maskPath) {
             mask = loadedMask
+            print("📲 ローカルからマスク画像を読み込み: \(maskPath)")
+          } else if let maskUrl = image.maskUrl, let url = URL(string: maskUrl) {
+            // 非同期でURLからマスク画像をダウンロード
+            do {
+              let (data, _) = try await URLSession.shared.data(from: url)
+              if let downloadedMask = UIImage(data: data) {
+                mask = downloadedMask
+                print("🌐 URLからマスク画像を非同期にダウンロード: \(maskUrl)")
+
+                // ローカルに保存して次回利用できるようにする
+                if let savedPath = localStorageService.saveImage(downloadedMask, id: image.id, type: "mask") {
+                  print("💾 ダウンロードしたマスク画像をローカルに保存: \(savedPath)")
+                }
+              }
+            } catch {
+              print("❌ マスク画像ダウンロードエラー: \(maskUrl) - \(error.localizedDescription)")
+            }
           }
         }
 
         // EditableImageSetを構築
-        return EditableImageSet(
+        let set = EditableImageSet(
           id: image.id,
           original: original,
           originalUrl: image.originalUrl,
           mask: mask,
           maskUrl: image.maskUrl,
           isNew: false)
+
+        imageSets.append(set)
       }
 
       // 既存のマップを更新
       imageSetsMap[id] = imageSets
       print("✅ 指定服の画像読み込み完了: \(id)")
     } catch {
-      print("❌ \(id)の画像読み込みエラー: \(error.localizedDescription)")
+      print("❌ 指定服の画像読み込みエラー: \(error.localizedDescription)")
     }
   }
 
