@@ -38,16 +38,19 @@ struct ClothingEditView: View {
         },
         isLoading: isBackgroundLoading)
 
-      ClothingFormSection(clothing: $clothing)
+      ClothingFormSection(
+        clothing: $clothing,
+        canDelete: canDelete,
+        onDelete: { showDeleteConfirm = true })
 
       Spacer()
-
-      ActionButtonsSection(
-        saveAction: saveChanges,
-        deleteAction: { showDeleteConfirm = true },
-        canDelete: canDelete)
     }
     .navigationTitle("服を編集")
+    .safeAreaInset(edge: .bottom) {
+      PrimaryActionButton(title: "保存") {
+        saveChanges()
+      }
+    }
     .onAppear {
       // 初期表示時に詳細画面と同じデータソースを使用（ViewModelから直接）
       editingSets = viewModel.imageSetsMap[clothing.id] ?? []
@@ -117,10 +120,6 @@ struct ClothingEditView: View {
         print("❌ 画像メタデータの取得に失敗")
         return
       }
-
-      // すでに持っている画像IDのセット（重複検出用）
-      let existingIds = Set(editingSets.map { $0.id })
-      var updatedSets: [EditableImageSet] = []
 
       // ローカル処理（サーバー通信なし）で画像を拡張
       for image in images {
@@ -320,6 +319,8 @@ private struct ImageListSection: View {
 
 private struct ClothingFormSection: View {
   @Binding var clothing: Clothing
+  let canDelete: Bool
+  let onDelete: () -> Void
 
   var body: some View {
     Form {
@@ -328,29 +329,19 @@ private struct ClothingFormSection: View {
         TextField("カテゴリ", text: $clothing.category)
         TextField("色", text: $clothing.color)
       }
-    }
-  }
-}
 
-private struct ActionButtonsSection: View {
-  let saveAction: () -> Void
-  let deleteAction: () -> Void
-  let canDelete: Bool
-
-  var body: some View {
-    HStack {
       if canDelete {
-        Button(action: deleteAction) {
-          Text("削除")
-            .foregroundColor(.red)
+        Section {
+          Button(action: onDelete) {
+            Text("削除")
+              .font(.callout) // footnoteからcalloutに変更してサイズアップ
+              .foregroundColor(.red.opacity(0.8))
+          }
+          .frame(maxWidth: .infinity, alignment: .center)
+          .listRowBackground(Color.clear)
         }
-        Spacer()
-      }
-      Button(action: saveAction) {
-        Text("保存")
-          .bold()
+        .textCase(nil)
       }
     }
-    .padding()
   }
 }
