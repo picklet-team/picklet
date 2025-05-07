@@ -41,8 +41,7 @@ struct ClothingEditView: View {
       ClothingFormSection(
         clothing: $clothing,
         canDelete: canDelete,
-        onDelete: { showDeleteConfirm = true }
-      )
+        onDelete: { showDeleteConfirm = true })
 
       Spacer()
     }
@@ -335,7 +334,7 @@ private struct ClothingFormSection: View {
         Section {
           Button(action: onDelete) {
             Text("削除")
-              .font(.callout)  // footnoteからcalloutに変更してサイズアップ
+              .font(.callout) // footnoteからcalloutに変更してサイズアップ
               .foregroundColor(.red.opacity(0.8))
           }
           .frame(maxWidth: .infinity, alignment: .center)
