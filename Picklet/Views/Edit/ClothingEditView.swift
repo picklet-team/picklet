@@ -143,8 +143,7 @@ struct ClothingEditView: View {
                 maskUrl: currentSet.maskUrl,
                 result: currentSet.result,
                 resultUrl: currentSet.resultUrl,
-                isNew: currentSet.isNew
-              )
+                isNew: currentSet.isNew)
 
               print("🔄 ローカルから高品質画像で更新: \(image.id)")
 
@@ -199,8 +198,7 @@ struct ClothingEditView: View {
           maskUrl: set.maskUrl,
           result: set.result,
           resultUrl: set.resultUrl,
-          isNew: set.isNew
-        )
+          isNew: set.isNew)
 
         print("📲 ローカルから高品質画像を取得: \(originalPath)")
 
@@ -238,8 +236,7 @@ struct ClothingEditView: View {
                 maskUrl: set.maskUrl,
                 result: set.result,
                 resultUrl: set.resultUrl,
-                isNew: set.isNew
-              )
+                isNew: set.isNew)
 
               // ローカルに保存して次回以降の高速アクセス用にキャッシュ
               if let savedPath = localStorageService.saveImage(downloadedImage, id: set.id, type: "original") {

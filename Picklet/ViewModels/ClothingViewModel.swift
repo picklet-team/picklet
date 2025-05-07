@@ -291,7 +291,7 @@ class ClothingViewModel: ObservableObject {
 
         for image in images {
           var original: UIImage = placeholderImage
-          var mask: UIImage? = nil
+          var mask: UIImage?
 
           // ローカルパスから画像を読み込む
           if let originalPath = image.originalLocalPath {
