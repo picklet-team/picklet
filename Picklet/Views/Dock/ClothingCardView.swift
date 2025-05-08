@@ -28,7 +28,7 @@ struct ClothingCardView: View {
       .offset(x: xOffset)
       .zIndex(zIndex)
       .gesture(
-        LongPressGesture(minimumDuration: 0.25, maximumDistance: 20)
+        LongPressGesture(minimumDuration: 0.15, maximumDistance: 20)
           .onEnded { _ in
             UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
             onPeek()

@@ -19,17 +19,19 @@ struct PickletApp: App {
 
   var body: some Scene {
     WindowGroup {
-      if isLoggedIn && SupabaseService.shared.currentUser != nil {
-        MainTabView()
-          .environmentObject(viewModel)
-          .task {
-            await viewModel.syncIfNeeded()
-          }
-          .preferredColorScheme(selectedColorScheme.colorScheme)
-      } else {
-        LoginView()
-          .preferredColorScheme(selectedColorScheme.colorScheme)
+      // GlobalOverlayContainerViewでラップして全画面オーバーレイを可能に
+      GlobalOverlayContainerView {
+        if isLoggedIn && SupabaseService.shared.currentUser != nil {
+          MainTabView()
+            .environmentObject(viewModel)
+            .task {
+              await viewModel.syncIfNeeded()
+            }
+        } else {
+          LoginView()
+        }
       }
+      .preferredColorScheme(selectedColorScheme.colorScheme)
     }
   }
 }
