@@ -33,8 +33,7 @@ struct ClothingEditView: View {
                 .frame(height: 1)
                 .padding(.horizontal, 40)
                 .foregroundColor(Color.gray.opacity(0.3)),
-              alignment: .bottom
-            )
+              alignment: .bottom)
         }
         .background(Color(.systemBackground))
 
@@ -72,8 +71,7 @@ struct ClothingEditView: View {
       .onTapGesture {
         UIApplication.shared.sendAction(
           #selector(UIResponder.resignFirstResponder),
-          to: nil, from: nil, for: nil
-        )
+          to: nil, from: nil, for: nil)
       }
       .navigationBarHidden(true) // ナビゲーションバーを非表示
 
