@@ -78,8 +78,7 @@ struct ClothingDockView: View {
                 previewId = IdentifiableUUID(id: clothing.id)
               }
             },
-            onPopAttempt: {}
-          )
+            onPopAttempt: {})
         }
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -111,8 +110,7 @@ struct ClothingDockView: View {
                 overlayManager.dismiss()
                 previewId = nil
               }
-              .padding(30)
-          )
+              .padding(30))
         } else if oldValue != nil && newValue == nil {
           // プレビューが閉じられたらオーバーレイも閉じる
           overlayManager.dismiss()
