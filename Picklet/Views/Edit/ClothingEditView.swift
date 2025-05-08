@@ -203,7 +203,8 @@ struct ClothingEditView: View {
     // 低品質画像のみ更新
     guard currentSet.original.size.width < 100 || currentSet.original.size.height < 100 else { return }
     guard let originalPath = image.originalLocalPath,
-          let loadedImage = storageService.loadImage(from: originalPath) else { return }
+          let loadedImage = storageService.loadImage(from: originalPath)
+    else { return }
 
     let updatedSet = createUpdatedImageSet(from: currentSet, with: loadedImage)
 
@@ -243,7 +244,8 @@ struct ClothingEditView: View {
 
     guard let image = images?.first(where: { $0.id == set.id }),
           let originalPath = image.originalLocalPath,
-          let loadedImage = viewModel.localStorageService.loadImage(from: originalPath) else {
+          let loadedImage = viewModel.localStorageService.loadImage(from: originalPath)
+    else {
       return nil
     }
 
@@ -270,7 +272,10 @@ struct ClothingEditView: View {
           let updatedSet = self.createUpdatedImageSet(from: set, with: downloadedImage)
 
           // ローカルに保存
-          if let savedPath = self.viewModel.localStorageService.saveImage(downloadedImage, id: set.id, type: "original") {
+          if let savedPath = self.viewModel.localStorageService.saveImage(
+            downloadedImage,
+            id: set.id,
+            type: "original") {
             print("💾 高品質画像をローカルに保存: \(savedPath)")
           }
 
@@ -284,7 +289,7 @@ struct ClothingEditView: View {
             completion(updatedSet)
           }
         } else {
-          completion(set)  // 失敗したら元の画像を使用
+          completion(set) // 失敗したら元の画像を使用
         }
       }
   }
