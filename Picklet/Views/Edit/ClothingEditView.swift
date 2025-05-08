@@ -18,39 +18,75 @@ struct ClothingEditView: View {
   @State private var isBackgroundLoading = false // バックグラウンド処理中フラグ
 
   var body: some View {
-    VStack {
-      ImageListSection(
-        imageSets: $editingSets,
-        addAction: { showPhotoPicker = true },
-        selectAction: { set in
-          // 画像編集前に確実に最新のデータを取得
-          if !set.isNew {
-            // マスク編集の前に、選択された画像を高品質バージョンに更新
-            ensureHighQualityImage(for: set) { updatedSet in
-              selectedImageSet = updatedSet
-              showImageEditor = true
-            }
-          } else {
-            // 新規の場合はそのまま設定
-            selectedImageSet = set
-            showImageEditor = true
+    ZStack(alignment: .bottom) {
+      // メインコンテンツ
+      VStack(spacing: 0) {
+        // カスタムヘッダー（ナビゲーションバーの代わり）
+        VStack {
+          TextField("名前", text: $clothing.name)
+            .font(.title.weight(.bold))
+            .padding(10)
+            .cornerRadius(10)
+            .multilineTextAlignment(.center)
+            .overlay(
+              Rectangle()
+                .frame(height: 1)
+                .padding(.horizontal, 40)
+                .foregroundColor(Color.gray.opacity(0.3)),
+              alignment: .bottom
+            )
+        }
+        .background(Color(.systemBackground))
+
+        // スクロール可能なコンテンツ
+        ScrollView {
+          VStack {
+            ImageListSection(
+              imageSets: $editingSets,
+              addAction: { showPhotoPicker = true },
+              selectAction: { set in
+                // 画像編集前に確実に最新のデータを取得
+                if !set.isNew {
+                  // マスク編集の前に、選択された画像を高品質バージョンに更新
+                  ensureHighQualityImage(for: set) { updatedSet in
+                    selectedImageSet = updatedSet
+                    showImageEditor = true
+                  }
+                } else {
+                  // 新規の場合はそのまま設定
+                  selectedImageSet = set
+                  showImageEditor = true
+                }
+              },
+              isLoading: isBackgroundLoading)
+              .padding(.top, 8)
+
+            ClothingFormSection(
+              clothing: $clothing,
+              canDelete: canDelete,
+              onDelete: { showDeleteConfirm = true })
           }
-        },
-        isLoading: isBackgroundLoading)
-
-      ClothingFormSection(
-        clothing: $clothing,
-        canDelete: canDelete,
-        onDelete: { showDeleteConfirm = true })
-
-      Spacer()
-    }
-    .navigationTitle("服を編集")
-    .safeAreaInset(edge: .bottom) {
-      PrimaryActionButton(title: "保存") {
-        saveChanges()
+          .padding(.bottom, 80) // 下部に余白を追加（保存ボタンの高さ分）
+        }
       }
+      .onTapGesture {
+        UIApplication.shared.sendAction(
+          #selector(UIResponder.resignFirstResponder),
+          to: nil, from: nil, for: nil
+        )
+      }
+      .navigationBarHidden(true) // ナビゲーションバーを非表示
+
+      // 保存ボタン - ZStackの最下部に配置
+      VStack {
+        PrimaryActionButton(title: "保存") {
+          saveChanges()
+        }
+      }
+      .padding(.horizontal)
+      .padding(.bottom, 16)
     }
+    .ignoresSafeArea(.keyboard, edges: .bottom)
     .onAppear {
       // 初期表示時に詳細画面と同じデータソースを使用（ViewModelから直接）
       editingSets = viewModel.imageSetsMap[clothing.id] ?? []
@@ -325,7 +361,6 @@ private struct ClothingFormSection: View {
   var body: some View {
     Form {
       Section(header: Text("服の情報")) {
-        TextField("名前", text: $clothing.name)
         TextField("カテゴリ", text: $clothing.category)
         TextField("色", text: $clothing.color)
       }

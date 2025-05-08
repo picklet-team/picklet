@@ -26,6 +26,5 @@ struct PrimaryActionButton: View {
         .padding(.horizontal, 24)
         .padding(.vertical, 8)
     }
-    .background(Color(UIColor.systemBackground)) // 背景透け防止
   }
 }
