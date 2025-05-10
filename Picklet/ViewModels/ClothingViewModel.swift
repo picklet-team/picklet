@@ -440,10 +440,10 @@ class ClothingViewModel: ObservableObject {
 
           imageSets.append(set)
           print(
-            "  🔗 画像セット: ID=\(image.id), " + 
-            "originalUrl=\(image.originalUrl ?? "nil"), " + 
-            "aimaskUrl=\(image.aimaskUrl ?? "nil"), " + 
-            "maskUrl=\(image.maskUrl ?? "nil")")
+            "  🔗 画像セット: ID=\(image.id), " +
+              "originalUrl=\(image.originalUrl ?? "nil"), " +
+              "aimaskUrl=\(image.aimaskUrl ?? "nil"), " +
+              "maskUrl=\(image.maskUrl ?? "nil")")
         }
 
         newMap[clothing.id] = imageSets
@@ -552,10 +552,10 @@ class ClothingViewModel: ObservableObject {
 
         imageSets.append(set)
         print(
-          "  🔗 画像セット: ID=\(image.id), " + 
-          "originalUrl=\(image.originalUrl ?? "nil"), " + 
-          "aimaskUrl=\(image.aimaskUrl ?? "nil"), " + 
-          "maskUrl=\(image.maskUrl ?? "nil")")
+          "  🔗 画像セット: ID=\(image.id), " +
+            "originalUrl=\(image.originalUrl ?? "nil"), " +
+            "aimaskUrl=\(image.aimaskUrl ?? "nil"), " +
+            "maskUrl=\(image.maskUrl ?? "nil")")
       }
 
       // 既存のマップを更新
