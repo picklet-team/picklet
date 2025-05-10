@@ -105,12 +105,12 @@ struct ClothingDockView: View {
           // GlobalOverlayManagerを使用してClothingQuickViewを表示
           overlayManager.present(
             ClothingQuickView(
-              clothingId: cloth.id,  // clothingIdを渡して画像読み込みに使用
+              clothingId: cloth.id, // clothingIdを渡して画像読み込みに使用
               imageURL: imageURL,
               name: cloth.name,
               category: cloth.category,
               color: cloth.color)
-              .environmentObject(viewModel)  // ここにEnvironmentObjectを追加
+              .environmentObject(viewModel) // ここにEnvironmentObjectを追加
               .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
               .shadow(radius: 10)
               .onTapGesture {

@@ -5,9 +5,9 @@
 //  Created by al dente on 2025/05/10.
 //
 
-import UIKit
 import Combine
 import SwiftUI
+import UIKit
 
 /// 画像読み込みを一元管理するサービス
 class ImageLoaderService {
@@ -57,7 +57,7 @@ class ImageLoaderService {
 
       // ローカルに画像がない場合はURLをチェック
       if let originalUrl = firstImage.originalUrl,
-         let _ = URL(string: originalUrl) {  // URLを作成してURLが有効か検証するだけでurlは使わないため_に変更
+         let _ = URL(string: originalUrl) { // URLを作成してURLが有効か検証するだけでurlは使わないため_に変更
         // この部分は非同期のためUIUpdateブロックでの使用に注意
         // 同期的に使いたい場合は別途キャッシュ機構が必要
         print("⚠️ URLからの同期読み込みは最適ではありません: \(originalUrl)")
@@ -90,7 +90,8 @@ class ImageLoaderService {
         let image = await loadFromURL(originalUrl)
 
         // ダウンロードした画像をローカルに保存
-        if let image = image, let savedPath = localStorageService.saveImage(image, id: firstImage.id, type: "original") {
+        if let image = image,
+           let savedPath = localStorageService.saveImage(image, id: firstImage.id, type: "original") {
           print("💾 ダウンロードした画像をローカルに保存: \(savedPath)")
 
           // メタデータを更新

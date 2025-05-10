@@ -5,7 +5,7 @@ struct ClothingItemView: View {
   let clothing: Clothing
   let imageUrl: String?
 
-  @State private var localImage: UIImage? = nil
+  @State private var localImage: UIImage?
   @EnvironmentObject private var viewModel: ClothingViewModel
 
   var body: some View {

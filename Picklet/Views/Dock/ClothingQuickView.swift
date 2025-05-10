@@ -15,7 +15,7 @@ struct ClothingQuickView: View {
   let color: String?
   let clothingId: UUID?
 
-  @State private var localImage: UIImage? = nil
+  @State private var localImage: UIImage?
   @Environment(\.colorScheme) private var colorScheme
   @EnvironmentObject private var viewModel: ClothingViewModel
 
