@@ -227,7 +227,7 @@ final class ImageMetadataService {
     let newClothingImage = ClothingImage(
       id: imageId,
       clothingId: clothingId,
-      userId: String(describing: user.id),  // Explicitly convert user.id to String
+      userId: String(describing: user.id), // Explicitly convert user.id to String
       originalUrl: originalUrl,
       maskUrl: maskUrl,
       aimaskUrl: aimaskUrl,

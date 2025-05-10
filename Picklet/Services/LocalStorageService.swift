@@ -25,7 +25,7 @@ class LocalStorageService {
     clothingDirectory = documentsDirectory.appendingPathComponent("clothing")
 
     // 必要なディレクトリが存在しない場合は作成
-    [imagesDirectory, clothingDirectory].forEach { directory in
+    for directory in [imagesDirectory, clothingDirectory] {
       if !fileManager.fileExists(atPath: directory.path) {
         do {
           try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -92,31 +92,31 @@ class LocalStorageService {
     from url: URL,
     id: UUID,
     type: String,
-    completion: @escaping (String?, Error?) -> Void
-  ) {
-    let task = URLSession.shared.dataTask(with: url) { [weak self] (data, response, error) in
+    completion: @escaping (String?, Error?) -> Void) {
+    let task = URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
       guard let self = self else { return }
-      
+
       if let error = error {
         print("❌ 画像ダウンロードエラー: \(error)")
         completion(nil, error)
         return
       }
-      
-      guard let data = data, 
-            let image = UIImage(data: data) else {
-        let error = NSError(domain: "LocalStorageService", 
-                           code: 1002, 
-                           userInfo: [NSLocalizedDescriptionKey: "無効な画像データです"])
+
+      guard let data = data,
+            let image = UIImage(data: data)
+      else {
+        let error = NSError(domain: "LocalStorageService",
+                            code: 1_002,
+                            userInfo: [NSLocalizedDescriptionKey: "無効な画像データです"])
         completion(nil, error)
         return
       }
-      
+
       // 画像を保存
       let path = self.saveImage(image, id: id, type: type)
       completion(path, nil)
     }
-    
+
     task.resume()
   }
 
@@ -309,7 +309,7 @@ class LocalStorageService {
     saveClothingIdList([])
 
     // ファイルを削除
-    [imagesDirectory, clothingDirectory].forEach { directory in
+    for directory in [imagesDirectory, clothingDirectory] {
       do {
         let fileURLs = try fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
         for fileURL in fileURLs {

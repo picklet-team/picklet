@@ -11,7 +11,7 @@ struct ClothingImage: Identifiable, Codable {
   let id: UUID
   let clothingId: UUID
   let userId: String?
-  
+
   // クラウドストレージのURL（Supabase用）
   var originalUrl: String?
   var maskUrl: String?

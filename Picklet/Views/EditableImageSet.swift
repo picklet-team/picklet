@@ -14,7 +14,7 @@ struct EditableImageSet: Identifiable {
   var mask: UIImage?
   var result: UIImage?
   var isNew: Bool
-  
+
   // Add URL properties
   var originalUrl: String?
   var maskUrl: String?

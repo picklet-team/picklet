@@ -245,23 +245,23 @@ class ClothingViewModel: ObservableObject {
   /// サーバーとローカルデータを同期する
   func syncIfNeeded() async {
     print("🔄 データ同期チェック")
-    
+
     // 既にロード中の場合は何もしない
     if isLoading {
       return
     }
-    
+
     isLoading = true
-    
+
     // オンラインか確認し、必要に応じてサーバーからデータを取得
     // このサンプルでは簡単にローカルデータの再読み込みのみ実行
     loadClothings()
-    
+
     // 画像も再読み込み
     await loadAllImages()
-    
+
     print("✅ 同期完了")
-    
+
     isLoading = false
   }
 }

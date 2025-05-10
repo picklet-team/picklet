@@ -46,16 +46,16 @@ struct WeatherView: View {
 
     // OpenWeather APIのアイコンコードからSF Symbolsへ変換
     switch icon {
-    case "01d", "01n": return "sun.max.fill"     // 晴れ
-    case "02d", "02n": return "cloud.sun.fill"   // 薄曇り
-    case "03d", "03n": return "cloud.fill"       // 曇り
-    case "04d", "04n": return "smoke.fill"       // 厚い曇り
+    case "01d", "01n": return "sun.max.fill" // 晴れ
+    case "02d", "02n": return "cloud.sun.fill" // 薄曇り
+    case "03d", "03n": return "cloud.fill" // 曇り
+    case "04d", "04n": return "smoke.fill" // 厚い曇り
     case "09d", "09n": return "cloud.drizzle.fill" // 小雨
-    case "10d", "10n": return "cloud.rain.fill"  // 雨
-    case "11d", "11n": return "cloud.bolt.fill"  // 雷雨
-    case "13d", "13n": return "cloud.snow.fill"  // 雪
-    case "50d", "50n": return "cloud.fog.fill"   // 霧
-    default: return "sun.max.fill"               // デフォルト
+    case "10d", "10n": return "cloud.rain.fill" // 雨
+    case "11d", "11n": return "cloud.bolt.fill" // 雷雨
+    case "13d", "13n": return "cloud.snow.fill" // 雪
+    case "50d", "50n": return "cloud.fog.fill" // 霧
+    default: return "sun.max.fill" // デフォルト
     }
   }
 

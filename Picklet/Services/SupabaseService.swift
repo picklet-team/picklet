@@ -61,11 +61,11 @@ class SupabaseService {
         code: 401,
         userInfo: [NSLocalizedDescriptionKey: "ユーザーが未ログインです"])
     }
-    
+
     // Convert Date to ISO8601 string format for database
     let dateFormatter = ISO8601DateFormatter()
     let createdAtString = dateFormatter.string(from: clothing.createdAt)
-    
+
     _ =
       try await client
         .from("clothes")
