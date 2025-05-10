@@ -1,3 +1,8 @@
+// swiftlint:disable file_length
+// swiftlint:disable type_body_length
+// swiftlint:disable function_body_length
+// swiftlint:disable cyclomatic_complexity
+// swiftlint:disable line_length
 import Foundation
 import SDWebImageSwiftUI
 import SwiftUI
