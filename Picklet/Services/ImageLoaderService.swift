@@ -45,26 +45,26 @@ class ImageLoaderService {
   func loadFirstImageForClothing(_ clothingId: UUID) -> UIImage? {
     // ローカルストレージからメタデータを取得
     let metadata = localStorageService.loadImageMetadata(for: clothingId)
-
+    
     // 最初のメタデータをチェック
     if let firstImage = metadata.first {
       // まずローカルパスをチェック
-      if let localPath = firstImage.originalLocalPath,
+      if let localPath = firstImage.originalLocalPath, 
          let image = localStorageService.loadImage(from: localPath) {
         print("✅ ローカルストレージから画像を読み込み: \(localPath)")
         return image
       }
-
+      
       // ローカルに画像がない場合はURLをチェック
       if let originalUrl = firstImage.originalUrl,
-         let _ = URL(string: originalUrl) { // URLを作成してURLが有効か検証するだけでurlは使わないため_に変更
+         URL(string: originalUrl) != nil {  // 未使用のオプショナルバインディングを修正
         // この部分は非同期のためUIUpdateブロックでの使用に注意
         // 同期的に使いたい場合は別途キャッシュ機構が必要
         print("⚠️ URLからの同期読み込みは最適ではありません: \(originalUrl)")
         return nil
       }
     }
-
+    
     print("⚠️ 画像が見つかりませんでした: \(clothingId)")
     return nil
   }
