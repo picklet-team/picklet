@@ -5,63 +5,40 @@
 //  Created by al dente on 2025/05/10.
 //
 
-import Combine
 import SwiftUI
 import UIKit
 
-/// 画像読み込みを一元管理するサービス
+/// 画像読み込みを一元管理するサービス（ローカルストレージ専用）
 class ImageLoaderService {
   static let shared = ImageLoaderService()
 
   private let localStorageService = LocalStorageService.shared
+  private var memoryCache = NSCache<NSUUID, UIImage>()
 
   private init() {}
 
-  /// URLから画像を読み込む
-  /// - Parameter urlString: 画像URL文字列
-  /// - Returns: 読み込んだ画像（成功した場合）
-  func loadFromURL(_ urlString: String) async -> UIImage? {
-    guard let url = URL(string: urlString) else {
-      print("❌ 無効なURL: \(urlString)")
-      return nil
-    }
-
-    do {
-      let (data, _) = try await URLSession.shared.data(from: url)
-      if let image = UIImage(data: data) {
-        print("✅ URLから画像を非同期にロード: \(urlString)")
-        return image
-      }
-    } catch {
-      print("❌ 画像ダウンロードエラー: \(urlString) - \(error.localizedDescription)")
-    }
-
-    return nil
-  }
-
-  /// 服IDから最初の画像を読み込む（ローカルストレージ優先）
+  /// 服IDから最初の画像を読み込む（ローカルストレージのみ）
   /// - Parameter clothingId: 服のID
   /// - Returns: 読み込んだ画像（成功した場合）
   func loadFirstImageForClothing(_ clothingId: UUID) -> UIImage? {
+    // メモリキャッシュをチェック
+    if let cachedImage = memoryCache.object(forKey: clothingId as NSUUID) {
+      print("✅ メモリキャッシュから画像を読み込み: \(clothingId)")
+      return cachedImage
+    }
+
     // ローカルストレージからメタデータを取得
     let metadata = localStorageService.loadImageMetadata(for: clothingId)
 
     // 最初のメタデータをチェック
     if let firstImage = metadata.first {
-      // まずローカルパスをチェック
+      // ローカルパスをチェック
       if let localPath = firstImage.originalLocalPath,
          let image = localStorageService.loadImage(from: localPath) {
         print("✅ ローカルストレージから画像を読み込み: \(localPath)")
+        // メモリキャッシュに追加
+        memoryCache.setObject(image, forKey: clothingId as NSUUID)
         return image
-      }
-
-      // ローカルに画像がない場合はURLをチェック
-      if let originalUrl = firstImage.originalUrl,
-         URL(string: originalUrl) != nil { // 未使用のオプショナルバインディングを修正
-        // この部分は非同期のためUIUpdateブロックでの使用に注意
-        // 同期的に使いたい場合は別途キャッシュ機構が必要
-        print("⚠️ URLからの同期読み込みは最適ではありません: \(originalUrl)")
-        return nil
       }
     }
 
@@ -69,45 +46,40 @@ class ImageLoaderService {
     return nil
   }
 
-  /// 服IDから最初の画像を非同期で読み込む
-  /// - Parameter clothingId: 服のID
-  /// - Returns: 読み込んだ画像（成功した場合）
-  func loadFirstImageForClothingAsync(_ clothingId: UUID) async -> UIImage? {
-    // ローカルストレージからメタデータを取得
-    let metadata = localStorageService.loadImageMetadata(for: clothingId)
+  /// 画像を保存し、メタデータを更新する
+  /// - Parameters:
+  ///   - image: 保存する画像
+  ///   - clothingId: 服のID
+  ///   - imageId: 画像ID (nilの場合は新しいUUIDを生成)
+  /// - Returns: 保存が成功したかどうか
+  func saveImage(_ image: UIImage, for clothingId: UUID, imageId: UUID? = nil) -> Bool {
+    let id = imageId ?? UUID()
 
-    // 最初のメタデータをチェック
-    if let firstImage = metadata.first {
-      // まずローカルパスをチェック
-      if let localPath = firstImage.originalLocalPath,
-         let image = localStorageService.loadImage(from: localPath) {
-        print("✅ ローカルストレージから画像を読み込み: \(localPath)")
-        return image
-      }
-
-      // ローカルに画像がない場合はURLをチェック
-      if let originalUrl = firstImage.originalUrl {
-        let image = await loadFromURL(originalUrl)
-
-        // ダウンロードした画像をローカルに保存
-        if let image = image,
-           let savedPath = localStorageService.saveImage(image, id: firstImage.id, type: "original") {
-          print("💾 ダウンロードした画像をローカルに保存: \(savedPath)")
-
-          // メタデータを更新
-          var updatedMetadata = metadata
-          if let index = updatedMetadata.firstIndex(where: { $0.id == firstImage.id }) {
-            updatedMetadata[index] = firstImage.updatingLocalPath(originalLocalPath: savedPath)
-            localStorageService.saveImageMetadata(for: clothingId, imageMetadata: updatedMetadata)
-          }
-        }
-
-        return image
-      }
+    // 画像をローカルに保存
+    guard let savedPath = localStorageService.saveImage(image, id: id, type: "original") else {
+      print("❌ 画像の保存に失敗しました")
+      return false
     }
 
-    print("⚠️ 画像が見つかりませんでした: \(clothingId)")
-    return nil
+    // メタデータを更新
+    var metadata = localStorageService.loadImageMetadata(for: clothingId)
+
+    // 既存の画像メタデータを更新するか、新しく追加するか
+    if let index = metadata.firstIndex(where: { $0.id == id }) {
+      metadata[index] = metadata[index].updatingLocalPath(originalLocalPath: savedPath)
+    } else {
+      let newImageMetadata = ClothingImage(id: id, originalLocalPath: savedPath)
+      metadata.append(newImageMetadata)
+    }
+
+    // メタデータを保存
+    localStorageService.saveImageMetadata(for: clothingId, imageMetadata: metadata)
+
+    // メモリキャッシュに追加
+    memoryCache.setObject(image, forKey: clothingId as NSUUID)
+
+    print("💾 画像をローカルに保存しました: \(savedPath)")
+    return true
   }
 
   /// EditableImageSet配列からClothing IDに関連する最初の画像を取得する
@@ -123,5 +95,11 @@ class ImageLoaderService {
       }
     }
     return nil
+  }
+
+  /// メモリキャッシュを消去する
+  func clearMemoryCache() {
+    memoryCache.removeAllObjects()
+    print("🧹 画像メモリキャッシュを消去しました")
   }
 }

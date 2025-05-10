@@ -101,8 +101,8 @@ final class ImageMetadataService {
       clothingId: serverImage.clothingId,
       userId: serverImage.userId,
       originalUrl: serverImage.originalUrl,
-      aimaskUrl: serverImage.aimaskUrl,
       maskUrl: serverImage.maskUrl,
+      aimaskUrl: serverImage.aimaskUrl,
       resultUrl: serverImage.resultUrl,
       originalLocalPath: localImage.originalLocalPath,
       maskLocalPath: localImage.maskLocalPath,
@@ -174,8 +174,8 @@ final class ImageMetadataService {
       clothingId: serverImage.clothingId,
       userId: serverImage.userId,
       originalUrl: serverImage.originalUrl,
-      aimaskUrl: serverImage.aimaskUrl,
       maskUrl: serverImage.maskUrl,
+      aimaskUrl: serverImage.aimaskUrl,
       resultUrl: serverImage.resultUrl,
       originalLocalPath: originalLocalPath,
       maskLocalPath: maskLocalPath,
@@ -227,10 +227,10 @@ final class ImageMetadataService {
     let newClothingImage = ClothingImage(
       id: imageId,
       clothingId: clothingId,
-      userId: user.id,
+      userId: String(describing: user.id),  // Explicitly convert user.id to String
       originalUrl: originalUrl,
-      aimaskUrl: aimaskUrl,
       maskUrl: maskUrl,
+      aimaskUrl: aimaskUrl,
       resultUrl: resultUrl,
       createdAt: Date(),
       updatedAt: Date())
@@ -300,8 +300,10 @@ final class ImageMetadataService {
 
         // 元の画像IDに一致する画像を探すためのループ
         for enrichedImage in allImages {
-          // 文字列に変換して比較
-          if enrichedImage.id.uuidString == imageId.uuidString {
+          // UUIDをString型に明示的に変換して比較
+          let enrichedIdString: String = enrichedImage.id.uuidString
+          let searchIdString: String = imageId.uuidString
+          if enrichedIdString == searchIdString {
             return enrichedImage
           }
         }

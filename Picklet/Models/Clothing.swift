@@ -10,18 +10,30 @@ import Foundation
 
 struct Clothing: Codable, Identifiable, Equatable {
   let id: UUID
-  let userID: UUID
   var name: String
   var category: String
   var color: String
-  let createdAt: String
-  let updatedAt: String
+  let createdAt: Date
+  let updatedAt: Date
 
   enum CodingKeys: String, CodingKey {
     case id
-    case userID = "user_id"
     case name, category, color
     case createdAt = "created_at"
     case updatedAt = "updated_at"
+  }
+
+  init(id: UUID = UUID(),
+       name: String = "",
+       category: String = "",
+       color: String = "",
+       createdAt: Date = Date(),
+       updatedAt: Date = Date()) {
+    self.id = id
+    self.name = name
+    self.category = category
+    self.color = color
+    self.createdAt = createdAt
+    self.updatedAt = updatedAt
   }
 }

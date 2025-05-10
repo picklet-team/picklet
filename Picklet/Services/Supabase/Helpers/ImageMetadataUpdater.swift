@@ -34,8 +34,8 @@ final class ImageMetadataUpdater {
           clothingId: oldImage.clothingId,
           userId: oldImage.userId,
           originalUrl: oldImage.originalUrl,
-          aimaskUrl: oldImage.aimaskUrl,
           maskUrl: maskUrl, // 新しいmaskUrl
+          aimaskUrl: oldImage.aimaskUrl,
           resultUrl: oldImage.resultUrl,
           originalLocalPath: oldImage.originalLocalPath,
           maskLocalPath: oldImage.maskLocalPath,
@@ -74,8 +74,8 @@ final class ImageMetadataUpdater {
           clothingId: oldImage.clothingId,
           userId: oldImage.userId,
           originalUrl: oldImage.originalUrl,
-          aimaskUrl: oldImage.aimaskUrl,
           maskUrl: oldImage.maskUrl,
+          aimaskUrl: oldImage.aimaskUrl,
           resultUrl: resultUrl, // 新しいresultUrl
           originalLocalPath: oldImage.originalLocalPath,
           maskLocalPath: oldImage.maskLocalPath,
@@ -120,8 +120,8 @@ final class ImageMetadataUpdater {
           clothingId: oldImage.clothingId,
           userId: oldImage.userId,
           originalUrl: oldImage.originalUrl,
-          aimaskUrl: oldImage.aimaskUrl,
           maskUrl: maskUrl ?? oldImage.maskUrl, // 新しいmaskUrlがあれば更新
+          aimaskUrl: oldImage.aimaskUrl,
           resultUrl: resultUrl ?? oldImage.resultUrl, // 新しいresultUrlがあれば更新
           originalLocalPath: oldImage.originalLocalPath,
           maskLocalPath: oldImage.maskLocalPath,
@@ -160,8 +160,8 @@ final class ImageMetadataUpdater {
           clothingId: oldImage.clothingId,
           userId: oldImage.userId,
           originalUrl: oldImage.originalUrl,
-          aimaskUrl: aimaskUrl, // 新しいaimaskUrl
           maskUrl: oldImage.maskUrl,
+          aimaskUrl: aimaskUrl, // 新しいaimaskUrl
           resultUrl: oldImage.resultUrl,
           originalLocalPath: oldImage.originalLocalPath,
           maskLocalPath: oldImage.maskLocalPath,

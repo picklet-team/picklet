@@ -1,7 +1,7 @@
 import Foundation
 import UIKit
 
-/// ローカルストレージを管理するサービス
+/// ローカルストレージを管理するサービス（オフライン専用）
 class LocalStorageService {
   static let shared = LocalStorageService()
 
@@ -11,6 +11,9 @@ class LocalStorageService {
   // 画像保存用のディレクトリ
   private let imagesDirectory: URL
 
+  // 衣類データ保存用のディレクトリ
+  private let clothingDirectory: URL
+
   private init() {
     // ドキュメントディレクトリのパスを取得
     documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
@@ -18,13 +21,18 @@ class LocalStorageService {
     // 画像保存用のディレクトリパスを作成
     imagesDirectory = documentsDirectory.appendingPathComponent("images")
 
-    // 画像ディレクトリが存在しない場合は作成
-    if !fileManager.fileExists(atPath: imagesDirectory.path) {
-      do {
-        try fileManager.createDirectory(at: imagesDirectory, withIntermediateDirectories: true)
-        print("✅ 画像保存ディレクトリを作成: \(imagesDirectory.path)")
-      } catch {
-        print("❌ 画像保存ディレクトリ作成エラー: \(error)")
+    // 衣類データ保存用のディレクトリパスを作成
+    clothingDirectory = documentsDirectory.appendingPathComponent("clothing")
+
+    // 必要なディレクトリが存在しない場合は作成
+    [imagesDirectory, clothingDirectory].forEach { directory in
+      if !fileManager.fileExists(atPath: directory.path) {
+        do {
+          try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+          print("✅ ディレクトリを作成: \(directory.path)")
+        } catch {
+          print("❌ ディレクトリ作成エラー: \(error)")
+        }
       }
     }
   }
@@ -74,34 +82,42 @@ class LocalStorageService {
     }
   }
 
-  /// URLから画像をダウンロードし、ローカルに保存
+  /// URLから画像をダウンロードしてローカルに保存
   /// - Parameters:
-  ///   - url: ダウンロードするURL
-  ///   - id: 画像のID
-  ///   - type: 画像タイプ
-  ///   - completion: 完了ハンドラ (ローカルパス, エラー)
-  func downloadAndSaveImage(from url: URL, id: UUID, type: String, completion: @escaping (String?, Error?) -> Void) {
-    URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
+  ///   - url: ダウンロード元のURL
+  ///   - id: 画像の一意なID
+  ///   - type: 画像タイプ (original, mask, resultなど)
+  ///   - completion: ダウンロード完了後に呼ばれるクロージャ。ローカルパスとエラーを返す
+  func downloadAndSaveImage(
+    from url: URL,
+    id: UUID,
+    type: String,
+    completion: @escaping (String?, Error?) -> Void
+  ) {
+    let task = URLSession.shared.dataTask(with: url) { [weak self] (data, response, error) in
       guard let self = self else { return }
-
+      
       if let error = error {
         print("❌ 画像ダウンロードエラー: \(error)")
         completion(nil, error)
         return
       }
-
-      guard let data = data, let image = UIImage(data: data) else {
-        let error = NSError(
-          domain: "LocalStorageService",
-          code: 1,
-          userInfo: [NSLocalizedDescriptionKey: "画像データの変換に失敗しました"])
+      
+      guard let data = data, 
+            let image = UIImage(data: data) else {
+        let error = NSError(domain: "LocalStorageService", 
+                           code: 1002, 
+                           userInfo: [NSLocalizedDescriptionKey: "無効な画像データです"])
         completion(nil, error)
         return
       }
-
-      let localPath = self.saveImage(image, id: id, type: type)
-      completion(localPath, nil)
-    }.resume()
+      
+      // 画像を保存
+      let path = self.saveImage(image, id: id, type: type)
+      completion(path, nil)
+    }
+    
+    task.resume()
   }
 
   // MARK: - メタデータの保存
@@ -116,11 +132,6 @@ class LocalStorageService {
       return [
         "id": image.id.uuidString,
         "clothingId": image.clothingId.uuidString,
-        "userId": image.userId.uuidString,
-        "originalUrl": image.originalUrl ?? "",
-        "aimaskUrl": image.aimaskUrl ?? "",
-        "maskUrl": image.maskUrl ?? "",
-        "resultUrl": image.resultUrl ?? "",
         "originalLocalPath": image.originalLocalPath ?? "",
         "maskLocalPath": image.maskLocalPath ?? "",
         "resultLocalPath": image.resultLocalPath ?? "",
@@ -147,10 +158,8 @@ class LocalStorageService {
       guard
         let idString = dict["id"] as? String,
         let clothingIdString = dict["clothingId"] as? String,
-        let userIdString = dict["userId"] as? String, !userIdString.isEmpty,
         let id = UUID(uuidString: idString),
         let clothingId = UUID(uuidString: clothingIdString),
-        let userId = UUID(uuidString: userIdString),
         let createdAtTimestamp = dict["createdAt"] as? Double,
         let updatedAtTimestamp = dict["updatedAt"] as? Double
       else {
@@ -160,11 +169,6 @@ class LocalStorageService {
       return ClothingImage(
         id: id,
         clothingId: clothingId,
-        userId: userId,
-        originalUrl: dict["originalUrl"] as? String,
-        aimaskUrl: dict["aimaskUrl"] as? String,
-        maskUrl: dict["maskUrl"] as? String,
-        resultUrl: dict["resultUrl"] as? String,
         originalLocalPath: dict["originalLocalPath"] as? String,
         maskLocalPath: dict["maskLocalPath"] as? String,
         resultLocalPath: dict["resultLocalPath"] as? String,
@@ -176,7 +180,116 @@ class LocalStorageService {
     return imageMetadata
   }
 
-  /// 全ての服の画像メタデータを削除（キャッシュクリア用）
+  // MARK: - 衣類データ管理
+
+  /// 衣類データを保存
+  /// - Parameter clothing: 保存する衣類データ
+  /// - Returns: 保存が成功したかどうか
+  func saveClothing(_ clothing: Clothing) -> Bool {
+    let encoder = JSONEncoder()
+    let fileURL = clothingDirectory.appendingPathComponent("\(clothing.id.uuidString).json")
+
+    do {
+      let data = try encoder.encode(clothing)
+      try data.write(to: fileURL)
+
+      // IDリストを更新
+      var clothingIds = loadClothingIdList()
+      if !clothingIds.contains(clothing.id) {
+        clothingIds.append(clothing.id)
+        saveClothingIdList(clothingIds)
+      }
+
+      print("✅ 衣類データを保存: \(clothing.id)")
+      return true
+    } catch {
+      print("❌ 衣類データ保存エラー: \(error)")
+      return false
+    }
+  }
+
+  /// 特定の衣類データを読み込む
+  /// - Parameter id: 衣類ID
+  /// - Returns: 読み込んだ衣類データ、失敗時はnil
+  func loadClothing(id: UUID) -> Clothing? {
+    let fileURL = clothingDirectory.appendingPathComponent("\(id.uuidString).json")
+
+    guard fileManager.fileExists(atPath: fileURL.path) else {
+      print("⚠️ 衣類ファイルが存在しません: \(id)")
+      return nil
+    }
+
+    do {
+      let data = try Data(contentsOf: fileURL)
+      let clothing = try JSONDecoder().decode(Clothing.self, from: data)
+      return clothing
+    } catch {
+      print("❌ 衣類データ読み込みエラー: \(error)")
+      return nil
+    }
+  }
+
+  /// すべての衣類データを読み込む
+  /// - Returns: 衣類データの配列
+  func loadAllClothing() -> [Clothing] {
+    let clothingIds = loadClothingIdList()
+
+    return clothingIds.compactMap { id in
+      loadClothing(id: id)
+    }
+  }
+
+  /// 衣類データを削除する
+  /// - Parameter id: 削除する衣類のID
+  /// - Returns: 削除が成功したかどうか
+  func deleteClothing(id: UUID) -> Bool {
+    let fileURL = clothingDirectory.appendingPathComponent("\(id.uuidString).json")
+
+    // ファイルの存在確認
+    guard fileManager.fileExists(atPath: fileURL.path) else {
+      return false
+    }
+
+    do {
+      // ファイルの削除
+      try fileManager.removeItem(at: fileURL)
+
+      // IDリストから削除
+      var clothingIds = loadClothingIdList()
+      clothingIds.removeAll { $0 == id }
+      saveClothingIdList(clothingIds)
+
+      // 関連する画像のメタデータを削除
+      UserDefaults.standard.removeObject(forKey: "clothingImages_\(id.uuidString)")
+
+      print("✅ 衣類データを削除: \(id)")
+      return true
+    } catch {
+      print("❌ 衣類データ削除エラー: \(error)")
+      return false
+    }
+  }
+
+  // MARK: - 衣類IDリスト管理
+
+  /// 衣類IDリストを保存
+  /// - Parameter ids: UUIDの配列
+  private func saveClothingIdList(_ ids: [UUID]) {
+    let idStrings = ids.map { $0.uuidString }
+    UserDefaults.standard.set(idStrings, forKey: "clothing_id_list")
+  }
+
+  /// 衣類IDリストを読み込む
+  /// - Returns: UUIDの配列
+  private func loadClothingIdList() -> [UUID] {
+    guard let idStrings = UserDefaults.standard.stringArray(forKey: "clothing_id_list") else {
+      return []
+    }
+
+    return idStrings.compactMap { UUID(uuidString: $0) }
+  }
+
+  /// 全ての画像メタデータを削除（キャッシュクリア用）
   func clearAllImageMetadata() {
     let defaults = UserDefaults.standard
     let allKeys = defaults.dictionaryRepresentation().keys
@@ -185,5 +298,27 @@ class LocalStorageService {
       defaults.removeObject(forKey: key)
     }
     print("✅ すべての画像メタデータをクリア")
+  }
+
+  /// 全てのローカルデータをクリア
+  func clearAllData() {
+    // 画像メタデータをクリア
+    clearAllImageMetadata()
+
+    // 衣類IDリストをクリア
+    saveClothingIdList([])
+
+    // ファイルを削除
+    [imagesDirectory, clothingDirectory].forEach { directory in
+      do {
+        let fileURLs = try fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+        for fileURL in fileURLs {
+          try fileManager.removeItem(at: fileURL)
+        }
+        print("✅ ディレクトリ内のファイルを削除: \(directory.path)")
+      } catch {
+        print("❌ ファイル削除エラー: \(error)")
+      }
+    }
   }
 }

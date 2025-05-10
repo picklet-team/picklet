@@ -25,6 +25,7 @@ struct PickletApp: App {
           MainTabView()
             .environmentObject(viewModel)
             .task {
+              // Properly call the async syncIfNeeded method
               await viewModel.syncIfNeeded()
             }
         } else {

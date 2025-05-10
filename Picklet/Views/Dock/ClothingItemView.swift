@@ -17,7 +17,7 @@ struct ClothingItemView: View {
         if imageUrl == nil {
           Task {
             // ViewModelのメソッドを呼び出して画像を取得
-            if let image = await viewModel.getImageForClothing(clothing.id) {
+            if let image = viewModel.getImageForClothing(clothing.id) {
               self.localImage = image
             }
           }

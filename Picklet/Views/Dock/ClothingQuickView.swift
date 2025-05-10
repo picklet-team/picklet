@@ -98,7 +98,7 @@ struct ClothingQuickView: View {
   // ViewModelから画像をロードする
   private func loadImage(for clothingId: UUID) {
     Task {
-      if let image = await viewModel.getImageForClothing(clothingId) {
+      if let image = viewModel.getImageForClothing(clothingId) {
         await MainActor.run {
           self.localImage = image
         }

@@ -159,13 +159,13 @@ struct ClothingEditView: View {
 
   private func saveChanges() {
     Task {
-      await viewModel.saveClothing(clothing, imageSets: editingSets, isNew: isNew)
+      viewModel.saveClothing(clothing, imageSets: editingSets, isNew: isNew)
       dismiss()
     }
   }
 
   private func deleteClothing() async {
-    await viewModel.deleteClothing(clothing)
+    viewModel.deleteClothing(clothing)
     dismiss()
   }
 
@@ -178,11 +178,8 @@ struct ClothingEditView: View {
     Task(priority: .low) {
       defer { Task { await MainActor.run { isBackgroundLoading = false } } }
 
-      guard let images = try? await viewModel.imageMetadataService.fetchImages(for: clothing.id) else {
-        print("❌ 画像メタデータの取得に失敗")
-        return
-      }
-
+      // Use localStorageService directly instead of imageMetadataService
+      let images = viewModel.localStorageService.loadImageMetadata(for: clothing.id)
       let localStorageService = viewModel.localStorageService
 
       for image in images {
@@ -240,9 +237,10 @@ struct ClothingEditView: View {
   }
 
   private func tryLoadImageFromLocal(_ set: EditableImageSet) async -> EditableImageSet? {
-    let images = try? await viewModel.imageMetadataService.fetchImages(for: clothing.id)
+    // Get image metadata directly from localStorageService
+    let images = viewModel.localStorageService.loadImageMetadata(for: clothing.id)
 
-    guard let image = images?.first(where: { $0.id == set.id }),
+    guard let image = images.first(where: { $0.id == set.id }),
           let originalPath = image.originalLocalPath,
           let loadedImage = viewModel.localStorageService.loadImage(from: originalPath)
     else {
