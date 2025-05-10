@@ -5,10 +5,23 @@ struct ClothingItemView: View {
   let clothing: Clothing
   let imageUrl: String?
 
+  @State private var localImage: UIImage? = nil
+  @EnvironmentObject private var viewModel: ClothingViewModel
+
   var body: some View {
-    ClothingImageCard(imageURL: imageUrl)
+    ClothingImageCard(imageURL: imageUrl, localImage: localImage)
       .onAppear {
         print("👕 ClothingItemView - clothing: \(clothing.id), imageUrl: \(imageUrl ?? "nil")")
+
+        // URLがnilの場合はViewModelから画像を読み込む
+        if imageUrl == nil {
+          Task {
+            // ViewModelのメソッドを呼び出して画像を取得
+            if let image = await viewModel.getImageForClothing(clothing.id) {
+              self.localImage = image
+            }
+          }
+        }
       }
   }
 }
@@ -16,6 +29,7 @@ struct ClothingItemView: View {
 // Card component for image display
 private struct ClothingImageCard: View {
   let imageURL: String?
+  let localImage: UIImage?
 
   var body: some View {
     ZStack {
@@ -27,6 +41,13 @@ private struct ClothingImageCard: View {
           .scaledToFill()
           .onAppear {
             print("🖼️ 有効なURLから画像を読み込み中: \(urlString)")
+          }
+      } else if let image = localImage {
+        Image(uiImage: image)
+          .resizable()
+          .scaledToFill()
+          .onAppear {
+            print("🖼️ ローカルの画像を表示中")
           }
       } else {
         Rectangle()

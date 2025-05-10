@@ -13,6 +13,11 @@ struct ClothingQuickView: View {
   let name: String
   let category: String
   let color: String?
+  let clothingId: UUID?
+
+  @State private var localImage: UIImage? = nil
+  @Environment(\.colorScheme) private var colorScheme
+  @EnvironmentObject private var viewModel: ClothingViewModel
 
   var body: some View {
     VStack(spacing: 12) {
@@ -44,6 +49,16 @@ struct ClothingQuickView: View {
         .onAppear {
           print("🖼️ 画像表示リクエスト: \(urlStr)")
         }
+      } else if let image = localImage {
+        Image(uiImage: image)
+          .resizable()
+          .scaledToFit()
+          .frame(width: 150, height: 150)
+          .background(colorScheme == .dark ? Color.black.opacity(0.1) : Color.white.opacity(0.1))
+          .cornerRadius(12)
+          .onAppear {
+            print("🖼️ ローカル画像を表示中")
+          }
       } else {
         Rectangle()
           .fill(Color.gray.opacity(0.2))
@@ -54,7 +69,7 @@ struct ClothingQuickView: View {
           .frame(width: 150, height: 150)
           .cornerRadius(12)
           .onAppear {
-            print("⚠️ 画像URLなし")
+            print("⚠️ 画像URLなし、ローカル画像も未設定")
           }
       }
       Text(name).font(.headline)
@@ -65,5 +80,29 @@ struct ClothingQuickView: View {
       }
     }
     .padding(24)
+    .onAppear {
+      if imageURL == nil, let id = clothingId {
+        loadImage(for: id)
+      }
+    }
+  }
+
+  init(clothingId: UUID? = nil, imageURL: String?, name: String, category: String, color: String?) {
+    self.clothingId = clothingId
+    self.imageURL = imageURL
+    self.name = name
+    self.category = category
+    self.color = color
+  }
+
+  // ViewModelから画像をロードする
+  private func loadImage(for clothingId: UUID) {
+    Task {
+      if let image = await viewModel.getImageForClothing(clothingId) {
+        await MainActor.run {
+          self.localImage = image
+        }
+      }
+    }
   }
 }

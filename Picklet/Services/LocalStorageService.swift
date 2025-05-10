@@ -116,8 +116,9 @@ class LocalStorageService {
       return [
         "id": image.id.uuidString,
         "clothingId": image.clothingId.uuidString,
-        "userId": image.userId?.uuidString ?? "",
+        "userId": image.userId.uuidString,
         "originalUrl": image.originalUrl ?? "",
+        "aimaskUrl": image.aimaskUrl ?? "",
         "maskUrl": image.maskUrl ?? "",
         "resultUrl": image.resultUrl ?? "",
         "originalLocalPath": image.originalLocalPath ?? "",
@@ -146,18 +147,14 @@ class LocalStorageService {
       guard
         let idString = dict["id"] as? String,
         let clothingIdString = dict["clothingId"] as? String,
+        let userIdString = dict["userId"] as? String, !userIdString.isEmpty,
         let id = UUID(uuidString: idString),
         let clothingId = UUID(uuidString: clothingIdString),
+        let userId = UUID(uuidString: userIdString),
         let createdAtTimestamp = dict["createdAt"] as? Double,
         let updatedAtTimestamp = dict["updatedAt"] as? Double
       else {
         return nil
-      }
-
-      // ユーザーIDはオプショナル
-      var userId: UUID?
-      if let userIdString = dict["userId"] as? String, !userIdString.isEmpty {
-        userId = UUID(uuidString: userIdString)
       }
 
       return ClothingImage(
@@ -165,6 +162,7 @@ class LocalStorageService {
         clothingId: clothingId,
         userId: userId,
         originalUrl: dict["originalUrl"] as? String,
+        aimaskUrl: dict["aimaskUrl"] as? String,
         maskUrl: dict["maskUrl"] as? String,
         resultUrl: dict["resultUrl"] as? String,
         originalLocalPath: dict["originalLocalPath"] as? String,

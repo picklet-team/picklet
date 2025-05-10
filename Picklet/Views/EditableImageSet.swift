@@ -11,6 +11,8 @@ struct EditableImageSet: Identifiable {
   let id: UUID
   let original: UIImage
   var originalUrl: String?
+  var aimask: UIImage?
+  var aimaskUrl: String?
   var mask: UIImage?
   var maskUrl: String?
   var result: UIImage?
@@ -21,6 +23,8 @@ struct EditableImageSet: Identifiable {
     id: UUID = UUID(),
     original: UIImage,
     originalUrl: String? = nil,
+    aimask: UIImage? = nil,
+    aimaskUrl: String? = nil,
     mask: UIImage? = nil,
     maskUrl: String? = nil,
     result: UIImage? = nil,
@@ -29,6 +33,8 @@ struct EditableImageSet: Identifiable {
     self.id = id
     self.original = original
     self.originalUrl = originalUrl
+    self.aimask = aimask
+    self.aimaskUrl = aimaskUrl
     self.mask = mask
     self.maskUrl = maskUrl
     self.result = result

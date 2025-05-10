@@ -101,6 +101,7 @@ final class ImageMetadataService {
       clothingId: serverImage.clothingId,
       userId: serverImage.userId,
       originalUrl: serverImage.originalUrl,
+      aimaskUrl: serverImage.aimaskUrl,
       maskUrl: serverImage.maskUrl,
       resultUrl: serverImage.resultUrl,
       originalLocalPath: localImage.originalLocalPath,
@@ -173,6 +174,7 @@ final class ImageMetadataService {
       clothingId: serverImage.clothingId,
       userId: serverImage.userId,
       originalUrl: serverImage.originalUrl,
+      aimaskUrl: serverImage.aimaskUrl,
       maskUrl: serverImage.maskUrl,
       resultUrl: serverImage.resultUrl,
       originalLocalPath: originalLocalPath,
@@ -195,6 +197,7 @@ final class ImageMetadataService {
   func addImage(
     for clothingId: UUID,
     originalUrl: String,
+    aimaskUrl: String? = nil,
     maskUrl: String? = nil,
     resultUrl: String? = nil) async throws {
     guard let user = currentUser else {
@@ -209,6 +212,7 @@ final class ImageMetadataService {
       clothingID: clothingId,
       userID: user.id,
       originalURL: originalUrl,
+      aimaskURL: aimaskUrl,
       maskURL: maskUrl,
       resultURL: resultUrl,
       createdAt: ISO8601DateFormatter().string(from: Date()))
@@ -225,6 +229,7 @@ final class ImageMetadataService {
       clothingId: clothingId,
       userId: user.id,
       originalUrl: originalUrl,
+      aimaskUrl: aimaskUrl,
       maskUrl: maskUrl,
       resultUrl: resultUrl,
       createdAt: Date(),
@@ -259,6 +264,11 @@ final class ImageMetadataService {
       imageId: imageId,
       maskUrl: maskUrl,
       resultUrl: resultUrl)
+  }
+
+  /// Update the AI mask URL for an existing image record
+  func updateImageAIMask(imageId: UUID, aimaskUrl: String) async throws {
+    try await updater.updateImageAIMask(imageId: imageId, aimaskUrl: aimaskUrl)
   }
 
   /// Function to get image from an existing record

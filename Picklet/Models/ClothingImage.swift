@@ -10,8 +10,9 @@ import Foundation
 struct ClothingImage: Identifiable, Codable {
   let id: UUID
   let clothingId: UUID
-  let userId: UUID?
+  let userId: UUID
   let originalUrl: String?
+  let aimaskUrl: String?
   let maskUrl: String?
   let resultUrl: String?
 
@@ -28,6 +29,7 @@ struct ClothingImage: Identifiable, Codable {
     case clothingId = "clothing_id"
     case userId = "user_id"
     case originalUrl = "original_url"
+    case aimaskUrl = "aimask_url"
     case maskUrl = "mask_url"
     case resultUrl = "result_url"
     case createdAt = "created_at"
@@ -40,8 +42,9 @@ struct ClothingImage: Identifiable, Codable {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     id = try container.decode(UUID.self, forKey: .id)
     clothingId = try container.decode(UUID.self, forKey: .clothingId)
-    userId = try container.decodeIfPresent(UUID.self, forKey: .userId)
+    userId = try container.decode(UUID.self, forKey: .userId)
     originalUrl = try container.decodeIfPresent(String.self, forKey: .originalUrl)
+    aimaskUrl = try container.decodeIfPresent(String.self, forKey: .aimaskUrl)
     maskUrl = try container.decodeIfPresent(String.self, forKey: .maskUrl)
     resultUrl = try container.decodeIfPresent(String.self, forKey: .resultUrl)
 
@@ -72,8 +75,9 @@ struct ClothingImage: Identifiable, Codable {
   init(
     id: UUID = UUID(),
     clothingId: UUID,
-    userId: UUID? = nil,
+    userId: UUID,
     originalUrl: String? = nil,
+    aimaskUrl: String? = nil,
     maskUrl: String? = nil,
     resultUrl: String? = nil,
     originalLocalPath: String? = nil,
@@ -85,6 +89,7 @@ struct ClothingImage: Identifiable, Codable {
     self.clothingId = clothingId
     self.userId = userId
     self.originalUrl = originalUrl
+    self.aimaskUrl = aimaskUrl
     self.maskUrl = maskUrl
     self.resultUrl = resultUrl
     self.originalLocalPath = originalLocalPath
@@ -99,8 +104,9 @@ struct ClothingImage: Identifiable, Codable {
     var container = encoder.container(keyedBy: CodingKeys.self)
     try container.encode(id, forKey: .id)
     try container.encode(clothingId, forKey: .clothingId)
-    try container.encodeIfPresent(userId, forKey: .userId)
+    try container.encode(userId, forKey: .userId)
     try container.encodeIfPresent(originalUrl, forKey: .originalUrl)
+    try container.encodeIfPresent(aimaskUrl, forKey: .aimaskUrl)
     try container.encodeIfPresent(maskUrl, forKey: .maskUrl)
     try container.encodeIfPresent(resultUrl, forKey: .resultUrl)
 
@@ -130,6 +136,7 @@ struct ClothingImage: Identifiable, Codable {
       clothingId: clothingId,
       userId: userId,
       originalUrl: originalUrl,
+      aimaskUrl: aimaskUrl,
       maskUrl: maskUrl,
       resultUrl: resultUrl,
       originalLocalPath: originalLocalPath ?? self.originalLocalPath,

@@ -118,8 +118,13 @@ class ClothingViewModel: ObservableObject {
 
     for var set in imageSets {
       // 新規オリジナル画像の処理
-      if set.isNew, set.originalUrl == nil {
+      if set.original != UIImage(systemName: "photo") && (set.isNew || set.originalUrl == nil) {
         await processOriginalImage(set: &set, clothing: clothing)
+      }
+
+      // AIマスク画像の処理
+      if let aimask = set.aimask, set.aimaskUrl == nil {
+        await processAIMaskImage(aimask: aimask, set: &set, clothing: clothing)
       }
 
       // マスク画像の処理
@@ -161,11 +166,22 @@ class ClothingViewModel: ObservableObject {
       // サーバーにアップロード
       let url = try await originalImageStorageService.uploadImage(originalImage, for: set.id.uuidString)
 
+      // 現在のユーザーIDを取得
+      guard let user = AuthService.shared.currentUser else {
+        print("❌ ユーザーが取得できません")
+        return
+      }
+
+      // ユーザーIDを取得
+      let userId = user.id
+
       // メタデータを追加（ローカルパス情報も含む）
       let newImage = ClothingImage(
         id: set.id,
         clothingId: clothing.id,
+        userId: userId,
         originalUrl: url,
+        aimaskUrl: nil,
         originalLocalPath: localPath,
         createdAt: Date(),
         updatedAt: Date())
@@ -213,6 +229,7 @@ class ClothingViewModel: ObservableObject {
           clothingId: oldImage.clothingId,
           userId: oldImage.userId,
           originalUrl: oldImage.originalUrl,
+          aimaskUrl: oldImage.aimaskUrl,
           maskUrl: maskUrl, // 更新されたマスクURL
           resultUrl: oldImage.resultUrl,
           originalLocalPath: oldImage.originalLocalPath,
@@ -232,6 +249,57 @@ class ClothingViewModel: ObservableObject {
       print("✅ マスクアップロード完了: URL=\(maskUrl)")
     } catch {
       print("❌ マスクアップロードエラー: \(error.localizedDescription)")
+    }
+  }
+
+  /// AIマスク画像を処理・アップロード
+  private func processAIMaskImage(aimask: UIImage, set: inout EditableImageSet, clothing: Clothing) async {
+    print("🔄 AIマスク画像をアップロード中: setID=\(set.id)")
+
+    // ローカルにAIマスク画像を保存
+    guard let localPath = localStorageService.saveImage(aimask, id: set.id, type: "aimask") else {
+      print("❌ ローカルAIマスク保存失敗")
+      return
+    }
+
+    print("✅ AIマスク画像をローカルに保存: \(localPath)")
+
+    do {
+      // サーバーにアップロード (AIマスク専用バケットを追加する必要があるかもしれません)
+      let aimaskUrl = try await maskImageStorageService.uploadImage(aimask, for: "\(set.id.uuidString)-ai")
+
+      // ローカルメタデータを更新
+      var localImages = localStorageService.loadImageMetadata(for: clothing.id)
+      if let index = localImages.firstIndex(where: { $0.id == set.id }) {
+        // ClothingImageはlet定数を持つので新しいインスタンスを作成して置き換え
+        let oldImage = localImages[index]
+        let updatedImage = ClothingImage(
+          id: oldImage.id,
+          clothingId: oldImage.clothingId,
+          userId: oldImage.userId,
+          originalUrl: oldImage.originalUrl,
+          aimaskUrl: aimaskUrl, // 新しいAIマスクURL
+          maskUrl: oldImage.maskUrl,
+          resultUrl: oldImage.resultUrl,
+          originalLocalPath: oldImage.originalLocalPath,
+          // AIマスク用のローカルパスはまだモデルに定義されていません。必要に応じて追加してください
+          maskLocalPath: oldImage.maskLocalPath,
+          resultLocalPath: oldImage.resultLocalPath,
+          createdAt: oldImage.createdAt,
+          updatedAt: Date())
+        localImages[index] = updatedImage
+        localStorageService.saveImageMetadata(for: clothing.id, imageMetadata: localImages)
+      }
+
+      // サーバーメタデータを更新
+      try await imageMetadataService.updateImageAIMask(imageId: set.id, aimaskUrl: aimaskUrl)
+
+      // EditableImageSetは可変なのでプロパティを更新
+      set.aimaskUrl = aimaskUrl
+      set.aimask = aimask
+      print("✅ AIマスクアップロード完了: URL=\(aimaskUrl)")
+    } catch {
+      print("❌ AIマスクアップロードエラー: \(error.localizedDescription)")
     }
   }
 
@@ -291,6 +359,7 @@ class ClothingViewModel: ObservableObject {
 
         for image in images {
           var original: UIImage = placeholderImage
+          var aimask: UIImage?
           var mask: UIImage?
 
           // ローカルパスから画像を読み込む
@@ -314,6 +383,24 @@ class ClothingViewModel: ObservableObject {
               } catch {
                 print("❌ 画像ダウンロードエラー: \(originalUrl) - \(error.localizedDescription)")
               }
+            }
+          }
+
+          // AIマスク画像の読み込み（後でローカルパスを追加する必要があります）
+          if let aimaskUrl = image.aimaskUrl, let url = URL(string: aimaskUrl) {
+            do {
+              let (data, _) = try await URLSession.shared.data(from: url)
+              if let downloadedAIMask = UIImage(data: data) {
+                aimask = downloadedAIMask
+                print("🌐 URLからAIマスク画像を非同期にダウンロード: \(aimaskUrl)")
+
+                // ローカルに保存して次回利用できるようにする（将来的に必要になるでしょう）
+                if let savedPath = localStorageService.saveImage(downloadedAIMask, id: image.id, type: "aimask") {
+                  print("💾 ダウンロードしたAIマスク画像をローカルに保存: \(savedPath)")
+                }
+              }
+            } catch {
+              print("❌ AIマスク画像ダウンロードエラー: \(aimaskUrl) - \(error.localizedDescription)")
             }
           }
 
@@ -345,12 +432,14 @@ class ClothingViewModel: ObservableObject {
             id: image.id,
             original: original,
             originalUrl: image.originalUrl,
+            aimask: aimask,
+            aimaskUrl: image.aimaskUrl,
             mask: mask,
             maskUrl: image.maskUrl,
             isNew: false)
 
           imageSets.append(set)
-          print("  🔗 画像セット: ID=\(set.id), originalUrl=\(image.originalUrl ?? "nil"), maskUrl=\(image.maskUrl ?? "nil")")
+          print("  🔗 画像セット: ID=\(set.id), originalUrl=\(image.originalUrl ?? "nil"), aimaskUrl=\(image.aimaskUrl ?? "nil"), maskUrl=\(image.maskUrl ?? "nil")")
         }
 
         newMap[clothing.id] = imageSets
@@ -378,6 +467,7 @@ class ClothingViewModel: ObservableObject {
 
       for image in images {
         var original: UIImage = placeholderImage
+        var aimask: UIImage?
         var mask: UIImage?
 
         // ローカルパスから画像を読み込む
@@ -401,6 +491,24 @@ class ClothingViewModel: ObservableObject {
             } catch {
               print("❌ 画像ダウンロードエラー: \(originalUrl) - \(error.localizedDescription)")
             }
+          }
+        }
+
+        // AIマスク画像の読み込み
+        if let aimaskUrl = image.aimaskUrl, let url = URL(string: aimaskUrl) {
+          do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            if let downloadedAIMask = UIImage(data: data) {
+              aimask = downloadedAIMask
+              print("🌐 URLからAIマスク画像を非同期にダウンロード: \(aimaskUrl)")
+
+              // ローカルに保存して次回利用できるようにする
+              if let savedPath = localStorageService.saveImage(downloadedAIMask, id: image.id, type: "aimask") {
+                print("💾 ダウンロードしたAIマスク画像をローカルに保存: \(savedPath)")
+              }
+            }
+          } catch {
+            print("❌ AIマスク画像ダウンロードエラー: \(aimaskUrl) - \(error.localizedDescription)")
           }
         }
 
@@ -432,11 +540,14 @@ class ClothingViewModel: ObservableObject {
           id: image.id,
           original: original,
           originalUrl: image.originalUrl,
+          aimask: aimask,
+          aimaskUrl: image.aimaskUrl,
           mask: mask,
           maskUrl: image.maskUrl,
           isNew: false)
 
         imageSets.append(set)
+        print("  🔗 画像セット: ID=\(image.id), originalUrl=\(image.originalUrl ?? "nil"), aimaskUrl=\(image.aimaskUrl ?? "nil"), maskUrl=\(image.maskUrl ?? "nil")")
       }
 
       // 既存のマップを更新
@@ -445,6 +556,58 @@ class ClothingViewModel: ObservableObject {
     } catch {
       print("❌ 指定服の画像読み込みエラー: \(error.localizedDescription)")
     }
+  }
+
+  /// ------------------------------------------------------------
+  /// 画像読み込みAPI
+  /// ------------------------------------------------------------
+
+  /// 服IDから画像を読み込むメソッド（ビュー層からの呼び出し用）
+  /// - Parameter clothingId: 服のID
+  /// - Returns: 読み込んだ画像（成功した場合）
+  func getImageForClothing(_ clothingId: UUID) async -> UIImage? {
+    // キャッシュから画像を取得
+    if let imageSets = imageSetsMap[clothingId], let firstSet = imageSets.first {
+      // すでにキャッシュされた画像がある場合はそれを返す
+      if firstSet.original != UIImage(systemName: "photo") {
+        print("✅ ViewModelのキャッシュから画像を取得: \(clothingId)")
+        return firstSet.original
+      }
+    }
+
+    // キャッシュにない場合はローカルストレージから検索
+    let imageLoaderService = ImageLoaderService.shared
+    let localStorageService = LocalStorageService.shared
+    let metadata = localStorageService.loadImageMetadata(for: clothingId)
+
+    if let firstImage = metadata.first,
+       let localPath = firstImage.originalLocalPath,
+       let image = localStorageService.loadImage(from: localPath) {
+      print("✅ ローカルストレージから画像を読み込み: \(localPath)")
+      return image
+    }
+
+    // ローカルにもない場合は非同期でネットワークから取得
+    if let firstImage = metadata.first, let originalUrl = firstImage.originalUrl {
+      let image = await imageLoaderService.loadFromURL(originalUrl)
+
+      // ダウンロードした画像をローカルに保存
+      if let image = image, let savedPath = localStorageService.saveImage(image, id: firstImage.id, type: "original") {
+        print("💾 ダウンロードした画像をローカルに保存: \(savedPath)")
+
+        // メタデータを更新
+        var updatedMetadata = metadata
+        if let index = updatedMetadata.firstIndex(where: { $0.id == firstImage.id }) {
+          updatedMetadata[index] = firstImage.updatingLocalPath(originalLocalPath: savedPath)
+          localStorageService.saveImageMetadata(for: clothingId, imageMetadata: updatedMetadata)
+        }
+      }
+
+      return image
+    }
+
+    print("⚠️ 画像が見つかりませんでした: \(clothingId)")
+    return nil
   }
 
   /// ------------------------------------------------------------

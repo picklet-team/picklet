@@ -6,6 +6,7 @@ struct NewClothingImage: Encodable {
   let clothingID: UUID
   let userID: UUID
   let originalURL: String
+  let aimaskURL: String?
   let maskURL: String?
   let resultURL: String?
   let createdAt: String
@@ -15,6 +16,7 @@ struct NewClothingImage: Encodable {
     case clothingID = "clothing_id"
     case userID = "user_id"
     case originalURL = "original_url"
+    case aimaskURL = "aimask_url"
     case maskURL = "mask_url"
     case resultURL = "result_url"
     case createdAt = "created_at"

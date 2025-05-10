@@ -34,6 +34,7 @@ final class ImageMetadataUpdater {
           clothingId: oldImage.clothingId,
           userId: oldImage.userId,
           originalUrl: oldImage.originalUrl,
+          aimaskUrl: oldImage.aimaskUrl,
           maskUrl: maskUrl, // 新しいmaskUrl
           resultUrl: oldImage.resultUrl,
           originalLocalPath: oldImage.originalLocalPath,
@@ -73,6 +74,7 @@ final class ImageMetadataUpdater {
           clothingId: oldImage.clothingId,
           userId: oldImage.userId,
           originalUrl: oldImage.originalUrl,
+          aimaskUrl: oldImage.aimaskUrl,
           maskUrl: oldImage.maskUrl,
           resultUrl: resultUrl, // 新しいresultUrl
           originalLocalPath: oldImage.originalLocalPath,
@@ -118,8 +120,49 @@ final class ImageMetadataUpdater {
           clothingId: oldImage.clothingId,
           userId: oldImage.userId,
           originalUrl: oldImage.originalUrl,
+          aimaskUrl: oldImage.aimaskUrl,
           maskUrl: maskUrl ?? oldImage.maskUrl, // 新しいmaskUrlがあれば更新
           resultUrl: resultUrl ?? oldImage.resultUrl, // 新しいresultUrlがあれば更新
+          originalLocalPath: oldImage.originalLocalPath,
+          maskLocalPath: oldImage.maskLocalPath,
+          resultLocalPath: oldImage.resultLocalPath,
+          createdAt: oldImage.createdAt,
+          updatedAt: Date())
+
+        // 配列を更新
+        localImages[index] = updatedImage
+        localStorageService.saveImageMetadata(for: clothingId, imageMetadata: localImages)
+      }
+    }
+  }
+
+  /// Update the AI mask URL for an existing image record
+  func updateImageAIMask(imageId: UUID, aimaskUrl: String) async throws {
+    // サーバー上のデータを更新
+    _ = try await client
+      .from("clothing_images")
+      .update(["aimask_url": aimaskUrl])
+      .eq("id", value: imageId.uuidString)
+      .execute()
+
+    // ローカルデータを取得
+    if let clothingData = try await fetchClothingData(for: imageId) {
+      let clothingId = clothingData.clothingId
+      var localImages = localStorageService.loadImageMetadata(for: clothingId)
+
+      // 対象画像を見つけて新しいインスタンスに更新
+      if let index = localImages.firstIndex(where: { $0.id == imageId }) {
+        let oldImage = localImages[index]
+
+        // 新しいインスタンスを作成して、AIマスクURLだけを更新
+        let updatedImage = ClothingImage(
+          id: oldImage.id,
+          clothingId: oldImage.clothingId,
+          userId: oldImage.userId,
+          originalUrl: oldImage.originalUrl,
+          aimaskUrl: aimaskUrl, // 新しいaimaskUrl
+          maskUrl: oldImage.maskUrl,
+          resultUrl: oldImage.resultUrl,
           originalLocalPath: oldImage.originalLocalPath,
           maskLocalPath: oldImage.maskLocalPath,
           resultLocalPath: oldImage.resultLocalPath,
