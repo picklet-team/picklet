@@ -109,14 +109,14 @@ struct PickletTests {
     #expect(viewModel.errorMessage == nil)
 
     // テストデータの作成
-    let testDate = Date()
+    let testDate = Date()  // Date型のまま使用
     let clothing = Clothing(
       id: UUID(),
       name: "テストアイテム",
       category: "ボトムス",
       color: "青",
-      createdAt: testDate,
-      updatedAt: testDate
+      createdAt: testDate,  // Date型をそのまま使用
+      updatedAt: testDate   // Date型をそのまま使用
     )
 
     // モック化したデータを追加 - MainActor上で直接操作
