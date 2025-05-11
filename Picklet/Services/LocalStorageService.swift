@@ -189,49 +189,65 @@ class LocalStorageService {
       }
 
       // パスの修正：古いパスを新しいパスに変換
-      var originalLocalPath = dict["originalLocalPath"] as? String
-      var maskLocalPath = dict["maskLocalPath"] as? String
-      var resultLocalPath = dict["resultLocalPath"] as? String
-
-      // パスが空でなく、ファイルが存在しない場合は修正を試みる
-      if let path = originalLocalPath, !path.isEmpty, !fileManager.fileExists(atPath: path) {
-        let filename = URL(fileURLWithPath: path).lastPathComponent
-        let newPath = imagesDirectory.appendingPathComponent(filename).path
-        if fileManager.fileExists(atPath: newPath) {
-          originalLocalPath = newPath
-          print("🔄 パスを修正: \(path) -> \(newPath)")
-        }
-      }
-
-      // マスクとリザルトの画像パスも同様に修正
-      if let path = maskLocalPath, !path.isEmpty, !fileManager.fileExists(atPath: path) {
-        let filename = URL(fileURLWithPath: path).lastPathComponent
-        let newPath = imagesDirectory.appendingPathComponent(filename).path
-        if fileManager.fileExists(atPath: newPath) {
-          maskLocalPath = newPath
-        }
-      }
-
-      if let path = resultLocalPath, !path.isEmpty, !fileManager.fileExists(atPath: path) {
-        let filename = URL(fileURLWithPath: path).lastPathComponent
-        let newPath = imagesDirectory.appendingPathComponent(filename).path
-        if fileManager.fileExists(atPath: newPath) {
-          resultLocalPath = newPath
-        }
-      }
+      let paths = fixImagePaths(
+        originalPath: dict["originalLocalPath"] as? String,
+        maskPath: dict["maskLocalPath"] as? String,
+        resultPath: dict["resultLocalPath"] as? String)
 
       return ClothingImage(
         id: id,
         clothingId: clothingId,
-        originalLocalPath: originalLocalPath,
-        maskLocalPath: maskLocalPath,
-        resultLocalPath: resultLocalPath,
+        originalLocalPath: paths.originalPath,
+        maskLocalPath: paths.maskPath,
+        resultLocalPath: paths.resultPath,
         createdAt: Date(timeIntervalSince1970: createdAtTimestamp),
         updatedAt: Date(timeIntervalSince1970: updatedAtTimestamp))
     }
 
     print("✅ \(clothingId) の画像メタデータを読み込み: \(imageMetadata.count)件")
     return imageMetadata
+  }
+
+  /// 画像パスを修正する
+  /// - Parameters:
+  ///   - originalPath: オリジナル画像のパス
+  ///   - maskPath: マスク画像のパス
+  ///   - resultPath: 結果画像のパス
+  /// - Returns: 修正されたパスのタプル
+  private func fixImagePaths(originalPath: String?, maskPath: String?, resultPath: String?) ->
+  (originalPath: String?, maskPath: String?, resultPath: String?) {
+    var fixedOriginalPath = originalPath
+    var fixedMaskPath = maskPath
+    var fixedResultPath = resultPath
+
+    // パスが空でなく、ファイルが存在しない場合は修正を試みる
+    if let path = fixedOriginalPath, !path.isEmpty, !fileManager.fileExists(atPath: path) {
+      let filename = URL(fileURLWithPath: path).lastPathComponent
+      let newPath = imagesDirectory.appendingPathComponent(filename).path
+      if fileManager.fileExists(atPath: newPath) {
+        fixedOriginalPath = newPath
+        print("🔄 パスを修正: \(path) -> \(newPath)")
+      }
+    }
+
+    // マスクとリザルトの画像パスも同様に修正
+    if let path = fixedMaskPath, !path.isEmpty, !fileManager.fileExists(atPath: path) {
+      let filename = URL(fileURLWithPath: path).lastPathComponent
+      let newPath = imagesDirectory.appendingPathComponent(filename).path
+      if fileManager.fileExists(atPath: newPath) {
+        fixedMaskPath = newPath
+      }
+    }
+
+    if let path = fixedResultPath, !path.isEmpty, !fileManager.fileExists(atPath: path) {
+      let filename = URL(fileURLWithPath: path).lastPathComponent
+      let newPath = imagesDirectory.appendingPathComponent(filename).path
+      if fileManager.fileExists(atPath: newPath) {
+        fixedResultPath = newPath
+      }
+    }
+
+    return (fixedOriginalPath, fixedMaskPath, fixedResultPath)
   }
 
   // MARK: - 衣類データ管理
