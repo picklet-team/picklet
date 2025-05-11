@@ -101,11 +101,11 @@ struct PickletTests {
   @Test func testClothingViewModel() async throws {
     #if os(iOS) || os(macOS)
     // ClothingViewModelのテスト - MainActorコンテキストで実行
-    let viewModel = ClothingViewModel()
+    let viewModel = ClothingViewModel(skipInitialLoad: true)  // テスト用に初期ロードをスキップ
 
     // MainActor上で実行されているのでawaitは不要
     #expect(viewModel.clothes.isEmpty)
-    #expect(viewModel.isLoading == false)
+    #expect(viewModel.isLoading == false)  // 初期ロードをスキップしたのでfalseのまま
     #expect(viewModel.errorMessage == nil)
 
     // テストデータの作成

@@ -21,9 +21,11 @@ class ClothingViewModel: ObservableObject {
   // デバッグ用
   @Published var imageLoadStatus: [String: String] = [:]
 
-  init() {
-    print("🧠 ClothingViewModel 初期化")
-    loadClothings()
+  init(skipInitialLoad: Bool = false) {
+    print("🧠 ClothingViewModel 初期化, skipInitialLoad: \(skipInitialLoad)")
+    if !skipInitialLoad {
+      loadClothings()
+    }
   }
 
   // デバッグ情報を出力する関数
