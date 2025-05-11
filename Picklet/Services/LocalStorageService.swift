@@ -6,7 +6,9 @@ class LocalStorageService {
   static let shared = LocalStorageService()
 
   private let fileManager = FileManager.default
+  private let groupIdentifier = "group.com.yourdomain.picklet" // App Group識別子を設定
   private let documentsDirectory: URL
+  private let userDefaults: UserDefaults
 
   // 画像保存用のディレクトリ
   private let imagesDirectory: URL
@@ -15,8 +17,16 @@ class LocalStorageService {
   private let clothingDirectory: URL
 
   private init() {
-    // ドキュメントディレクトリのパスを取得
-    documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+    // アプリグループのコンテナURLを取得
+    if let containerURL = fileManager.containerURL(forSecurityApplicationGroupIdentifier: groupIdentifier) {
+      documentsDirectory = containerURL
+      userDefaults = UserDefaults(suiteName: groupIdentifier) ?? .standard
+    } else {
+      // フォールバックとして通常のドキュメントディレクトリを使用
+      print("⚠️ アプリグループが利用できないため、通常のドキュメントディレクトリを使用します")
+      documentsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+      userDefaults = .standard
+    }
 
     // 画像保存用のディレクトリパスを作成
     imagesDirectory = documentsDirectory.appendingPathComponent("images")
@@ -68,8 +78,19 @@ class LocalStorageService {
   /// - Parameter path: ローカルファイルパス
   /// - Returns: 読み込んだUIImage、または失敗時にnil
   func loadImage(from path: String) -> UIImage? {
+    // パスの存在確認
     guard fileManager.fileExists(atPath: path) else {
       print("❌ 画像ファイルが存在しません: \(path)")
+
+      // パスが古いドキュメントディレクトリを参照している場合、新しいパスに変換してみる
+      let filename = URL(fileURLWithPath: path).lastPathComponent
+      let newPath = imagesDirectory.appendingPathComponent(filename).path
+
+      if fileManager.fileExists(atPath: newPath) {
+        print("🔄 新しいパスで画像を発見: \(newPath)")
+        return UIImage(contentsOfFile: newPath)
+      }
+
       return nil
     }
 
@@ -140,7 +161,8 @@ class LocalStorageService {
       ]
     }
 
-    UserDefaults.standard.set(metadataArray, forKey: "clothingImages_\(clothingId.uuidString)")
+    userDefaults.set(metadataArray, forKey: "clothingImages_\(clothingId.uuidString)")
+    userDefaults.synchronize()
     print("✅ \(clothingId) の画像メタデータを保存: \(metadataArray.count)件")
   }
 
@@ -149,7 +171,7 @@ class LocalStorageService {
   /// - Returns: 画像メタデータの配列
   func loadImageMetadata(for clothingId: UUID) -> [ClothingImage] {
     let key = "clothingImages_\(clothingId.uuidString)"
-    guard let metadataArray = UserDefaults.standard.array(forKey: key) as? [[String: Any]] else {
+    guard let metadataArray = userDefaults.array(forKey: key) as? [[String: Any]] else {
       print("⚠️ \(clothingId) の画像メタデータがローカルに存在しません")
       return []
     }
@@ -166,18 +188,66 @@ class LocalStorageService {
         return nil
       }
 
+      // パスの修正：古いパスを新しいパスに変換
+      let paths = fixImagePaths(
+        originalPath: dict["originalLocalPath"] as? String,
+        maskPath: dict["maskLocalPath"] as? String,
+        resultPath: dict["resultLocalPath"] as? String)
+
       return ClothingImage(
         id: id,
         clothingId: clothingId,
-        originalLocalPath: dict["originalLocalPath"] as? String,
-        maskLocalPath: dict["maskLocalPath"] as? String,
-        resultLocalPath: dict["resultLocalPath"] as? String,
+        originalLocalPath: paths.originalPath,
+        maskLocalPath: paths.maskPath,
+        resultLocalPath: paths.resultPath,
         createdAt: Date(timeIntervalSince1970: createdAtTimestamp),
         updatedAt: Date(timeIntervalSince1970: updatedAtTimestamp))
     }
 
     print("✅ \(clothingId) の画像メタデータを読み込み: \(imageMetadata.count)件")
     return imageMetadata
+  }
+
+  /// 画像パスを修正する
+  /// - Parameters:
+  ///   - originalPath: オリジナル画像のパス
+  ///   - maskPath: マスク画像のパス
+  ///   - resultPath: 結果画像のパス
+  /// - Returns: 修正されたパスのタプル
+  private func fixImagePaths(originalPath: String?, maskPath: String?, resultPath: String?) ->
+  (originalPath: String?, maskPath: String?, resultPath: String?) {
+    var fixedOriginalPath = originalPath
+    var fixedMaskPath = maskPath
+    var fixedResultPath = resultPath
+
+    // パスが空でなく、ファイルが存在しない場合は修正を試みる
+    if let path = fixedOriginalPath, !path.isEmpty, !fileManager.fileExists(atPath: path) {
+      let filename = URL(fileURLWithPath: path).lastPathComponent
+      let newPath = imagesDirectory.appendingPathComponent(filename).path
+      if fileManager.fileExists(atPath: newPath) {
+        fixedOriginalPath = newPath
+        print("🔄 パスを修正: \(path) -> \(newPath)")
+      }
+    }
+
+    // マスクとリザルトの画像パスも同様に修正
+    if let path = fixedMaskPath, !path.isEmpty, !fileManager.fileExists(atPath: path) {
+      let filename = URL(fileURLWithPath: path).lastPathComponent
+      let newPath = imagesDirectory.appendingPathComponent(filename).path
+      if fileManager.fileExists(atPath: newPath) {
+        fixedMaskPath = newPath
+      }
+    }
+
+    if let path = fixedResultPath, !path.isEmpty, !fileManager.fileExists(atPath: path) {
+      let filename = URL(fileURLWithPath: path).lastPathComponent
+      let newPath = imagesDirectory.appendingPathComponent(filename).path
+      if fileManager.fileExists(atPath: newPath) {
+        fixedResultPath = newPath
+      }
+    }
+
+    return (fixedOriginalPath, fixedMaskPath, fixedResultPath)
   }
 
   // MARK: - 衣類データ管理
@@ -260,7 +330,8 @@ class LocalStorageService {
       saveClothingIdList(clothingIds)
 
       // 関連する画像のメタデータを削除
-      UserDefaults.standard.removeObject(forKey: "clothingImages_\(id.uuidString)")
+      userDefaults.removeObject(forKey: "clothingImages_\(id.uuidString)")
+      userDefaults.synchronize()
 
       print("✅ 衣類データを削除: \(id)")
       return true
@@ -276,13 +347,14 @@ class LocalStorageService {
   /// - Parameter ids: UUIDの配列
   private func saveClothingIdList(_ ids: [UUID]) {
     let idStrings = ids.map { $0.uuidString }
-    UserDefaults.standard.set(idStrings, forKey: "clothing_id_list")
+    userDefaults.set(idStrings, forKey: "clothing_id_list")
+    userDefaults.synchronize()
   }
 
   /// 衣類IDリストを読み込む
   /// - Returns: UUIDの配列
   private func loadClothingIdList() -> [UUID] {
-    guard let idStrings = UserDefaults.standard.stringArray(forKey: "clothing_id_list") else {
+    guard let idStrings = userDefaults.stringArray(forKey: "clothing_id_list") else {
       return []
     }
 
@@ -291,12 +363,13 @@ class LocalStorageService {
 
   /// 全ての画像メタデータを削除（キャッシュクリア用）
   func clearAllImageMetadata() {
-    let defaults = UserDefaults.standard
+    let defaults = userDefaults
     let allKeys = defaults.dictionaryRepresentation().keys
 
     for key in allKeys where key.starts(with: "clothingImages_") {
       defaults.removeObject(forKey: key)
     }
+    defaults.synchronize()
     print("✅ すべての画像メタデータをクリア")
   }
 
