@@ -14,15 +14,14 @@ struct ClothingListView: View {
         .navigationTitle("My Clothes")
         .safeAreaInset(edge: .bottom) {
           PrimaryActionButton(title: "写真から服を追加") {
-            if let user = SupabaseService.shared.currentUser {
+            if SupabaseService.shared.currentUser != nil {
               editingClothing = Clothing(
                 id: UUID(),
-                userID: user.id,
                 name: "",
                 category: "",
                 color: "",
-                createdAt: ISO8601DateFormatter().string(from: Date()),
-                updatedAt: ISO8601DateFormatter().string(from: Date()))
+                createdAt: Date(),
+                updatedAt: Date())
               isNewClothing = true
               navigateToEdit = true
             }

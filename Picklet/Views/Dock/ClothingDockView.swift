@@ -27,6 +27,9 @@ struct ClothingDockView: View {
   @EnvironmentObject private var viewModel: ClothingViewModel
   @EnvironmentObject private var overlayManager: GlobalOverlayManager // オーバーレイマネージャー
 
+  // 共通のImageLoaderServiceを使用
+  private let imageLoaderService = ImageLoaderService.shared
+
   // configuration
   private let maxCards = 20
   private let cardWidth: CGFloat = 120
@@ -96,13 +99,18 @@ struct ClothingDockView: View {
           // 選択されたIDを記録
           lastSelectedId = wrap.id
 
+          // QuickView表示時にImageLoaderServiceを使用
+          let imageURL = viewModel.imageSetsMap[cloth.id]?.first?.originalUrl
+
           // GlobalOverlayManagerを使用してClothingQuickViewを表示
           overlayManager.present(
             ClothingQuickView(
-              imageURL: viewModel.imageSetsMap[cloth.id]?.first?.originalUrl,
+              clothingId: cloth.id, // clothingIdを渡して画像読み込みに使用
+              imageURL: imageURL,
               name: cloth.name,
               category: cloth.category,
               color: cloth.color)
+              .environmentObject(viewModel) // ここにEnvironmentObjectを追加
               .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
               .shadow(radius: 10)
               .onTapGesture {

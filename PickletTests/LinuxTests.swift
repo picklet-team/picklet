@@ -11,30 +11,27 @@ import XCTest
 final class LinuxCompatibleTests: XCTestCase {
 
     func testClothingModel() {
-        // テスト用の日付文字列
-        let dateStr = "2025-04-30T10:00:00Z"
+        // テスト用の日付作成
+        let date = Date()
 
         // Clothingインスタンスの作成テスト
         let id = UUID()
-        let userId = UUID()
         let clothing = Clothing(
           id: id,
-          userID: userId,
           name: "テストTシャツ",
           category: "トップス",
           color: "白",
-          createdAt: dateStr,
-          updatedAt: dateStr
+          createdAt: date,
+          updatedAt: date
         )
 
         // 各プロパティが正しく設定されているかテスト
         XCTAssertEqual(clothing.id, id)
-        XCTAssertEqual(clothing.userID, userId)
         XCTAssertEqual(clothing.name, "テストTシャツ")
         XCTAssertEqual(clothing.category, "トップス")
         XCTAssertEqual(clothing.color, "白")
-        XCTAssertEqual(clothing.createdAt, dateStr)
-        XCTAssertEqual(clothing.updatedAt, dateStr)
+        XCTAssertEqual(clothing.createdAt, date)
+        XCTAssertEqual(clothing.updatedAt, date)
     }
 
     func testWeatherModel() {
@@ -65,7 +62,7 @@ final class LinuxCompatibleTests: XCTestCase {
         // ClothingImageインスタンスの作成テスト
         let id = UUID()
         let clothingId = UUID()
-        let userId = UUID()
+        let userId = "user123" // String型
         let clothingImage = ClothingImage(
           id: id,
           clothingId: clothingId,

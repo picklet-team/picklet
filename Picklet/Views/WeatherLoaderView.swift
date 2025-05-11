@@ -13,6 +13,9 @@ struct WeatherLoaderView: View {
   @State private var isLoading = true
   @State private var errorMessage: String?
 
+  // オフライン専用のWeatherServiceを使用
+  private let weatherService = PickletOfflineWeatherService.shared
+
   var body: some View {
     Group {
       if isLoading {
@@ -25,7 +28,13 @@ struct WeatherLoaderView: View {
           .padding()
       }
     }
+    .onAppear {
+      Task {
+        await loadWeather()
+      }
+    }
     .onChange(of: locationManager.placemark) {
+      // プレースマークが更新されたら再読み込み（ただし必要ない場合はスキップ）
       guard weather == nil && errorMessage == nil else { return }
       Task {
         await loadWeather()
@@ -35,32 +44,21 @@ struct WeatherLoaderView: View {
 
   private func loadWeather() async {
     print("🌀 loadWeather called")
-    guard let placemark = locationManager.placemark else {
-      errorMessage = "位置情報が取得できませんでした"
-      isLoading = false
-      return
-    }
 
-    // 県や市の表示確認
-    let prefecture = placemark.administrativeArea ?? "不明"
-    let city = placemark.locality ?? placemark.subAdministrativeArea ?? "不明"
-
-    print("🗾 現在地: \(prefecture) / \(city)")
-
-    if city == "不明" {
-      errorMessage = "位置情報から市区町村を取得できませんでした"
-      isLoading = false
-      return
-    }
-
-    do {
-      let fetchedWeather = try await WeatherManager.shared.fetchWeather(for: city)
-      weather = fetchedWeather
-    } catch {
-      errorMessage = "天気情報の取得に失敗しました: \(error.localizedDescription)"
-      print("❌ 天気取得失敗: \(error)")
-    }
-
+    // オフラインモードではシンプルに固定の天気データを使用
+    weather = weatherService.getCurrentWeather()
     isLoading = false
+
+    // 位置情報がある場合は、都市名だけログ出力（実際の処理には影響しない）
+    if let placemark = locationManager.placemark {
+      let prefecture = placemark.administrativeArea ?? "不明"
+      let city = placemark.locality ?? placemark.subAdministrativeArea ?? "不明"
+      print("🗾 現在地: \(prefecture) / \(city) (オフラインモードのため使用されません)")
+    }
+  }
+
+  // デモ用に天気をランダムに切り替える関数（実際のアプリでは使用しなくてもOK）
+  func refreshRandomWeather() {
+    weather = weatherService.generateRandomWeather()
   }
 }

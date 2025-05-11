@@ -1,5 +1,5 @@
 //
-//  WeatherService.swift
+//  _disabled_WeatherService.swift
 //  Picklet
 //
 //  Created by al dente on 2025/04/25.

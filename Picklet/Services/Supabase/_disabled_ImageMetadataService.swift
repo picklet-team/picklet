@@ -102,6 +102,7 @@ final class ImageMetadataService {
       userId: serverImage.userId,
       originalUrl: serverImage.originalUrl,
       maskUrl: serverImage.maskUrl,
+      aimaskUrl: serverImage.aimaskUrl,
       resultUrl: serverImage.resultUrl,
       originalLocalPath: localImage.originalLocalPath,
       maskLocalPath: localImage.maskLocalPath,
@@ -174,6 +175,7 @@ final class ImageMetadataService {
       userId: serverImage.userId,
       originalUrl: serverImage.originalUrl,
       maskUrl: serverImage.maskUrl,
+      aimaskUrl: serverImage.aimaskUrl,
       resultUrl: serverImage.resultUrl,
       originalLocalPath: originalLocalPath,
       maskLocalPath: maskLocalPath,
@@ -195,6 +197,7 @@ final class ImageMetadataService {
   func addImage(
     for clothingId: UUID,
     originalUrl: String,
+    aimaskUrl: String? = nil,
     maskUrl: String? = nil,
     resultUrl: String? = nil) async throws {
     guard let user = currentUser else {
@@ -209,6 +212,7 @@ final class ImageMetadataService {
       clothingID: clothingId,
       userID: user.id,
       originalURL: originalUrl,
+      aimaskURL: aimaskUrl,
       maskURL: maskUrl,
       resultURL: resultUrl,
       createdAt: ISO8601DateFormatter().string(from: Date()))
@@ -223,9 +227,10 @@ final class ImageMetadataService {
     let newClothingImage = ClothingImage(
       id: imageId,
       clothingId: clothingId,
-      userId: user.id,
+      userId: String(describing: user.id), // Explicitly convert user.id to String
       originalUrl: originalUrl,
       maskUrl: maskUrl,
+      aimaskUrl: aimaskUrl,
       resultUrl: resultUrl,
       createdAt: Date(),
       updatedAt: Date())
@@ -261,6 +266,11 @@ final class ImageMetadataService {
       resultUrl: resultUrl)
   }
 
+  /// Update the AI mask URL for an existing image record
+  func updateImageAIMask(imageId: UUID, aimaskUrl: String) async throws {
+    try await updater.updateImageAIMask(imageId: imageId, aimaskUrl: aimaskUrl)
+  }
+
   /// Function to get image from an existing record
   func getImage(imageId: UUID) async throws -> ClothingImage? {
     // サーバー上のデータを検索
@@ -290,8 +300,10 @@ final class ImageMetadataService {
 
         // 元の画像IDに一致する画像を探すためのループ
         for enrichedImage in allImages {
-          // 文字列に変換して比較
-          if enrichedImage.id.uuidString == imageId.uuidString {
+          // UUIDをString型に明示的に変換して比較
+          let enrichedIdString: String = enrichedImage.id.uuidString
+          let searchIdString: String = imageId.uuidString
+          if enrichedIdString == searchIdString {
             return enrichedImage
           }
         }
