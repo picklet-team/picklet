@@ -9,7 +9,8 @@ import SwiftUI
 
 @main
 struct PickletApp: App {
-  @AppStorage("isLoggedIn") var isLoggedIn = false
+  // ログイン状態は常にtrueとして扱う
+  @AppStorage("isLoggedIn") var isLoggedIn = true
   @AppStorage("colorSchemePreference") private var colorSchemePreference: String = ColorSchemeSelection.system.rawValue
   @StateObject private var viewModel = ClothingViewModel()
 
@@ -21,16 +22,13 @@ struct PickletApp: App {
     WindowGroup {
       // GlobalOverlayContainerViewでラップして全画面オーバーレイを可能に
       GlobalOverlayContainerView {
-        if isLoggedIn && SupabaseService.shared.currentUser != nil {
-          MainTabView()
-            .environmentObject(viewModel)
-            .task {
-              // Properly call the async syncIfNeeded method
-              await viewModel.syncIfNeeded()
-            }
-        } else {
-          LoginView()
-        }
+        // ログイン画面を表示せず、常にMainTabViewを表示
+        MainTabView()
+          .environmentObject(viewModel)
+          .task {
+            // Properly call the async syncIfNeeded method
+            await viewModel.syncIfNeeded()
+          }
       }
       .preferredColorScheme(selectedColorScheme.colorScheme)
     }

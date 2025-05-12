@@ -41,16 +41,6 @@ struct SettingsView: View {
           .pickerStyle(SegmentedPickerStyle())
         }
 
-        Section {
-          Button("ログアウト", role: .destructive) {
-            Task {
-              try? await SupabaseService.shared.signOut()
-              dismiss()
-            }
-          }
-          .accessibility(identifier: "logoutButton")
-        }
-
         Section(header: Text("情報")) {
           Text(appVersion)
             .foregroundColor(.gray)
