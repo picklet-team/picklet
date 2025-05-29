@@ -1,12 +1,12 @@
 import SwiftUI
 
 // MARK: - Action Handlers
-extension ClothingEditView {
 
+extension ClothingEditView {
   func setupInitialData() {
     editingSets = viewModel.imageSetsMap[clothing.id] ?? []
 
-    if !isNew && !editingSets.isEmpty {
+    if !isNew, !editingSets.isEmpty {
       enhanceImagesInBackground()
     }
 

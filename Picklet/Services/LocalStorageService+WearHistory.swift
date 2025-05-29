@@ -1,8 +1,8 @@
 import Foundation
 
 // MARK: - 着用履歴管理
-extension LocalStorageService {
 
+extension LocalStorageService {
   /// 着用履歴を保存
   /// - Parameter histories: 着用履歴の配列
   func saveWearHistories(_ histories: [WearHistory]) {

@@ -63,14 +63,13 @@ struct ClothingCardView: View {
             let distance = sqrt(pow(value.translation.width, 2) + pow(value.translation.height, 2))
             let timeElapsed = Date().timeIntervalSince(gestureStartTime ?? Date())
 
-            if !hasMoved && distance <= 5 && timeElapsed <= 0.2 {
+            if !hasMoved, distance <= 5, timeElapsed <= 0.2 {
               // タップ処理
               onTap()
             } else if hasMoved {
               // ドラッグ終了処理
               onDragEnd()
             }
-          }
-      )
+          })
   }
 }

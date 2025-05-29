@@ -346,8 +346,8 @@ class ClothingViewModel: ObservableObject {
 
     return wearHistories.contains { history in
       history.clothingId == clothingId &&
-      history.wornAt >= today &&
-      history.wornAt < tomorrow
+        history.wornAt >= today &&
+        history.wornAt < tomorrow
     }
   }
 
@@ -358,8 +358,8 @@ class ClothingViewModel: ObservableObject {
 
     wearHistories.removeAll { history in
       history.clothingId == clothingId &&
-      history.wornAt >= today &&
-      history.wornAt < tomorrow
+        history.wornAt >= today &&
+        history.wornAt < tomorrow
     }
 
     // ローカルストレージに保存

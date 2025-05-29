@@ -18,40 +18,38 @@ struct ClothingListView: View {
         .accessibility(identifier: "clothingListView")
         .background(
           themeManager.currentTheme.backgroundGradient
-            .ignoresSafeArea()
-        )
-      .safeAreaInset(edge: .bottom) {
-        PrimaryActionButton(
-          title: "写真から服を追加",
-          backgroundColor: themeManager.currentTheme.lightBackgroundColor
-        ) {
-          editingClothing = Clothing(
-            id: UUID(),
-            name: "",
-            category: "",
-            color: "",
-            createdAt: Date(),
-            updatedAt: Date())
-          isNewClothing = true
-          navigateToEdit = true
+            .ignoresSafeArea())
+        .safeAreaInset(edge: .bottom) {
+          PrimaryActionButton(
+            title: "写真から服を追加",
+            backgroundColor: themeManager.currentTheme.lightBackgroundColor) {
+              editingClothing = Clothing(
+                id: UUID(),
+                name: "",
+                category: "",
+                color: "",
+                createdAt: Date(),
+                updatedAt: Date())
+              isNewClothing = true
+              navigateToEdit = true
+            }
+            .accessibility(identifier: "addClothingButton")
         }
-        .accessibility(identifier: "addClothingButton")
-      }
-      .navigationDestination(isPresented: $navigateToEdit) {
-        if let editingClothing = editingClothing {
-          ClothingEditView(
-            clothing: Binding(
-              get: { editingClothing },
-              set: { self.editingClothing = $0 }),
-            openPhotoPickerOnAppear: true,
-            canDelete: false,
-            isNew: true)
-            .environmentObject(viewModel)
+        .navigationDestination(isPresented: $navigateToEdit) {
+          if let editingClothing = editingClothing {
+            ClothingEditView(
+              clothing: Binding(
+                get: { editingClothing },
+                set: { self.editingClothing = $0 }),
+              openPhotoPickerOnAppear: true,
+              canDelete: false,
+              isNew: true)
+              .environmentObject(viewModel)
+          }
         }
-      }
-      .refreshable {
-        viewModel.loadClothings()
-      }
+        .refreshable {
+          viewModel.loadClothings()
+        }
     }
   }
 }

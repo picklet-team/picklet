@@ -1,8 +1,8 @@
 import Foundation
 
 // MARK: - Clothing Data Management
-extension LocalStorageService {
 
+extension LocalStorageService {
   /// 衣類データを保存
   /// - Parameter clothing: 保存する衣類データ
   /// - Returns: 保存成功の可否

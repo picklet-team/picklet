@@ -1,6 +1,7 @@
 import SwiftUI
 
 // MARK: - EditableImageSet Extension
+
 extension EditableImageSet {
   var hasHighQuality: Bool {
     return original.size.width >= 100 && original.size.height >= 100
@@ -8,6 +9,7 @@ extension EditableImageSet {
 }
 
 // MARK: - Subviews
+
 struct ImageListSection: View {
   @Binding var imageSets: [EditableImageSet]
   let addAction: () -> Void

@@ -80,8 +80,7 @@ struct ClothingDockView: View {
                 guard !isCardDragging else { return }
                 lastDragValue = 0
                 startInertialRotation()
-              }
-          )
+              })
 
         ForEach(Array(viewModel.clothes.prefix(maxCards).enumerated()), id: \.element.id) { idx, clothing in
           clothingCardView(
@@ -148,10 +147,9 @@ struct ClothingDockView: View {
         // カードドラッグ終了をマーク
         isCardDragging = false
         startInertialRotation()
-      }
-    )
-    .offset(y: yOffsetValue)
-    .allowsHitTesting(true)
+      })
+      .offset(y: yOffsetValue)
+      .allowsHitTesting(true)
   }
 
   // MARK: - Calculations
@@ -270,8 +268,7 @@ struct ClothingDockView: View {
       overlayManager.present(
         ClothingQuickView(
           clothingId: cloth.id,
-          imageURL: imageURL
-        )
+          imageURL: imageURL)
           .environmentObject(viewModel)
           .environmentObject(themeManager) // テーママネージャーも追加
           .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))

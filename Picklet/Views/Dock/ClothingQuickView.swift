@@ -69,8 +69,7 @@ struct ClothingQuickView: View {
             .background(
               Circle()
                 .fill(themeManager.currentTheme.primaryColor)
-                .frame(width: 24, height: 24)
-            )
+                .frame(width: 24, height: 24))
             .offset(x: 4, y: -4) // 画像の枠内に収まるように微調整
         }
       }
@@ -124,8 +123,7 @@ struct ClothingQuickView: View {
           .background(
             RoundedRectangle(cornerRadius: 8)
               .fill(colorScheme == .dark ? Color(.systemGray6) : Color(.systemGray6))
-              .stroke(Color(.systemGray4), lineWidth: 0.5)
-          )
+              .stroke(Color(.systemGray4), lineWidth: 0.5))
 
           // 今日着る/着用取り消しボタン（状態によって切り替え）
           Button {
@@ -157,8 +155,7 @@ struct ClothingQuickView: View {
     .background(
       RoundedRectangle(cornerRadius: 16)
         .fill(.ultraThinMaterial)
-        .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
-    )
+        .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5))
     .onAppear {
       if imageURL == nil, let id = clothingId {
         loadImage(for: id)

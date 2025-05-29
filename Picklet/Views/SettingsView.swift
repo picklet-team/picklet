@@ -67,12 +67,10 @@ struct SettingsView: View {
                       .frame(width: 40, height: 40)
                       .overlay(
                         Circle()
-                          .stroke(currentTheme == theme ? Color.primary : Color.clear, lineWidth: 3)
-                      )
+                          .stroke(currentTheme == theme ? Color.primary : Color.clear, lineWidth: 3))
                       .scaleEffect(currentTheme == theme ? 1.1 : 1.0)
-                  }
-                )
-                .buttonStyle(PlainButtonStyle())
+                  })
+                  .buttonStyle(PlainButtonStyle())
               }
             }
             .padding(.vertical, 8)

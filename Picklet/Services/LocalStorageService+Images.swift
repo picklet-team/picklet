@@ -2,8 +2,8 @@ import Foundation
 import UIKit
 
 // MARK: - Image Management
-extension LocalStorageService {
 
+extension LocalStorageService {
   /// 画像を保存
   /// - Parameters:
   ///   - image: 保存する画像

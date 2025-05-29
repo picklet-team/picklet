@@ -52,8 +52,7 @@ enum ThemeColor: String, CaseIterable, Identifiable {
     LinearGradient(
       colors: [primaryColor.opacity(0.15), primaryColor.opacity(0.05)],
       startPoint: .topLeading,
-      endPoint: .bottomTrailing
-    )
+      endPoint: .bottomTrailing)
   }
 
   var lightBackgroundColor: Color {
@@ -66,7 +65,7 @@ class ThemeManager: ObservableObject {
 
   init() {
     let savedTheme = UserDefaults.standard.string(forKey: "selectedTheme") ?? ThemeColor.blue.rawValue
-    self.currentTheme = ThemeColor(rawValue: savedTheme) ?? .blue
+    currentTheme = ThemeColor(rawValue: savedTheme) ?? .blue
   }
 
   func setTheme(_ theme: ThemeColor) {

@@ -2,8 +2,8 @@ import SDWebImageSwiftUI
 import SwiftUI
 
 // MARK: - Image Processing
-extension ClothingEditView {
 
+extension ClothingEditView {
   /// バックグラウンドで画像の高品質バージョンを取得
   func enhanceImagesInBackground() {
     isBackgroundLoading = true
