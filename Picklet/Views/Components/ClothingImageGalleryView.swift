@@ -37,6 +37,7 @@ struct ClothingImageGalleryView: View {
         // 既存の画像アイテム
         ForEach(imageSets) { set in
           ImageThumbnailView(
+            image: set.original, // originalプロパティを渡す
             imageURL: set.originalUrl,
             size: imageSize,
             cornerRadius: cornerRadius)
@@ -98,16 +99,39 @@ struct ImageThumbnailView: View {
   let imageURL: String?
   let size: CGFloat
   let cornerRadius: CGFloat
+  let image: UIImage? // 追加: 直接UIImageを受け取るプロパティ
+
+  // 既存のイニシャライザをオーバーロード（下位互換性のため）
+  init(imageURL: String?, size: CGFloat, cornerRadius: CGFloat) {
+    self.imageURL = imageURL
+    self.size = size
+    self.cornerRadius = cornerRadius
+    image = nil
+  }
+
+  // 新しいイニシャライザを追加
+  init(image: UIImage?, imageURL: String? = nil, size: CGFloat, cornerRadius: CGFloat) {
+    self.image = image
+    self.imageURL = imageURL
+    self.size = size
+    self.cornerRadius = cornerRadius
+  }
 
   var body: some View {
     Group {
       if let urlString = imageURL, let url = URL(string: urlString) {
+        // URLがある場合はWebImageを使用
         WebImage(
           url: url,
           options: [.queryMemoryData, .queryDiskDataSync, .refreshCached])
           .resizable()
           .indicator(.activity)
+      } else if let uiImage = image {
+        // URLがなくUIImageがある場合は直接表示
+        Image(uiImage: uiImage)
+          .resizable()
       } else {
+        // どちらもない場合はグレーの長方形
         Rectangle().fill(Color.gray.opacity(0.2))
       }
     }

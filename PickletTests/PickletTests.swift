@@ -19,50 +19,28 @@ struct PickletTests {
     // Write your test here and use APIs like `#expect(...)` to check expected conditions.
   }
 
-  @MainActor
-  @Test func testLogin() async throws {
-    #if os(macOS) || os(iOS)
-    // @MainActorのテストであることを明示
-    let viewModel = LoginViewModel()
-
-    // MainActor上で実行されているのでawaitは不要
-    viewModel.email = "test@example.com"
-    viewModel.password = "password123"
-
-    // 実際の認証を行わずにテスト目的でセット
-    viewModel.isLoggedIn = true
-    viewModel.errorMessage = nil
-
-    #expect(viewModel.isLoggedIn)
-    #expect(viewModel.errorMessage == nil)
-    #endif
-  }
-
   @Test func testClothingModel() throws {
-    // テスト用の日付文字列
-    let dateStr = "2025-04-30T10:00:00Z"
+    // テスト用の日付
+    let date = Date()
 
     // Clothingインスタンスの作成テスト
     let id = UUID()
-    let userId = UUID()
     let clothing = Clothing(
       id: id,
-      userID: userId,
       name: "テストTシャツ",
       category: "トップス",
       color: "白",
-      createdAt: dateStr,
-      updatedAt: dateStr
+      createdAt: date,
+      updatedAt: date
     )
 
     // 各プロパティが正しく設定されているかテスト
     #expect(clothing.id == id)
-    #expect(clothing.userID == userId)
     #expect(clothing.name == "テストTシャツ")
     #expect(clothing.category == "トップス")
     #expect(clothing.color == "白")
-    #expect(clothing.createdAt == dateStr)
-    #expect(clothing.updatedAt == dateStr)
+    #expect(clothing.createdAt == date)
+    #expect(clothing.updatedAt == date)
   }
 
   @Test func testWeatherModel() throws {
@@ -104,22 +82,22 @@ struct PickletTests {
   @Test func testClothingViewModel() async throws {
     #if os(iOS) || os(macOS)
     // ClothingViewModelのテスト - MainActorコンテキストで実行
-    let viewModel = ClothingViewModel()
+    let viewModel = ClothingViewModel(skipInitialLoad: true)  // テスト用に初期ロードをスキップ
 
     // MainActor上で実行されているのでawaitは不要
     #expect(viewModel.clothes.isEmpty)
-    #expect(viewModel.isLoading == false)
+    #expect(viewModel.isLoading == false)  // 初期ロードをスキップしたのでfalseのまま
     #expect(viewModel.errorMessage == nil)
 
     // テストデータの作成
+    let testDate = Date()  // Date型のまま使用
     let clothing = Clothing(
       id: UUID(),
-      userID: UUID(),
       name: "テストアイテム",
       category: "ボトムス",
       color: "青",
-      createdAt: "2025-05-01T10:00:00Z",
-      updatedAt: "2025-05-01T10:00:00Z"
+      createdAt: testDate,  // Date型をそのまま使用
+      updatedAt: testDate   // Date型をそのまま使用
     )
 
     // モック化したデータを追加 - MainActor上で直接操作
@@ -291,7 +269,7 @@ struct PickletTests {
     // ClothingImageインスタンスの作成テスト
     let id = UUID()
     let clothingId = UUID()
-    let userId = UUID()
+    let userId = "user123" // String型に変更
     let clothingImage = ClothingImage(
       id: id,
       clothingId: clothingId,

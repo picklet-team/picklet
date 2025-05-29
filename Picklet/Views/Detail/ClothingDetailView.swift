@@ -11,25 +11,34 @@ struct ClothingDetailView: View {
   @State private var showEdit = false
 
   var body: some View {
-    VStack {
-      // 共通コンポーネントを使用（プラスボタンなし）
-      ClothingImageGalleryView(
-        imageSets: viewModel.imageSetsMap[clothingId] ?? [],
-        showAddButton: false // プラスボタンは表示しない
-      )
+    VStack(spacing: 0) {
+      // メインコンテンツをScrollViewに入れる
+      ScrollView {
+        VStack {
+          // 共通コンポーネントを使用（プラスボタンなし）
+          ClothingImageGalleryView(
+            imageSets: viewModel.imageSetsMap[clothingId] ?? [],
+            showAddButton: false // プラスボタンは表示しない
+          )
 
-      Text(clothing.name)
-        .font(.title)
+          // その他の詳細情報をここに追加
+          // ...
 
-      Spacer()
-    }
-    .accessibility(identifier: "clothingDetailView")
-    .navigationTitle("服の詳細")
-    .safeAreaInset(edge: .bottom) {
+          // スクロール領域の末尾に余白を追加（必要に応じて）
+          Spacer(minLength: 20)
+        }
+        .padding(.horizontal)
+      }
+
+      // タブのすぐ上に固定表示される編集ボタン
       PrimaryActionButton(title: "編集する") {
         showEdit = true
       }
+      .padding(.vertical, 8)
+      .padding(.horizontal)
     }
+    .accessibility(identifier: "clothingDetailView")
+    .navigationTitle(clothing.name)
     .sheet(isPresented: $showEdit) {
       ClothingEditView(
         clothing: $clothing,

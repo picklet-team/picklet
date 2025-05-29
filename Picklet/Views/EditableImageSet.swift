@@ -10,17 +10,23 @@ import SwiftUI
 struct EditableImageSet: Identifiable {
   let id: UUID
   let original: UIImage
-  var originalUrl: String?
+  var aimask: UIImage?
   var mask: UIImage?
-  var maskUrl: String?
   var result: UIImage?
-  var resultUrl: String?
   var isNew: Bool
+
+  // Add URL properties
+  var originalUrl: String?
+  var maskUrl: String?
+  var aimaskUrl: String?
+  var resultUrl: String?
 
   init(
     id: UUID = UUID(),
     original: UIImage,
     originalUrl: String? = nil,
+    aimask: UIImage? = nil,
+    aimaskUrl: String? = nil,
     mask: UIImage? = nil,
     maskUrl: String? = nil,
     result: UIImage? = nil,
@@ -29,6 +35,8 @@ struct EditableImageSet: Identifiable {
     self.id = id
     self.original = original
     self.originalUrl = originalUrl
+    self.aimask = aimask
+    self.aimaskUrl = aimaskUrl
     self.mask = mask
     self.maskUrl = maskUrl
     self.result = result

@@ -9,56 +9,83 @@ import SwiftUI
 
 struct WeatherLoaderView: View {
   @StateObject private var locationManager = LocationManager()
+  @EnvironmentObject private var themeManager: ThemeManager
   @State private var weather: Weather?
   @State private var isLoading = true
   @State private var errorMessage: String?
+  @State private var lastLoadedCity: String?
+
+  // 実際の天気APIサービスを使用
+  private let weatherAPIService = WeatherAPIService.shared
 
   var body: some View {
-    Group {
-      if isLoading {
-        ProgressView("天気情報を取得中...")
-      } else if let weather = weather {
-        WeatherView(weather: weather)
-      } else if let errorMessage = errorMessage {
-        Text(errorMessage)
-          .foregroundColor(.red)
-          .padding()
+    NavigationView {
+      ZStack {
+        // 背景グラデーション
+        themeManager.currentTheme.backgroundGradient
+          .ignoresSafeArea()
+
+        Group {
+          if isLoading {
+            ProgressView("天気情報を取得中...")
+              .tint(themeManager.currentTheme.primaryColor)
+          } else if let weather = weather {
+            WeatherView(weather: weather)
+          } else if let errorMessage = errorMessage {
+            VStack(spacing: 16) {
+              Text(errorMessage)
+                .foregroundColor(.red)
+                .padding()
+
+              Button("再試行") {
+                Task {
+                  await loadWeather(force: true)
+                }
+              }
+              .buttonStyle(.bordered)
+              .tint(themeManager.currentTheme.primaryColor)
+            }
+          }
+        }
       }
-    }
-    .onChange(of: locationManager.placemark) {
-      guard weather == nil && errorMessage == nil else { return }
-      Task {
-        await loadWeather()
+      .navigationTitle("天気")
+      .onAppear {
+        Task {
+          await loadWeather()
+        }
+      }
+      .onChange(of: locationManager.placemark) { _, newPlacemark in
+        if newPlacemark != nil {
+          Task {
+            await loadWeather()
+          }
+        }
       }
     }
   }
 
-  private func loadWeather() async {
-    print("🌀 loadWeather called")
-    guard let placemark = locationManager.placemark else {
-      errorMessage = "位置情報が取得できませんでした"
-      isLoading = false
+  private func loadWeather(force: Bool = false) async {
+    // 位置情報から都市名を取得
+    let city = locationManager.placemark?.locality ??
+      locationManager.placemark?.subAdministrativeArea ?? "東京"
+
+    // 同じ都市で強制更新でない場合はスキップ
+    if !force && lastLoadedCity == city && weather != nil {
+      print("🔄 同じ都市(\(city))のため天気取得をスキップ")
       return
     }
 
-    // 県や市の表示確認
-    let prefecture = placemark.administrativeArea ?? "不明"
-    let city = placemark.locality ?? placemark.subAdministrativeArea ?? "不明"
-
-    print("🗾 現在地: \(prefecture) / \(city)")
-
-    if city == "不明" {
-      errorMessage = "位置情報から市区町村を取得できませんでした"
-      isLoading = false
-      return
-    }
+    isLoading = true
+    errorMessage = nil
 
     do {
-      let fetchedWeather = try await WeatherManager.shared.fetchWeather(for: city)
-      weather = fetchedWeather
+      print("🗾 天気取得開始: \(city)")
+      weather = try await weatherAPIService.fetchWeatherData(for: city)
+      lastLoadedCity = city
+      print("🌤️ 天気データ取得成功: \(weather?.condition ?? "不明")")
     } catch {
-      errorMessage = "天気情報の取得に失敗しました: \(error.localizedDescription)"
-      print("❌ 天気取得失敗: \(error)")
+      errorMessage = "天気データの取得に失敗しました: \(error.localizedDescription)"
+      print("❌ 天気データ取得エラー: \(error)")
     }
 
     isLoading = false

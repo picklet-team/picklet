@@ -7,16 +7,6 @@ import SwiftUI
 /// Wrapper so we can use UUID in sheet/navigationDestination
 struct IdentifiableUUID: Identifiable, Hashable { let id: UUID }
 
-/// Exponential‑moving‑average cursor smoother
-private struct CursorSmoother {
-  private(set) var raw: CGFloat = -1_000 // last tapped / dragged target X
-  private(set) var ema: CGFloat = -1_000 // smoothed X used for UI
-  private let alpha: CGFloat = 0.25 // smoothing factor (0‥1)
-  mutating func setTarget(_ targetX: CGFloat) { raw = targetX }
-  mutating func step() { ema += alpha * (raw - ema) }
-  var reachedTarget: Bool { abs(raw - ema) < 0.5 }
-}
-
 // MARK: - Dock View
 
 struct ClothingDockView: View {
@@ -25,127 +15,277 @@ struct ClothingDockView: View {
   let horizontalPadding = 15.0
 
   @EnvironmentObject private var viewModel: ClothingViewModel
+  @EnvironmentObject private var overlayManager: GlobalOverlayManager
+  @EnvironmentObject private var themeManager: ThemeManager // この行を追加
 
-  // configuration
+  private let imageLoaderService = ImageLoaderService.shared
+
+  // 円形レイアウト設定
   private let maxCards = 20
-  private let cardWidth: CGFloat = 120
-  private let influence: CGFloat = 160
-  private let sideMargin: CGFloat = 0.2
+  private let baseRadius: CGFloat = 80 // 基本半径を大きく
+  private let radiusMultiplier: CGFloat = 12 // アイテム数に応じた半径の増加率を大きく
+  private let cardSize: CGFloat = 80 // カードサイズ
 
-  // cursor smoothing
-  @State private var smoother = CursorSmoother()
-  @State private var smoothingOn = false
+  // 回転制御
+  @State private var currentRotation: Double = 0 // 現在の回転角度（ラジアン）
+  @State private var lastDragValue: CGFloat = 0
+  @State private var velocity: Double = 0 // 慣性用の速度
+  @State private var timer: Timer? // 慣性アニメーション用
+
+  // タップ/ドラッグ判定用
+  @State private var gestureStartTime: Date? // ジェスチャー開始時刻
+  @State private var hasMoved: Bool = false // 移動したかどうか
 
   // Peek & Pop state
   @State private var previewId: IdentifiableUUID?
+  @State private var lastSelectedId: UUID?
   @State private var commitId: UUID?
 
-  // timer
-  private let tick = Timer.publish(every: 1 / 60, on: .main, in: .common).autoconnect()
+  // ジェスチャー競合を防ぐためのState
+  @State private var isCardDragging: Bool = false
 
   var body: some View {
     GeometryReader { geo in
       ZStack {
-        let items = Array(viewModel.clothes.prefix(maxCards))
-        let centreX = geo.size.width / 2
+        // 透明な背景領域で回転ジェスチャーを受け取る
+        Rectangle()
+          .fill(Color.clear)
+          .contentShape(Rectangle())
+          .gesture(
+            DragGesture(minimumDistance: 5)
+              .onChanged { value in
+                // カードがドラッグ中の場合は背景ジェスチャーを無効化
+                guard !isCardDragging else { return }
 
-        ForEach(Array(zip(viewModel.clothes.indices, $viewModel.clothes)), id: \.1.id) { idx, $clothing in
-          let baseX = baseOffsetX(idx: idx, total: items.count, width: geo.size.width)
-          let deltaX = smoother.ema - baseX
-          let tValue = clamp(1 - abs(deltaX) / influence, 0, 1)
-          let angle = Angle(radians: -Double(atan(deltaX / (cardWidth / 2))))
-          let scale = 1 / (2 - tValue)
+                // スワイプ位置によって回転方向を変える（判定ラインを上にずらす）
+                let swipeY = value.location.y
+                let centerY = geo.size.height / 2
+                let adjustedThreshold = centerY - 50 // 中心から60ポイント上を境界に
 
-          ClothingCardView(
-            clothing: $clothing,
-            imageURL: viewModel.imageSetsMap[clothing.id]?.first?.originalUrl,
-            angle: angle,
-            scale: scale,
-            xOffset: baseX - centreX,
-            zIndex: Double(tValue),
-            onPeek: { previewId = IdentifiableUUID(id: clothing.id) },
-            onPopAttempt: {}
-            // onPopAttempt: { commitIfFront(id: clothing.id, dx: dx) }
-          )
+                let dragDistance = value.translation.width - lastDragValue
+
+                if swipeY < adjustedThreshold {
+                  // 上部（奥）：逆回転
+                  currentRotation += Double(dragDistance) * 0.004
+                  velocity = Double(dragDistance) * 0.004
+                } else {
+                  // 下部（手前）：正回転
+                  currentRotation -= Double(dragDistance) * 0.004
+                  velocity = -Double(dragDistance) * 0.004
+                }
+
+                lastDragValue = value.translation.width
+              }
+              .onEnded { _ in
+                guard !isCardDragging else { return }
+                lastDragValue = 0
+                startInertialRotation()
+              })
+
+        ForEach(Array(viewModel.clothes.prefix(maxCards).enumerated()), id: \.element.id) { idx, clothing in
+          clothingCardView(
+            for: clothing,
+            at: idx,
+            centerX: geo.size.width / 2,
+            centerY: geo.size.height / 2,
+            totalItems: min(viewModel.clothes.count, maxCards))
         }
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
-      // drag
-      .contentShape(Rectangle())
-      .gesture(
-        DragGesture(minimumDistance: 0)
-          .onChanged { value in setCursor(to: value.location.x) })
-      // smoother tick
-      .onReceive(tick) { _ in stepSmoother() }
-      // overlay (peek)
-      .overlay { overlayQuickView() }
-      // pop navigation
+      .onChange(of: previewId) { oldValue, newValue in
+        handlePreviewChange(oldValue: oldValue, newValue: newValue)
+      }
       .navigationDestination(item: $commitId) { id in
         if let binding = bindingFor(id: id) {
           ClothingDetailView(clothing: binding, clothingId: id)
             .environmentObject(viewModel)
         }
       }
-      .task { // initial centre
-        if smoother.raw < 0 { setCursor(to: geo.size.width / 2) }
-      }
     }
   }
 
-  // MARK: – Cursor helpers
+  @ViewBuilder
+  private func clothingCardView(
+    for clothing: Clothing,
+    at index: Int,
+    centerX: CGFloat,
+    centerY: CGFloat,
+    totalItems: Int) -> some View {
+    let position = calculatePosition(index: index, centerX: centerX, centerY: centerY, totalItems: totalItems)
+    let scale = calculateScale(yPosition: position.y, centerY: centerY, totalItems: totalItems)
+    let zIndex = calculateZIndex(yPosition: position.y, centerY: centerY, totalItems: totalItems)
+    let cardRotation = calculateCardRotation(index: index, totalItems: totalItems, centerX: centerX, centerY: centerY)
+    let xOffsetValue: CGFloat = position.x - centerX
+    let yOffsetValue: CGFloat = (position.y - centerY) * 0.3
 
-  private func setCursor(to cursorX: CGFloat) {
-    smoother.setTarget(cursorX)
-    smoothingOn = true
-  }
+    ClothingCardView(
+      clothing: .constant(clothing),
+      imageURL: viewModel.imageSetsMap[clothing.id]?.first?.originalUrl,
+      angle: Angle(radians: cardRotation),
+      scale: scale,
+      xOffset: xOffsetValue,
+      zIndex: zIndex,
+      onTap: { handleClick(for: clothing.id) },
+      onDrag: { dragDistance in
+        // カードドラッグ開始をマーク
+        isCardDragging = true
 
-  private func stepSmoother() {
-    guard smoothingOn else { return }
-    smoother.step()
-    if smoother.reachedTarget { smoothingOn = false }
-  }
+        // カードの位置によって回転方向を決定（同じ調整を適用）
+        let adjustedThreshold = centerY - 60 // 中心から60ポイント上を境界に
 
-  // MARK: – Peek / Pop helpers
-
-  private func overlayQuickView() -> some View {
-    Group {
-      if let wrap = previewId,
-         let cloth = viewModel.clothes.first(where: { $0.id == wrap.id }) {
-        ZStack {
-          Color.black.opacity(0.5).ignoresSafeArea()
-            .onTapGesture { previewId = nil }
-          ClothingQuickView(
-            imageURL: viewModel.imageSetsMap[cloth.id]?.first?.originalUrl,
-            name: cloth.name,
-            category: cloth.category,
-            color: cloth.color)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
-            .shadow(radius: 10)
-            .transition(.scale.combined(with: .opacity))
-            .onTapGesture {
-              commitId = cloth.id
-              previewId = nil
-            }
+        if position.y < adjustedThreshold {
+          // 上部（奥）：逆回転
+          currentRotation += Double(dragDistance) * 0.004
+          velocity = Double(dragDistance) * 0.004
+        } else {
+          // 下部（手前）：正回転
+          currentRotation -= Double(dragDistance) * 0.004
+          velocity = -Double(dragDistance) * 0.004
         }
-        .zIndex(20)
-        .animation(.spring(), value: previewId)
+      },
+      onDragEnd: {
+        // カードドラッグ終了をマーク
+        isCardDragging = false
+        startInertialRotation()
+      })
+      .offset(y: yOffsetValue)
+      .allowsHitTesting(true)
+  }
+
+  // MARK: - Calculations
+
+  private func calculateRadius(for totalItems: Int) -> CGFloat {
+    return baseRadius + CGFloat(totalItems) * radiusMultiplier
+  }
+
+  private func calculatePosition(index: Int, centerX: CGFloat, centerY: CGFloat, totalItems: Int) -> CGPoint {
+    let radius = calculateRadius(for: totalItems)
+    let anglePerItem: Double = 2 * Double.pi / Double(totalItems)
+    let itemAngle: Double = currentRotation + Double(index) * anglePerItem
+
+    let xPos: CGFloat = centerX + CGFloat(cos(itemAngle)) * radius
+    let yPos: CGFloat = centerY + CGFloat(sin(itemAngle)) * radius
+
+    return CGPoint(x: xPos, y: yPos)
+  }
+
+  private func calculateScale(yPosition: CGFloat, centerY: CGFloat, totalItems: Int) -> CGFloat {
+    let radius = calculateRadius(for: totalItems)
+    // 手前（下）が大きく、奥（上）が小さくなるように調整（遠近法）
+    let normalizedY: CGFloat = (yPosition - centerY + radius) / (2 * radius)
+    return 0.4 + 0.6 * normalizedY // 手前（下側/画面下部）が大きく、奥（上側/画面上部）がもっと小さく
+  }
+
+  private func calculateZIndex(yPosition: CGFloat, centerY: CGFloat, totalItems: Int) -> Double {
+    let radius = calculateRadius(for: totalItems)
+    // 手前（下）が前面に、奥（上）が背面になるように調整
+    let normalizedY: CGFloat = (yPosition - centerY + radius) / (2 * radius)
+    return Double(normalizedY) * 1_000 // 手前（下側/画面下部）が前面に
+  }
+
+  private func calculateCardRotation(index: Int, totalItems: Int, centerX: CGFloat, centerY: CGFloat) -> Double {
+    let anglePerItem: Double = 2 * Double.pi / Double(totalItems)
+    let itemAngle: Double = currentRotation + Double(index) * anglePerItem
+
+    // アイテムの位置を計算
+    let radius = calculateRadius(for: totalItems)
+    let itemX = centerX + CGFloat(cos(itemAngle)) * radius
+    let itemY = centerY + CGFloat(sin(itemAngle)) * radius
+
+    // ユーザーの位置（中心より遠く設定して斜めを向く角度を緩やかに）
+    let userX = centerX
+    let userY = centerY + 400 // 200 → 300に変更（より遠くに設定）
+
+    // アイテムからユーザーへの角度を計算
+    let deltaX = userX - itemX
+    let deltaY = userY - itemY
+    let rotationAngle = atan2(deltaY, deltaX)
+
+    return rotationAngle + Double.pi / 2 // 90度調整
+  }
+
+  // MARK: - Gestures
+
+  private var rotationGesture: some Gesture {
+    // カード個別のジェスチャーで処理するため、全体のジェスチャーは無効化または簡素化
+    DragGesture()
+      .onChanged { _ in }
+      .onEnded { _ in }
+  }
+
+  // MARK: - Helper Methods
+
+  private func startInertialRotation() {
+    timer?.invalidate()
+
+    // 慣性のみ（スナップ機能削除）
+    timer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { [weak timer] _ in
+      Task { @MainActor in
+        currentRotation += velocity
+        velocity *= 0.98 // 減速をより緩やかに
+
+        // 速度の閾値をより小さく（慣性を長く保つ）
+        if abs(velocity) < 0.0001 {
+          timer?.invalidate()
+          self.timer = nil
+          // スナップ削除
+        }
       }
     }
   }
 
-  // MARK: – Utilities
+  private func snapToNearestItem(itemCount: Int) {
+    guard itemCount > 0 else { return }
 
-  private func baseOffsetX(idx: Int, total: Int, width: CGFloat) -> CGFloat {
-    let usable = width * (1 - 2 * sideMargin)
-    return width * sideMargin + usable * CGFloat(idx) / CGFloat(max(total - 1, 1))
+    let anglePerItem: Double = 2 * Double.pi / Double(itemCount)
+    let currentIndex: Double = currentRotation / anglePerItem
+    let nearestIndex: Double = round(currentIndex)
+    let targetRotation: Double = nearestIndex * anglePerItem
+
+    withAnimation(.easeOut(duration: 0.3)) {
+      currentRotation = targetRotation
+    }
+  }
+
+  private func handleClick(for clothingId: UUID) {
+    // 同じアイテムの場合は一度クリアしてから再設定
+    if previewId?.id == clothingId {
+      previewId = nil
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+        previewId = IdentifiableUUID(id: clothingId)
+      }
+    } else {
+      previewId = IdentifiableUUID(id: clothingId)
+    }
+  }
+
+  private func handlePreviewChange(oldValue: IdentifiableUUID?, newValue: IdentifiableUUID?) {
+    if let wrap = newValue,
+       let cloth = viewModel.clothes.first(where: { $0.id == wrap.id }) {
+      lastSelectedId = wrap.id
+      let imageURL = viewModel.imageSetsMap[cloth.id]?.first?.originalUrl
+
+      overlayManager.present(
+        ClothingQuickView(
+          clothingId: cloth.id,
+          imageURL: imageURL)
+          .environmentObject(viewModel)
+          .environmentObject(themeManager) // テーママネージャーも追加
+          .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+          .shadow(radius: 10)
+          .onTapGesture {
+            commitId = cloth.id
+            overlayManager.dismiss()
+            previewId = nil
+          }
+          .padding(30))
+    } else if oldValue != nil && newValue == nil {
+      overlayManager.dismiss()
+    }
   }
 
   private func bindingFor(id: UUID) -> Binding<Clothing>? {
     guard let index = viewModel.clothes.firstIndex(where: { $0.id == id }) else { return nil }
     return $viewModel.clothes[index]
-  }
-
-  private func clamp<T: Comparable>(_ value: T, _ minValue: T, _ maxValue: T) -> T {
-    min(max(value, minValue), maxValue)
   }
 }

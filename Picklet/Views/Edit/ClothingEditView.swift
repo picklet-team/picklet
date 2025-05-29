@@ -2,85 +2,105 @@ import SDWebImageSwiftUI
 import SwiftUI
 
 struct ClothingEditView: View {
-  @EnvironmentObject private var viewModel: ClothingViewModel
-  @Environment(\.dismiss) private var dismiss
+  @EnvironmentObject var viewModel: ClothingViewModel // private を削除
+  @Environment(\.dismiss) var dismiss // private を削除
   @Binding var clothing: Clothing
   let openPhotoPickerOnAppear: Bool
   let canDelete: Bool
   let isNew: Bool
 
-  @State private var editingSets: [EditableImageSet] = []
-  @State private var selectedImageSet: EditableImageSet?
-  @State private var showPhotoPicker = false
-  @State private var showImageEditor = false
-  @State private var showDeleteConfirm = false
+  @State var editingSets: [EditableImageSet] = []
+  @State var selectedImageSet: EditableImageSet? // private を削除
+  @State var showPhotoPicker = false // private を削除
+  @State var showDeleteConfirm = false // private を削除
+  @State var isBackgroundLoading = false
 
   var body: some View {
-    VStack {
-      ImageListSection(
-        imageSets: $editingSets,
-        addAction: { showPhotoPicker = true },
-        selectAction: { set in
-          selectedImageSet = set
-          showImageEditor = true
-        })
-
-      ClothingFormSection(clothing: $clothing)
-
-      Spacer()
-
-      ActionButtonsSection(
-        saveAction: saveChanges,
-        deleteAction: { showDeleteConfirm = true },
-        canDelete: canDelete)
+    ZStack(alignment: .bottom) {
+      mainContent
+      saveButton
     }
-    .navigationTitle("服を編集")
-    .onAppear {
-      // 初期ロード
-      if editingSets.isEmpty {
-        editingSets = viewModel.imageSetsMap[clothing.id] ?? []
-      }
-      if openPhotoPickerOnAppear {
-        showPhotoPicker = true
-      }
-    }
-    .sheet(isPresented: $showPhotoPicker) {
-      CaptureOrLibraryView { image in
-        let newSet = EditableImageSet(
-          id: UUID(),
-          original: image.normalized(),
-          originalUrl: nil,
-          mask: nil,
-          maskUrl: nil,
-          result: nil,
-          resultUrl: nil,
-          isNew: true)
-        editingSets.append(newSet)
-      }
-    }
-    .sheet(item: $selectedImageSet) { imageSet in
-      MaskEditorView(imageSet: bindingFor(imageSet))
-    }
+    .ignoresSafeArea(.keyboard, edges: .bottom)
+    .onAppear(perform: setupInitialData)
+    .sheet(isPresented: $showPhotoPicker) { photoPickerSheet }
+    .sheet(item: $selectedImageSet) { maskEditorSheet($0) }
     .confirmationDialog("本当に削除しますか？", isPresented: $showDeleteConfirm) {
-      Button("削除する", role: .destructive) {
-        Task {
-          await viewModel.deleteClothing(clothing)
-          dismiss()
-        }
-      }
-      Button("キャンセル", role: .cancel) {}
+      deleteConfirmationButtons
     }
   }
 
-  // MARK: - Actions
+  private var mainContent: some View {
+    VStack(spacing: 0) {
+      customHeader
+      scrollableContent
+    }
+    .onTapGesture(perform: dismissKeyboard)
+    .navigationBarHidden(true)
+  }
 
-  private func saveChanges() {
-    Task {
-      await viewModel.updateClothing(
-        clothing,
-        imageSets: editingSets,
-        isNew: isNew)
-      dismiss()
+  private var customHeader: some View {
+    VStack {
+      TextField("名前", text: $clothing.name)
+        .font(.title.weight(.bold))
+        .padding(10)
+        .cornerRadius(10)
+        .multilineTextAlignment(.center)
+        .overlay(
+          Rectangle()
+            .frame(height: 1)
+            .padding(.horizontal, 40)
+            .foregroundColor(Color.gray.opacity(0.3)),
+          alignment: .bottom)
+    }
+    .background(Color(.systemBackground))
+  }
+
+  private var scrollableContent: some View {
+    ScrollView {
+      VStack {
+        ImageListSection(
+          imageSets: $editingSets,
+          addAction: { showPhotoPicker = true },
+          selectAction: prepareImageForEditing,
+          isLoading: isBackgroundLoading)
+          .padding(.top, 8)
+
+        ClothingFormSection(
+          clothing: $clothing,
+          canDelete: canDelete,
+          onDelete: { showDeleteConfirm = true })
+      }
+      .padding(.bottom, 80)
+    }
+  }
+
+  private var saveButton: some View {
+    VStack {
+      PrimaryActionButton(title: "保存", action: saveChanges)
+    }
+    .padding(.horizontal)
+    .padding(.bottom, 16)
+  }
+
+  private var photoPickerSheet: some View {
+    CaptureOrLibraryView { image in
+      addNewImageSet(image)
+    }
+  }
+
+  private func maskEditorSheet(_ imageSet: EditableImageSet) -> some View {
+    MaskEditorView(imageSet: bindingFor(imageSet))
+      .onDisappear {
+        updateImageCache()
+      }
+  }
+
+  private var deleteConfirmationButtons: some View {
+    Group {
+      Button("削除する", role: .destructive) {
+        Task { await deleteClothing() }
+      }
+      Button("キャンセル", role: .cancel) {}
     }
   }
 
@@ -90,60 +110,10 @@ struct ClothingEditView: View {
     }
     return $editingSets[idx]
   }
-}
 
-// MARK: - Subviews
-
-private struct ImageListSection: View {
-  @Binding var imageSets: [EditableImageSet]
-  let addAction: () -> Void
-  let selectAction: (EditableImageSet) -> Void
-
-  var body: some View {
-    VStack(alignment: .leading) {
-      // バインディング対応の共通コンポーネントを使用
-      ClothingImageGalleryView(
-        imageSets: $imageSets, // $を使ってバインディングを渡す
-        showAddButton: true,
-        onSelectImage: selectAction,
-        onAddButtonTap: addAction)
-    }
-  }
-}
-
-private struct ClothingFormSection: View {
-  @Binding var clothing: Clothing
-
-  var body: some View {
-    Form {
-      Section(header: Text("服の情報")) {
-        TextField("名前", text: $clothing.name)
-        TextField("カテゴリ", text: $clothing.category)
-        TextField("色", text: $clothing.color)
-      }
-    }
-  }
-}
-
-private struct ActionButtonsSection: View {
-  let saveAction: () -> Void
-  let deleteAction: () -> Void
-  let canDelete: Bool
-
-  var body: some View {
-    HStack {
-      if canDelete {
-        Button(action: deleteAction) {
-          Text("削除")
-            .foregroundColor(.red)
-        }
-        Spacer()
-      }
-      Button(action: saveAction) {
-        Text("保存")
-          .bold()
-      }
-    }
-    .padding()
+  private func dismissKeyboard() {
+    UIApplication.shared.sendAction(
+      #selector(UIResponder.resignFirstResponder),
+      to: nil, from: nil, for: nil)
   }
 }

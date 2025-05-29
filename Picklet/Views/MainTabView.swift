@@ -9,10 +9,11 @@ import SwiftUI
 
 struct MainTabView: View {
   @EnvironmentObject private var viewModel: ClothingViewModel
+  @EnvironmentObject private var themeManager: ThemeManager
+
   var body: some View {
     TabView {
       ClothingListView()
-        .environmentObject(viewModel)
         .tabItem {
           Image(systemName: "tshirt")
         }
@@ -27,5 +28,6 @@ struct MainTabView: View {
           Image(systemName: "gear")
         }
     }
+    .accentColor(themeManager.currentTheme.accentColor)
   }
 }
