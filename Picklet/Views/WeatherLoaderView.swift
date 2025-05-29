@@ -9,6 +9,7 @@ import SwiftUI
 
 struct WeatherLoaderView: View {
   @StateObject private var locationManager = LocationManager()
+  @EnvironmentObject private var themeManager: ThemeManager
   @State private var weather: Weather?
   @State private var isLoading = true
   @State private var errorMessage: String?
@@ -19,29 +20,35 @@ struct WeatherLoaderView: View {
 
   var body: some View {
     NavigationView {
-      Group {
-        if isLoading {
-          ProgressView("天気情報を取得中...")
-        } else if let weather = weather {
-          WeatherView(weather: weather)
-        } else if let errorMessage = errorMessage {
-          VStack(spacing: 16) {
-            Text(errorMessage)
-              .foregroundColor(.red)
-              .padding()
+      ZStack {
+        // 背景グラデーション
+        themeManager.currentTheme.backgroundGradient
+          .ignoresSafeArea()
 
-            Button("再試行") {
-              Task {
-                await loadWeather(force: true)
+        Group {
+          if isLoading {
+            ProgressView("天気情報を取得中...")
+              .tint(themeManager.currentTheme.primaryColor)
+          } else if let weather = weather {
+            WeatherView(weather: weather)
+          } else if let errorMessage = errorMessage {
+            VStack(spacing: 16) {
+              Text(errorMessage)
+                .foregroundColor(.red)
+                .padding()
+
+              Button("再試行") {
+                Task {
+                  await loadWeather(force: true)
+                }
               }
+              .buttonStyle(.bordered)
+              .tint(themeManager.currentTheme.primaryColor)
             }
-            .buttonStyle(.bordered)
           }
         }
       }
-      .refreshable {
-        await loadWeather(force: true)
-      }
+      .navigationTitle("天気")
       .onAppear {
         Task {
           await loadWeather()

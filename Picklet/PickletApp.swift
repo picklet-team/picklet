@@ -9,28 +9,34 @@ import SwiftUI
 
 @main
 struct PickletApp: App {
-  // ログイン状態は常にtrueとして扱う
-  @AppStorage("isLoggedIn") var isLoggedIn = true
-  @AppStorage("colorSchemePreference") private var colorSchemePreference: String = ColorSchemeSelection.system.rawValue
-  @StateObject private var viewModel = ClothingViewModel()
+  @StateObject private var clothingViewModel = ClothingViewModel()
+  @StateObject private var themeManager = ThemeManager()
 
-  private var selectedColorScheme: ColorSchemeSelection {
-    ColorSchemeSelection(rawValue: colorSchemePreference) ?? .system
-  }
+  // カラースキーム設定を監視
+  @AppStorage("colorSchemePreference") private var colorSchemePreference: String = ColorSchemeSelection.system.rawValue
 
   var body: some Scene {
     WindowGroup {
-      // GlobalOverlayContainerViewでラップして全画面オーバーレイを可能に
       GlobalOverlayContainerView {
-        // ログイン画面を表示せず、常にMainTabViewを表示
         MainTabView()
-          .environmentObject(viewModel)
-          .task {
-            // Properly call the async syncIfNeeded method
-            await viewModel.syncIfNeeded()
-          }
+          .environmentObject(clothingViewModel)
+          .environmentObject(themeManager)
+          .accentColor(themeManager.currentTheme.accentColor)
       }
-      .preferredColorScheme(selectedColorScheme.colorScheme)
+      .preferredColorScheme(getPreferredColorScheme()) // この行を追加
+    }
+  }
+
+  private func getPreferredColorScheme() -> ColorScheme? {
+    let selection = ColorSchemeSelection(rawValue: colorSchemePreference) ?? .system
+
+    switch selection {
+    case .light:
+      return .light
+    case .dark:
+      return .dark
+    case .system:
+      return nil
     }
   }
 }

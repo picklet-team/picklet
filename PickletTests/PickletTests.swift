@@ -19,25 +19,6 @@ struct PickletTests {
     // Write your test here and use APIs like `#expect(...)` to check expected conditions.
   }
 
-  @MainActor
-  @Test func testLogin() async throws {
-    #if os(macOS) || os(iOS)
-    // @MainActorのテストであることを明示
-    let viewModel = LoginViewModel()
-
-    // MainActor上で実行されているのでawaitは不要
-    viewModel.email = "test@example.com"
-    viewModel.password = "password123"
-
-    // 実際の認証を行わずにテスト目的でセット
-    viewModel.isLoggedIn = true
-    viewModel.errorMessage = nil
-
-    #expect(viewModel.isLoggedIn)
-    #expect(viewModel.errorMessage == nil)
-    #endif
-  }
-
   @Test func testClothingModel() throws {
     // テスト用の日付
     let date = Date()

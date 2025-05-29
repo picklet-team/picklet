@@ -16,6 +16,7 @@ struct ClothingDockView: View {
 
   @EnvironmentObject private var viewModel: ClothingViewModel
   @EnvironmentObject private var overlayManager: GlobalOverlayManager
+  @EnvironmentObject private var themeManager: ThemeManager // この行を追加
 
   private let imageLoaderService = ImageLoaderService.shared
 
@@ -40,9 +41,48 @@ struct ClothingDockView: View {
   @State private var lastSelectedId: UUID?
   @State private var commitId: UUID?
 
+  // ジェスチャー競合を防ぐためのState
+  @State private var isCardDragging: Bool = false
+
   var body: some View {
     GeometryReader { geo in
       ZStack {
+        // 透明な背景領域で回転ジェスチャーを受け取る
+        Rectangle()
+          .fill(Color.clear)
+          .contentShape(Rectangle())
+          .gesture(
+            DragGesture(minimumDistance: 5)
+              .onChanged { value in
+                // カードがドラッグ中の場合は背景ジェスチャーを無効化
+                guard !isCardDragging else { return }
+
+                // スワイプ位置によって回転方向を変える（判定ラインを上にずらす）
+                let swipeY = value.location.y
+                let centerY = geo.size.height / 2
+                let adjustedThreshold = centerY - 50 // 中心から60ポイント上を境界に
+
+                let dragDistance = value.translation.width - lastDragValue
+
+                if swipeY < adjustedThreshold {
+                  // 上部（奥）：逆回転
+                  currentRotation += Double(dragDistance) * 0.004
+                  velocity = Double(dragDistance) * 0.004
+                } else {
+                  // 下部（手前）：正回転
+                  currentRotation -= Double(dragDistance) * 0.004
+                  velocity = -Double(dragDistance) * 0.004
+                }
+
+                lastDragValue = value.translation.width
+              }
+              .onEnded { _ in
+                guard !isCardDragging else { return }
+                lastDragValue = 0
+                startInertialRotation()
+              }
+          )
+
         ForEach(Array(viewModel.clothes.prefix(maxCards).enumerated()), id: \.element.id) { idx, clothing in
           clothingCardView(
             for: clothing,
@@ -53,8 +93,6 @@ struct ClothingDockView: View {
         }
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
-      .contentShape(Rectangle())
-      .gesture(rotationGesture)
       .onChange(of: previewId) { oldValue, newValue in
         handlePreviewChange(oldValue: oldValue, newValue: newValue)
       }
@@ -66,8 +104,6 @@ struct ClothingDockView: View {
       }
     }
   }
-
-  // MARK: - View Builders
 
   @ViewBuilder
   private func clothingCardView(
@@ -81,7 +117,7 @@ struct ClothingDockView: View {
     let zIndex = calculateZIndex(yPosition: position.y, centerY: centerY, totalItems: totalItems)
     let cardRotation = calculateCardRotation(index: index, totalItems: totalItems, centerX: centerX, centerY: centerY)
     let xOffsetValue: CGFloat = position.x - centerX
-    let yOffsetValue: CGFloat = (position.y - centerY) * 0.3 // 上下の差を小さく
+    let yOffsetValue: CGFloat = (position.y - centerY) * 0.3
 
     ClothingCardView(
       clothing: .constant(clothing),
@@ -90,51 +126,32 @@ struct ClothingDockView: View {
       scale: scale,
       xOffset: xOffsetValue,
       zIndex: zIndex,
-      onPeek: {
-        // 長押し用（必要に応じて）
+      onTap: { handleClick(for: clothing.id) },
+      onDrag: { dragDistance in
+        // カードドラッグ開始をマーク
+        isCardDragging = true
+
+        // カードの位置によって回転方向を決定（同じ調整を適用）
+        let adjustedThreshold = centerY - 60 // 中心から60ポイント上を境界に
+
+        if position.y < adjustedThreshold {
+          // 上部（奥）：逆回転
+          currentRotation += Double(dragDistance) * 0.004
+          velocity = Double(dragDistance) * 0.004
+        } else {
+          // 下部（手前）：正回転
+          currentRotation -= Double(dragDistance) * 0.004
+          velocity = -Double(dragDistance) * 0.004
+        }
       },
-      onPopAttempt: {})
-      .offset(y: yOffsetValue)
-      .simultaneousGesture(
-        DragGesture(minimumDistance: 0)
-          .onChanged { value in
-            if gestureStartTime == nil {
-              gestureStartTime = Date()
-              hasMoved = false
-            }
-
-            // 移動距離が一定以上、または時間が一定以上ならドラッグとして処理
-            let distance = sqrt(pow(value.translation.width, 2) + pow(value.translation.height, 2))
-            let timeElapsed = Date().timeIntervalSince(gestureStartTime ?? Date())
-
-            if distance > 5 || timeElapsed > 0.2 {
-              hasMoved = true
-              // ドラッグ処理（回転速度を遅く）
-              let dragDistance: CGFloat = value.translation.width - lastDragValue
-              currentRotation -= Double(dragDistance) * 0.004
-              lastDragValue = value.translation.width
-              velocity = -Double(dragDistance) * 0.004
-            }
-          }
-          .onEnded { value in
-            defer {
-              gestureStartTime = nil
-              lastDragValue = 0
-              hasMoved = false
-            }
-
-            // 短いタップで移動距離が小さい場合はクリックとして処理
-            let distance = sqrt(pow(value.translation.width, 2) + pow(value.translation.height, 2))
-            let timeElapsed = Date().timeIntervalSince(gestureStartTime ?? Date())
-
-            if !hasMoved, distance <= 5, timeElapsed <= 0.2 {
-              // クリック処理
-              handleClick(for: clothing.id)
-            } else {
-              // ドラッグ終了処理（慣性のみ、スナップなし）
-              startInertialRotation()
-            }
-          })
+      onDragEnd: {
+        // カードドラッグ終了をマーク
+        isCardDragging = false
+        startInertialRotation()
+      }
+    )
+    .offset(y: yOffsetValue)
+    .allowsHitTesting(true)
   }
 
   // MARK: - Calculations
@@ -253,11 +270,10 @@ struct ClothingDockView: View {
       overlayManager.present(
         ClothingQuickView(
           clothingId: cloth.id,
-          imageURL: imageURL,
-          name: cloth.name,
-          category: cloth.category,
-          color: cloth.color)
+          imageURL: imageURL
+        )
           .environmentObject(viewModel)
+          .environmentObject(themeManager) // テーママネージャーも追加
           .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
           .shadow(radius: 10)
           .onTapGesture {

@@ -194,22 +194,24 @@ class ClothingViewModel: ObservableObject {
 
       // マスク画像があれば保存
       if let mask = set.mask {
-        if let localPath = localStorageService.saveImage(mask, id: set.id, type: "mask") {
-          print("✅ マスク画像をローカルに保存: \(localPath)")
+        let maskFilename = "\(set.id.uuidString)_mask.jpg" // ファイル名を生成
+        if localStorageService.saveImage(mask, filename: maskFilename) { // 修正: filename:を使用
+          print("✅ マスク画像をローカルに保存: \(maskFilename)")
 
           // メタデータを更新
           var metadata = localStorageService.loadImageMetadata(for: clothingId)
           if let index = metadata.firstIndex(where: { $0.id == set.id }) {
-            metadata[index] = metadata[index].updatingLocalPath(maskLocalPath: localPath)
-            localStorageService.saveImageMetadata(for: clothingId, imageMetadata: metadata)
+            metadata[index] = metadata[index].updatingLocalPath(maskLocalPath: maskFilename)
+            localStorageService.saveImageMetadata(metadata, for: clothingId) // 修正: 引数順序を変更
           }
         }
       }
 
       // AIマスク画像があれば保存
       if let aimask = set.aimask {
-        if let localPath = localStorageService.saveImage(aimask, id: set.id, type: "aimask") {
-          print("✅ AIマスク画像をローカルに保存: \(localPath)")
+        let aimaskFilename = "\(set.id.uuidString)_aimask.jpg" // ファイル名を生成
+        if localStorageService.saveImage(aimask, filename: aimaskFilename) { // 修正: filename:を使用
+          print("✅ AIマスク画像をローカルに保存: \(aimaskFilename)")
         }
       }
 
@@ -249,7 +251,7 @@ class ClothingViewModel: ObservableObject {
 
         // オリジナル画像を読み込む
         if let originalPath = image.originalLocalPath {
-          if let loadedImage = localStorageService.loadImage(from: originalPath) {
+          if let loadedImage = localStorageService.loadImage(filename: originalPath) { // 修正: from: → filename:
             original = loadedImage
             print("✅ ローカルからオリジナル画像を読み込み: \(originalPath)")
           }
@@ -257,7 +259,7 @@ class ClothingViewModel: ObservableObject {
 
         // マスク画像を読み込む
         if let maskPath = image.maskLocalPath {
-          if let loadedMask = localStorageService.loadImage(from: maskPath) {
+          if let loadedMask = localStorageService.loadImage(filename: maskPath) { // 修正: from: → filename:
             mask = loadedMask
             print("✅ ローカルからマスク画像を読み込み: \(maskPath)")
           }
@@ -335,5 +337,40 @@ class ClothingViewModel: ObservableObject {
     print("✅ 同期完了")
 
     isLoading = false
+  }
+
+  /// 今日着用済みかどうかを判定
+  func isWornToday(for clothingId: UUID) -> Bool {
+    let today = Calendar.current.startOfDay(for: Date())
+    let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today)!
+
+    return wearHistories.contains { history in
+      history.clothingId == clothingId &&
+      history.wornAt >= today &&
+      history.wornAt < tomorrow
+    }
+  }
+
+  /// 今日の着用履歴を削除
+  func removeWearHistoryForToday(for clothingId: UUID) {
+    let today = Calendar.current.startOfDay(for: Date())
+    let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today)!
+
+    wearHistories.removeAll { history in
+      history.clothingId == clothingId &&
+      history.wornAt >= today &&
+      history.wornAt < tomorrow
+    }
+
+    // ローカルストレージに保存
+    saveWearHistoriesToLocal()
+  }
+
+  /// 着用履歴をローカルストレージに保存
+  private func saveWearHistoriesToLocal() {
+    let encoder = JSONEncoder()
+    if let data = try? encoder.encode(wearHistories) {
+      UserDefaults.standard.set(data, forKey: "wear_histories")
+    }
   }
 }

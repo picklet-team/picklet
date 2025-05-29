@@ -34,7 +34,7 @@ class ImageLoaderService {
     if let firstImage = metadata.first {
       // ローカルパスをチェック
       if let localPath = firstImage.originalLocalPath,
-         let image = localStorageService.loadImage(from: localPath) {
+         let image = localStorageService.loadImage(filename: localPath) { // from: → filename:
         print("✅ ローカルストレージから画像を読み込み: \(localPath)")
         // メモリキャッシュに追加
         memoryCache.setObject(image, forKey: clothingId as NSUUID)
@@ -55,8 +55,9 @@ class ImageLoaderService {
   func saveImage(_ image: UIImage, for clothingId: UUID, imageId: UUID? = nil) -> Bool {
     let id = imageId ?? UUID()
 
-    // 画像をローカルに保存
-    guard let savedPath = localStorageService.saveImage(image, id: id, type: "original") else {
+    // 画像をローカルに保存（ファイル名を生成）
+    let filename = "\(id.uuidString)_original.jpg"
+    guard localStorageService.saveImage(image, filename: filename) else { // メソッドシグネチャを修正
       print("❌ 画像の保存に失敗しました")
       return false
     }
@@ -66,19 +67,19 @@ class ImageLoaderService {
 
     // 既存の画像メタデータを更新するか、新しく追加するか
     if let index = metadata.firstIndex(where: { $0.id == id }) {
-      metadata[index] = metadata[index].updatingLocalPath(originalLocalPath: savedPath)
+      metadata[index] = metadata[index].updatingLocalPath(originalLocalPath: filename)
     } else {
-      let newImageMetadata = ClothingImage(id: id, originalLocalPath: savedPath)
+      let newImageMetadata = ClothingImage(id: id, originalLocalPath: filename)
       metadata.append(newImageMetadata)
     }
 
     // メタデータを保存
-    localStorageService.saveImageMetadata(for: clothingId, imageMetadata: metadata)
+    localStorageService.saveImageMetadata(metadata, for: clothingId) // 引数順序を修正
 
     // メモリキャッシュに追加
     memoryCache.setObject(image, forKey: clothingId as NSUUID)
 
-    print("💾 画像をローカルに保存しました: \(savedPath)")
+    print("💾 画像をローカルに保存しました: \(filename)")
     return true
   }
 

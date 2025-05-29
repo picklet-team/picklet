@@ -51,7 +51,7 @@ class PickletOfflineImageMetadataService {
     metadata.append(newImage)
 
     // 保存
-    localStorageService.saveImageMetadata(for: clothingId, imageMetadata: metadata)
+    LocalStorageService.shared.saveImageMetadata(metadata, for: clothingId)
 
     return newImage
   }
@@ -93,7 +93,7 @@ class PickletOfflineImageMetadataService {
     metadata[index] = updatedImage
 
     // 保存
-    localStorageService.saveImageMetadata(for: clothingId, imageMetadata: metadata)
+    LocalStorageService.shared.saveImageMetadata(metadata, for: clothingId)
     return true
   }
 
@@ -133,7 +133,7 @@ class PickletOfflineImageMetadataService {
     }
 
     // 保存
-    localStorageService.saveImageMetadata(for: clothingId, imageMetadata: metadata)
+    LocalStorageService.shared.saveImageMetadata(metadata, for: clothingId)
     return true
   }
 }
