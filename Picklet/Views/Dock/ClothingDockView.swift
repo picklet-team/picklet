@@ -49,8 +49,7 @@ struct ClothingDockView: View {
             at: idx,
             centerX: geo.size.width / 2,
             centerY: geo.size.height / 2,
-            totalItems: min(viewModel.clothes.count, maxCards)
-          )
+            totalItems: min(viewModel.clothes.count, maxCards))
         }
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -76,8 +75,7 @@ struct ClothingDockView: View {
     at index: Int,
     centerX: CGFloat,
     centerY: CGFloat,
-    totalItems: Int
-  ) -> some View {
+    totalItems: Int) -> some View {
     let position = calculatePosition(index: index, centerX: centerX, centerY: centerY, totalItems: totalItems)
     let scale = calculateScale(yPosition: position.y, centerY: centerY, totalItems: totalItems)
     let zIndex = calculateZIndex(yPosition: position.y, centerY: centerY, totalItems: totalItems)
@@ -95,50 +93,48 @@ struct ClothingDockView: View {
       onPeek: {
         // 長押し用（必要に応じて）
       },
-      onPopAttempt: {}
-    )
-    .offset(y: yOffsetValue)
-    .simultaneousGesture(
-      DragGesture(minimumDistance: 0)
-        .onChanged { value in
-          if gestureStartTime == nil {
-            gestureStartTime = Date()
-            hasMoved = false
-          }
+      onPopAttempt: {})
+      .offset(y: yOffsetValue)
+      .simultaneousGesture(
+        DragGesture(minimumDistance: 0)
+          .onChanged { value in
+            if gestureStartTime == nil {
+              gestureStartTime = Date()
+              hasMoved = false
+            }
 
-          // 移動距離が一定以上、または時間が一定以上ならドラッグとして処理
-          let distance = sqrt(pow(value.translation.width, 2) + pow(value.translation.height, 2))
-          let timeElapsed = Date().timeIntervalSince(gestureStartTime ?? Date())
+            // 移動距離が一定以上、または時間が一定以上ならドラッグとして処理
+            let distance = sqrt(pow(value.translation.width, 2) + pow(value.translation.height, 2))
+            let timeElapsed = Date().timeIntervalSince(gestureStartTime ?? Date())
 
-          if distance > 5 || timeElapsed > 0.2 {
-            hasMoved = true
-            // ドラッグ処理（回転速度を遅く）
-            let dragDistance: CGFloat = value.translation.width - lastDragValue
-            currentRotation -= Double(dragDistance) * 0.004
-            lastDragValue = value.translation.width
-            velocity = -Double(dragDistance) * 0.004
+            if distance > 5 || timeElapsed > 0.2 {
+              hasMoved = true
+              // ドラッグ処理（回転速度を遅く）
+              let dragDistance: CGFloat = value.translation.width - lastDragValue
+              currentRotation -= Double(dragDistance) * 0.004
+              lastDragValue = value.translation.width
+              velocity = -Double(dragDistance) * 0.004
+            }
           }
-        }
-        .onEnded { value in
-          defer {
-            gestureStartTime = nil
-            lastDragValue = 0
-            hasMoved = false
-          }
+          .onEnded { value in
+            defer {
+              gestureStartTime = nil
+              lastDragValue = 0
+              hasMoved = false
+            }
 
-          // 短いタップで移動距離が小さい場合はクリックとして処理
-          let distance = sqrt(pow(value.translation.width, 2) + pow(value.translation.height, 2))
-          let timeElapsed = Date().timeIntervalSince(gestureStartTime ?? Date())
+            // 短いタップで移動距離が小さい場合はクリックとして処理
+            let distance = sqrt(pow(value.translation.width, 2) + pow(value.translation.height, 2))
+            let timeElapsed = Date().timeIntervalSince(gestureStartTime ?? Date())
 
-          if !hasMoved && distance <= 5 && timeElapsed <= 0.2 {
-            // クリック処理
-            handleClick(for: clothing.id)
-          } else {
-            // ドラッグ終了処理（慣性のみ、スナップなし）
-            startInertialRotation()
-          }
-        }
-    )
+            if !hasMoved, distance <= 5, timeElapsed <= 0.2 {
+              // クリック処理
+              handleClick(for: clothing.id)
+            } else {
+              // ドラッグ終了処理（慣性のみ、スナップなし）
+              startInertialRotation()
+            }
+          })
   }
 
   // MARK: - Calculations
