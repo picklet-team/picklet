@@ -1,2 +1,4 @@
 .DS_Store
-TestResults*
+*.env.local
+*.env
+Config.plist

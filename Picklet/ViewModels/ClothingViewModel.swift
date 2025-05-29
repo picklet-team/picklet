@@ -1,14 +1,10 @@
-// swiftlint:disable file_length
-// swiftlint:disable type_body_length
-// swiftlint:disable function_body_length
-// swiftlint:disable cyclomatic_complexity
-// swiftlint:disable line_length
 import Foundation
 import SwiftUI
 
 @MainActor
 class ClothingViewModel: ObservableObject {
   @Published var clothes: [Clothing] = []
+  @Published var wearHistories: [WearHistory] = []
   @Published var isLoading = false
   @Published var errorMessage: String?
   @Published var imageSetsMap: [UUID: [EditableImageSet]] = [:]
@@ -25,6 +21,7 @@ class ClothingViewModel: ObservableObject {
     print("🧠 ClothingViewModel 初期化, skipInitialLoad: \(skipInitialLoad)")
     if !skipInitialLoad {
       loadClothings()
+      loadWearHistories()
     }
   }
 
@@ -36,18 +33,8 @@ class ClothingViewModel: ObservableObject {
 
     // 各服の情報をデバッグ
     for clothing in clothes {
-      print("👕 服ID: \(clothing.id), 名前: \(clothing.name)")
-
-      // 服に関連する画像セットを表示
-      if let imageSets = imageSetsMap[clothing.id] {
-        print("  📸 関連画像セット数: \(imageSets.count)")
-        for (index, set) in imageSets.enumerated() {
-          print("  📷 セット[\(index)]: ID=\(set.id)")
-          print("    🆕 isNew: \(set.isNew)")
-        }
-      } else {
-        print("  ⚠️ 関連画像セットなし")
-      }
+      let imageSets = imageSetsMap[clothing.id] ?? []
+      print("  - \(clothing.name): \(imageSets.count) 画像セット")
     }
   }
 
@@ -66,6 +53,92 @@ class ClothingViewModel: ObservableObject {
     }
 
     print("✅ 衣類読み込み完了: \(clothes.count)件")
+  }
+
+  // MARK: - 着用履歴機能
+
+  /// 着用履歴をローカルストレージから読み込む
+  func loadWearHistories() {
+    print("📂 着用履歴を読み込み開始")
+
+    guard let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+      print("❌ ドキュメントディレクトリが見つかりません")
+      return
+    }
+
+    let filePath = documentsPath.appendingPathComponent("wear_histories.json")
+
+    guard FileManager.default.fileExists(atPath: filePath.path) else {
+      print("📂 着用履歴ファイルが存在しません（初回起動）")
+      return
+    }
+
+    do {
+      let data = try Data(contentsOf: filePath)
+      wearHistories = try JSONDecoder().decode([WearHistory].self, from: data)
+      print("✅ 着用履歴読み込み完了: \(wearHistories.count)件")
+    } catch {
+      print("❌ 着用履歴読み込みエラー: \(error)")
+    }
+  }
+
+  /// 着用履歴をローカルストレージに保存
+  private func saveWearHistories() {
+    print("💾 着用履歴を保存開始")
+
+    guard let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+      print("❌ ドキュメントディレクトリが見つかりません")
+      return
+    }
+
+    let filePath = documentsPath.appendingPathComponent("wear_histories.json")
+
+    do {
+      let data = try JSONEncoder().encode(wearHistories)
+      try data.write(to: filePath)
+      print("✅ 着用履歴保存完了: \(wearHistories.count)件")
+    } catch {
+      print("❌ 着用履歴保存エラー: \(error)")
+    }
+  }
+
+  /// 着用履歴を追加
+  func addWearHistory(for clothingId: UUID, notes: String? = nil) {
+    print("👕 着用履歴を追加: clothingId=\(clothingId)")
+
+    let history = WearHistory(clothingId: clothingId, notes: notes)
+    wearHistories.append(history)
+    saveWearHistories()
+
+    print("✅ 着用履歴追加完了")
+  }
+
+  /// 特定の服の着用履歴を取得
+  func getWearHistories(for clothingId: UUID) -> [WearHistory] {
+    return wearHistories.filter { $0.clothingId == clothingId }
+  }
+
+  /// 着用回数を取得
+  func getWearCount(for clothingId: UUID) -> Int {
+    return wearHistories.filter { $0.clothingId == clothingId }.count
+  }
+
+  /// 最後の着用日を取得
+  func getLastWornDate(for clothingId: UUID) -> Date? {
+    return wearHistories
+      .filter { $0.clothingId == clothingId }
+      .max(by: { $0.wornAt < $1.wornAt })?.wornAt
+  }
+
+  /// 1回あたりの着用単価を計算
+  func getCostPerWear(for clothingId: UUID) -> Double? {
+    guard let clothing = clothes.first(where: { $0.id == clothingId }),
+          let price = clothing.purchasePrice
+    else { return nil }
+
+    let count = getWearCount(for: clothingId)
+    // swiftlint:disable:next empty_count
+    return count == 0 ? price : price / Double(count)
   }
 
   /// メインエントリーポイント - 服の保存（新規 or 更新）
@@ -94,14 +167,11 @@ class ClothingViewModel: ObservableObject {
     updateLocalImagesCache(clothing.id, imageSets: localSavedSets)
 
     // ステップ4: UIの衣類リストを更新
-    if isNew {
-      if !clothes.contains(where: { $0.id == clothing.id }) {
-        clothes.append(clothing)
-      }
+    // 修正: 新規か更新かに関わらず、配列に存在すれば更新、なければ追加するロジックに統一
+    if let index = clothes.firstIndex(where: { $0.id == clothing.id }) {
+      clothes[index] = clothing // 既存の場合、更新
     } else {
-      if let index = clothes.firstIndex(where: { $0.id == clothing.id }) {
-        clothes[index] = clothing
-      }
+      clothes.append(clothing) // 新規の場合、追加
     }
 
     isLoading = false

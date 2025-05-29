@@ -1,0 +1,664 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 76;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B53EF51A2DBA8C8B00F5CA39 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = B53EF5192DBA8C8B00F5CA39 /* Auth */; };
+		B53EF51C2DBA8C8B00F5CA39 /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = B53EF51B2DBA8C8B00F5CA39 /* Functions */; };
+		B53EF51E2DBA8C8B00F5CA39 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = B53EF51D2DBA8C8B00F5CA39 /* PostgREST */; };
+		B53EF5202DBA8C8B00F5CA39 /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = B53EF51F2DBA8C8B00F5CA39 /* Realtime */; };
+		B53EF5222DBA8C8B00F5CA39 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = B53EF5212DBA8C8B00F5CA39 /* Storage */; };
+		B53EF5242DBA8C8B00F5CA39 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = B53EF5232DBA8C8B00F5CA39 /* Supabase */; };
+		B57CB8AD2DBB457300789BEF /* SDWebImageSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = B57CB8AC2DBB457300789BEF /* SDWebImageSwiftUI */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		B57C87E72DAA27A1001C2153 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B57C87CE2DAA27A0001C2153 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B57C87D52DAA27A0001C2153;
+			remoteInfo = Picklet;
+		};
+		B57C87F12DAA27A1001C2153 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B57C87CE2DAA27A0001C2153 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B57C87D52DAA27A0001C2153;
+			remoteInfo = Picklet;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		B57C87D62DAA27A0001C2153 /* Picklet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Picklet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B57C87E62DAA27A1001C2153 /* PickletTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PickletTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B57C87F02DAA27A1001C2153 /* PickletUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PickletUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		B53EF5382DBAA65500F5CA39 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = B57C87D52DAA27A0001C2153 /* Picklet */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		B57C87D82DAA27A0001C2153 /* Picklet */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (B53EF5382DBAA65500F5CA39 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Picklet; sourceTree = "<group>"; };
+		B57C87E92DAA27A1001C2153 /* PickletTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = PickletTests; sourceTree = "<group>"; };
+		B57C87F32DAA27A1001C2153 /* PickletUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = PickletUITests; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		B57C87D32DAA27A0001C2153 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B57CB8AD2DBB457300789BEF /* SDWebImageSwiftUI in Frameworks */,
+				B53EF51E2DBA8C8B00F5CA39 /* PostgREST in Frameworks */,
+				B53EF51C2DBA8C8B00F5CA39 /* Functions in Frameworks */,
+				B53EF5242DBA8C8B00F5CA39 /* Supabase in Frameworks */,
+				B53EF51A2DBA8C8B00F5CA39 /* Auth in Frameworks */,
+				B53EF5222DBA8C8B00F5CA39 /* Storage in Frameworks */,
+				B53EF5202DBA8C8B00F5CA39 /* Realtime in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B57C87E32DAA27A1001C2153 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B57C87ED2DAA27A1001C2153 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		B53EF5182DBA8C8B00F5CA39 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		B57C87CD2DAA27A0001C2153 = {
+			isa = PBXGroup;
+			children = (
+				B57C87D82DAA27A0001C2153 /* Picklet */,
+				B57C87E92DAA27A1001C2153 /* PickletTests */,
+				B57C87F32DAA27A1001C2153 /* PickletUITests */,
+				B53EF5182DBA8C8B00F5CA39 /* Frameworks */,
+				B57C87D72DAA27A0001C2153 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		B57C87D72DAA27A0001C2153 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B57C87D62DAA27A0001C2153 /* Picklet.app */,
+				B57C87E62DAA27A1001C2153 /* PickletTests.xctest */,
+				B57C87F02DAA27A1001C2153 /* PickletUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B57C87D52DAA27A0001C2153 /* Picklet */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B57C87FA2DAA27A1001C2153 /* Build configuration list for PBXNativeTarget "Picklet" */;
+			buildPhases = (
+				B57C87D22DAA27A0001C2153 /* Sources */,
+				B57C87D32DAA27A0001C2153 /* Frameworks */,
+				B57C87D42DAA27A0001C2153 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				B57C87D82DAA27A0001C2153 /* Picklet */,
+			);
+			name = Picklet;
+			packageProductDependencies = (
+				B53EF5192DBA8C8B00F5CA39 /* Auth */,
+				B53EF51B2DBA8C8B00F5CA39 /* Functions */,
+				B53EF51D2DBA8C8B00F5CA39 /* PostgREST */,
+				B53EF51F2DBA8C8B00F5CA39 /* Realtime */,
+				B53EF5212DBA8C8B00F5CA39 /* Storage */,
+				B53EF5232DBA8C8B00F5CA39 /* Supabase */,
+				B57CB8AC2DBB457300789BEF /* SDWebImageSwiftUI */,
+			);
+			productName = Picklet;
+			productReference = B57C87D62DAA27A0001C2153 /* Picklet.app */;
+			productType = "com.apple.product-type.application";
+		};
+		B57C87E52DAA27A1001C2153 /* PickletTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B57C87FD2DAA27A1001C2153 /* Build configuration list for PBXNativeTarget "PickletTests" */;
+			buildPhases = (
+				B57C87E22DAA27A1001C2153 /* Sources */,
+				B57C87E32DAA27A1001C2153 /* Frameworks */,
+				B57C87E42DAA27A1001C2153 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B57C87E82DAA27A1001C2153 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B57C87E92DAA27A1001C2153 /* PickletTests */,
+			);
+			name = PickletTests;
+			packageProductDependencies = (
+			);
+			productName = PickletTests;
+			productReference = B57C87E62DAA27A1001C2153 /* PickletTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		B57C87EF2DAA27A1001C2153 /* PickletUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B57C88002DAA27A1001C2153 /* Build configuration list for PBXNativeTarget "PickletUITests" */;
+			buildPhases = (
+				B57C87EC2DAA27A1001C2153 /* Sources */,
+				B57C87ED2DAA27A1001C2153 /* Frameworks */,
+				B57C87EE2DAA27A1001C2153 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B57C87F22DAA27A1001C2153 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B57C87F32DAA27A1001C2153 /* PickletUITests */,
+			);
+			name = PickletUITests;
+			packageProductDependencies = (
+			);
+			productName = PickletUITests;
+			productReference = B57C87F02DAA27A1001C2153 /* PickletUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B57C87CE2DAA27A0001C2153 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1620;
+				LastUpgradeCheck = 1620;
+				TargetAttributes = {
+					B57C87D52DAA27A0001C2153 = {
+						CreatedOnToolsVersion = 16.2;
+					};
+					B57C87E52DAA27A1001C2153 = {
+						CreatedOnToolsVersion = 16.2;
+						TestTargetID = B57C87D52DAA27A0001C2153;
+					};
+					B57C87EF2DAA27A1001C2153 = {
+						CreatedOnToolsVersion = 16.2;
+						TestTargetID = B57C87D52DAA27A0001C2153;
+					};
+				};
+			};
+			buildConfigurationList = B57C87D12DAA27A0001C2153 /* Build configuration list for PBXProject "Picklet" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = B57C87CD2DAA27A0001C2153;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B53EF5172DBA8AD700F5CA39 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				B53EF53B2DBB3F6700F5CA39 /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */,
+			);
+			preferredProjectObjectVersion = 76;
+			productRefGroup = B57C87D72DAA27A0001C2153 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B57C87D52DAA27A0001C2153 /* Picklet */,
+				B57C87E52DAA27A1001C2153 /* PickletTests */,
+				B57C87EF2DAA27A1001C2153 /* PickletUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		B57C87D42DAA27A0001C2153 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B57C87E42DAA27A1001C2153 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B57C87EE2DAA27A1001C2153 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		B57C87D22DAA27A0001C2153 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B57C87E22DAA27A1001C2153 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B57C87EC2DAA27A1001C2153 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B57C87E82DAA27A1001C2153 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B57C87D52DAA27A0001C2153 /* Picklet */;
+			targetProxy = B57C87E72DAA27A1001C2153 /* PBXContainerItemProxy */;
+		};
+		B57C87F22DAA27A1001C2153 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B57C87D52DAA27A0001C2153 /* Picklet */;
+			targetProxy = B57C87F12DAA27A1001C2153 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		B57C87F82DAA27A1001C2153 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		B57C87F92DAA27A1001C2153 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		B57C87FB2DAA27A1001C2153 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Picklet/Preview Content\"";
+				DEVELOPMENT_TEAM = 8WZMDG8UJ5;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Picklet/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Picklet;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "カメラで撮影するためにカメラへのアクセスを許可してください。";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "天気情報を取得するために位置情報を使用します";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "写真を選択するためにフォトライブラリへのアクセスを許可してください。";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Reiji.Picklet;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B57C87FC2DAA27A1001C2153 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Picklet/Preview Content\"";
+				DEVELOPMENT_TEAM = 8WZMDG8UJ5;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Picklet/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Picklet;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "カメラで撮影するためにカメラへのアクセスを許可してください。";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "天気情報を取得するために位置情報を使用します";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "写真を選択するためにフォトライブラリへのアクセスを許可してください。";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Reiji.Picklet;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		B57C87FE2DAA27A1001C2153 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8WZMDG8UJ5;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Reiji.PickletTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Picklet.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Picklet";
+			};
+			name = Debug;
+		};
+		B57C87FF2DAA27A1001C2153 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8WZMDG8UJ5;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Reiji.PickletTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Picklet.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Picklet";
+			};
+			name = Release;
+		};
+		B57C88012DAA27A1001C2153 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Reiji.PickletUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Picklet;
+			};
+			name = Debug;
+		};
+		B57C88022DAA27A1001C2153 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Reiji.PickletUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Picklet;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		B57C87D12DAA27A0001C2153 /* Build configuration list for PBXProject "Picklet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B57C87F82DAA27A1001C2153 /* Debug */,
+				B57C87F92DAA27A1001C2153 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B57C87FA2DAA27A1001C2153 /* Build configuration list for PBXNativeTarget "Picklet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B57C87FB2DAA27A1001C2153 /* Debug */,
+				B57C87FC2DAA27A1001C2153 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B57C87FD2DAA27A1001C2153 /* Build configuration list for PBXNativeTarget "PickletTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B57C87FE2DAA27A1001C2153 /* Debug */,
+				B57C87FF2DAA27A1001C2153 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B57C88002DAA27A1001C2153 /* Build configuration list for PBXNativeTarget "PickletUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B57C88012DAA27A1001C2153 /* Debug */,
+				B57C88022DAA27A1001C2153 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B53EF5172DBA8AD700F5CA39 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+		B53EF53B2DBB3F6700F5CA39 /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SDWebImage/SDWebImageSwiftUI";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.1.3;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B53EF5192DBA8C8B00F5CA39 /* Auth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B53EF5172DBA8AD700F5CA39 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Auth;
+		};
+		B53EF51B2DBA8C8B00F5CA39 /* Functions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B53EF5172DBA8AD700F5CA39 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Functions;
+		};
+		B53EF51D2DBA8C8B00F5CA39 /* PostgREST */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B53EF5172DBA8AD700F5CA39 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = PostgREST;
+		};
+		B53EF51F2DBA8C8B00F5CA39 /* Realtime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B53EF5172DBA8AD700F5CA39 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Realtime;
+		};
+		B53EF5212DBA8C8B00F5CA39 /* Storage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B53EF5172DBA8AD700F5CA39 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Storage;
+		};
+		B53EF5232DBA8C8B00F5CA39 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B53EF5172DBA8AD700F5CA39 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+		B57CB8AC2DBB457300789BEF /* SDWebImageSwiftUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B53EF53B2DBB3F6700F5CA39 /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */;
+			productName = SDWebImageSwiftUI;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = B57C87CE2DAA27A0001C2153 /* Project object */;
+}
