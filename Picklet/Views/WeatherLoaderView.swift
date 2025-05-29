@@ -12,53 +12,75 @@ struct WeatherLoaderView: View {
   @State private var weather: Weather?
   @State private var isLoading = true
   @State private var errorMessage: String?
+  @State private var lastLoadedCity: String?
 
-  // オフライン専用のWeatherServiceを使用
-  private let weatherService = PickletOfflineWeatherService.shared
+  // 実際の天気APIサービスを使用
+  private let weatherAPIService = WeatherAPIService.shared
 
   var body: some View {
-    Group {
-      if isLoading {
-        ProgressView("天気情報を取得中...")
-      } else if let weather = weather {
-        WeatherView(weather: weather)
-      } else if let errorMessage = errorMessage {
-        Text(errorMessage)
-          .foregroundColor(.red)
-          .padding()
+    NavigationView {
+      Group {
+        if isLoading {
+          ProgressView("天気情報を取得中...")
+        } else if let weather = weather {
+          WeatherView(weather: weather)
+        } else if let errorMessage = errorMessage {
+          VStack(spacing: 16) {
+            Text(errorMessage)
+              .foregroundColor(.red)
+              .padding()
+
+            Button("再試行") {
+              Task {
+                await loadWeather(force: true)
+              }
+            }
+            .buttonStyle(.bordered)
+          }
+        }
       }
-    }
-    .onAppear {
-      Task {
-        await loadWeather()
+      .refreshable {
+        await loadWeather(force: true)
       }
-    }
-    .onChange(of: locationManager.placemark) {
-      // プレースマークが更新されたら再読み込み（ただし必要ない場合はスキップ）
-      guard weather == nil && errorMessage == nil else { return }
-      Task {
-        await loadWeather()
+      .onAppear {
+        Task {
+          await loadWeather()
+        }
+      }
+      .onChange(of: locationManager.placemark) { _, newPlacemark in
+        if newPlacemark != nil {
+          Task {
+            await loadWeather()
+          }
+        }
       }
     }
   }
 
-  private func loadWeather() async {
-    print("🌀 loadWeather called")
+  private func loadWeather(force: Bool = false) async {
+    // 位置情報から都市名を取得
+    let city = locationManager.placemark?.locality ??
+               locationManager.placemark?.subAdministrativeArea ?? "東京"
 
-    // オフラインモードではシンプルに固定の天気データを使用
-    weather = weatherService.getCurrentWeather()
+    // 同じ都市で強制更新でない場合はスキップ
+    if !force && lastLoadedCity == city && weather != nil {
+      print("🔄 同じ都市(\(city))のため天気取得をスキップ")
+      return
+    }
+
+    isLoading = true
+    errorMessage = nil
+
+    do {
+      print("🗾 天気取得開始: \(city)")
+      weather = try await weatherAPIService.fetchWeatherData(for: city)
+      lastLoadedCity = city
+      print("🌤️ 天気データ取得成功: \(weather?.condition ?? "不明")")
+    } catch {
+      errorMessage = "天気データの取得に失敗しました: \(error.localizedDescription)"
+      print("❌ 天気データ取得エラー: \(error)")
+    }
+
     isLoading = false
-
-    // 位置情報がある場合は、都市名だけログ出力（実際の処理には影響しない）
-    if let placemark = locationManager.placemark {
-      let prefecture = placemark.administrativeArea ?? "不明"
-      let city = placemark.locality ?? placemark.subAdministrativeArea ?? "不明"
-      print("🗾 現在地: \(prefecture) / \(city) (オフラインモードのため使用されません)")
-    }
-  }
-
-  // デモ用に天気をランダムに切り替える関数（実際のアプリでは使用しなくてもOK）
-  func refreshRandomWeather() {
-    weather = weatherService.generateRandomWeather()
   }
 }

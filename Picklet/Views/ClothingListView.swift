@@ -11,20 +11,18 @@ struct ClothingListView: View {
     NavigationStack {
       ClothingDockView().environmentObject(viewModel)
         .accessibility(identifier: "clothingListView")
-        .navigationTitle("My Clothes")
         .safeAreaInset(edge: .bottom) {
           PrimaryActionButton(title: "写真から服を追加") {
-            if SupabaseService.shared.currentUser != nil {
-              editingClothing = Clothing(
-                id: UUID(),
-                name: "",
-                category: "",
-                color: "",
-                createdAt: Date(),
-                updatedAt: Date())
-              isNewClothing = true
-              navigateToEdit = true
-            }
+            // Supabase認証チェックを削除し、直接服の追加を許可
+            editingClothing = Clothing(
+              id: UUID(),
+              name: "",
+              category: "",
+              color: "",
+              createdAt: Date(),
+              updatedAt: Date())
+            isNewClothing = true
+            navigateToEdit = true
           }
           .accessibility(identifier: "addClothingButton")
         }
@@ -41,7 +39,8 @@ struct ClothingListView: View {
           }
         }
         .refreshable {
-          await viewModel.syncIfNeeded()
+          // Supabase同期を削除し、ローカルデータのリロードのみ
+          viewModel.loadClothings()
         }
     }
   }
