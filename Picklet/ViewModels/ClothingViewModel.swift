@@ -133,7 +133,8 @@ class ClothingViewModel: ObservableObject {
   /// 1回あたりの着用単価を計算
   func getCostPerWear(for clothingId: UUID) -> Double? {
     guard let clothing = clothes.first(where: { $0.id == clothingId }),
-          let price = clothing.purchasePrice else { return nil }
+          let price = clothing.purchasePrice
+    else { return nil }
 
     let count = getWearCount(for: clothingId)
     // swiftlint:disable:next empty_count
@@ -168,9 +169,9 @@ class ClothingViewModel: ObservableObject {
     // ステップ4: UIの衣類リストを更新
     // 修正: 新規か更新かに関わらず、配列に存在すれば更新、なければ追加するロジックに統一
     if let index = clothes.firstIndex(where: { $0.id == clothing.id }) {
-        clothes[index] = clothing // 既存の場合、更新
+      clothes[index] = clothing // 既存の場合、更新
     } else {
-        clothes.append(clothing) // 新規の場合、追加
+      clothes.append(clothing) // 新規の場合、追加
     }
 
     isLoading = false

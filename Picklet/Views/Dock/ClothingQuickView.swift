@@ -54,8 +54,7 @@ struct ClothingQuickView: View {
           .overlay(
             Image(systemName: "photo")
               .font(.system(size: 40))
-              .foregroundColor(.secondary)
-          )
+              .foregroundColor(.secondary))
           .frame(width: 150, height: 150)
           .cornerRadius(12)
       }

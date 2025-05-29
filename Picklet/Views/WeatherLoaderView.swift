@@ -60,7 +60,7 @@ struct WeatherLoaderView: View {
   private func loadWeather(force: Bool = false) async {
     // 位置情報から都市名を取得
     let city = locationManager.placemark?.locality ??
-               locationManager.placemark?.subAdministrativeArea ?? "東京"
+      locationManager.placemark?.subAdministrativeArea ?? "東京"
 
     // 同じ都市で強制更新でない場合はスキップ
     if !force && lastLoadedCity == city && weather != nil {
