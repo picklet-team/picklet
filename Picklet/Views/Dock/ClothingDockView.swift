@@ -57,22 +57,12 @@ struct ClothingDockView: View {
                 // カードがドラッグ中の場合は背景ジェスチャーを無効化
                 guard !isCardDragging else { return }
 
-                // スワイプ位置によって回転方向を変える（判定ラインを上にずらす）
-                let swipeY = value.location.y
-                let centerY = geo.size.height / 2
-                let adjustedThreshold = centerY - 50 // 中心から60ポイント上を境界に
-
+                // 上下の区別なく同じ回転方向で処理する
                 let dragDistance = value.translation.width - lastDragValue
 
-                if swipeY < adjustedThreshold {
-                  // 上部（奥）：逆回転
-                  currentRotation += Double(dragDistance) * 0.004
-                  velocity = Double(dragDistance) * 0.004
-                } else {
-                  // 下部（手前）：正回転
-                  currentRotation -= Double(dragDistance) * 0.004
-                  velocity = -Double(dragDistance) * 0.004
-                }
+                // 左右のドラッグで一貫した回転方向
+                currentRotation -= Double(dragDistance) * 0.004
+                velocity = -Double(dragDistance) * 0.004
 
                 lastDragValue = value.translation.width
               }
@@ -130,18 +120,9 @@ struct ClothingDockView: View {
         // カードドラッグ開始をマーク
         isCardDragging = true
 
-        // カードの位置によって回転方向を決定（同じ調整を適用）
-        let adjustedThreshold = centerY - 60 // 中心から60ポイント上を境界に
-
-        if position.y < adjustedThreshold {
-          // 上部（奥）：逆回転
-          currentRotation += Double(dragDistance) * 0.004
-          velocity = Double(dragDistance) * 0.004
-        } else {
-          // 下部（手前）：正回転
-          currentRotation -= Double(dragDistance) * 0.004
-          velocity = -Double(dragDistance) * 0.004
-        }
+        // 上下関係なく一貫した回転方向（左右のドラッグで一貫した回転）
+        currentRotation -= Double(dragDistance) * 0.004
+        velocity = -Double(dragDistance) * 0.004
       },
       onDragEnd: {
         // カードドラッグ終了をマーク

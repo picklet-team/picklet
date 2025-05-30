@@ -9,8 +9,8 @@ class ClothingViewModel: ObservableObject {
   @Published var errorMessage: String?
   @Published var imageSetsMap: [UUID: [EditableImageSet]] = [:]
 
-  // オフライン専用サービスを使用
-  let localStorageService = LocalStorageService.shared
+  // LocalStorageServiceの代わりにSQLiteManagerを使用
+  let dataManager = SQLiteManager.shared
   let imageLoaderService = ImageLoaderService.shared
   let clothingService = ClothingService.shared
 
@@ -195,14 +195,14 @@ class ClothingViewModel: ObservableObject {
       // マスク画像があれば保存
       if let mask = set.mask {
         let maskFilename = "\(set.id.uuidString)_mask.jpg" // ファイル名を生成
-        if localStorageService.saveImage(mask, filename: maskFilename) { // 修正: filename:を使用
+        if dataManager.saveImage(mask, filename: maskFilename) { // 修正: filename:を使用
           print("✅ マスク画像をローカルに保存: \(maskFilename)")
 
           // メタデータを更新
-          var metadata = localStorageService.loadImageMetadata(for: clothingId)
+          var metadata = dataManager.loadImageMetadata(for: clothingId)
           if let index = metadata.firstIndex(where: { $0.id == set.id }) {
             metadata[index] = metadata[index].updatingLocalPath(maskLocalPath: maskFilename)
-            localStorageService.saveImageMetadata(metadata, for: clothingId) // 修正: 引数順序を変更
+            dataManager.saveImageMetadata(metadata, for: clothingId) // 修正: 引数順序を変更
           }
         }
       }
@@ -210,7 +210,7 @@ class ClothingViewModel: ObservableObject {
       // AIマスク画像があれば保存
       if let aimask = set.aimask {
         let aimaskFilename = "\(set.id.uuidString)_aimask.jpg" // ファイル名を生成
-        if localStorageService.saveImage(aimask, filename: aimaskFilename) { // 修正: filename:を使用
+        if dataManager.saveImage(aimask, filename: aimaskFilename) { // 修正: filename:を使用
           print("✅ AIマスク画像をローカルに保存: \(aimaskFilename)")
         }
       }
@@ -238,7 +238,7 @@ class ClothingViewModel: ObservableObject {
 
     for clothing in clothes {
       // ローカルストレージからメタデータを取得
-      let images = localStorageService.loadImageMetadata(for: clothing.id)
+      let images = dataManager.loadImageMetadata(for: clothing.id)
       print("📷 \(clothing.id)の画像メタデータを取得: \(images.count)件")
 
       // 画像セットを作成
@@ -251,7 +251,7 @@ class ClothingViewModel: ObservableObject {
 
         // オリジナル画像を読み込む
         if let originalPath = image.originalLocalPath {
-          if let loadedImage = localStorageService.loadImage(filename: originalPath) { // 修正: from: → filename:
+          if let loadedImage = dataManager.loadImage(filename: originalPath) { // 修正: from: → filename:
             original = loadedImage
             print("✅ ローカルからオリジナル画像を読み込み: \(originalPath)")
           }
@@ -259,7 +259,7 @@ class ClothingViewModel: ObservableObject {
 
         // マスク画像を読み込む
         if let maskPath = image.maskLocalPath {
-          if let loadedMask = localStorageService.loadImage(filename: maskPath) { // 修正: from: → filename:
+          if let loadedMask = dataManager.loadImage(filename: maskPath) { // 修正: from: → filename:
             mask = loadedMask
             print("✅ ローカルからマスク画像を読み込み: \(maskPath)")
           }
