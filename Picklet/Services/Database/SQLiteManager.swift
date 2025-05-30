@@ -6,37 +6,37 @@ class SQLiteManager {
   static let shared = SQLiteManager()
 
   // privateからinternalに変更
-  internal var db: Connection?
-  internal let documentsDirectory: URL
-  internal let fileManager = FileManager.default  // privateからinternalに変更
+  var db: Connection?
+  let documentsDirectory: URL
+  let fileManager = FileManager.default
 
   // テーブル定義
-  internal let clothesTable = Table("clothes")
-  internal let wearHistoriesTable = Table("wear_histories")
-  internal let imageMetadataTable = Table("image_metadata")
+  let clothesTable = Table("clothes")
+  let wearHistoriesTable = Table("wear_histories")
+  let imageMetadataTable = Table("image_metadata")
 
-  // 完全修飾名（SQLite.Expression）を使用
+  // 型を明示的に宣言
   // Clothes テーブルのカラム
-  internal let clothesId = SQLite.Expression<String>("id")
-  internal let clothesName = SQLite.Expression<String>("name")
-  internal let clothesCategory = SQLite.Expression<String>("category")
-  internal let clothesColor = SQLite.Expression<String>("color")
-  internal let clothesCreatedAt = SQLite.Expression<Date>("created_at")
-  internal let clothesUpdatedAt = SQLite.Expression<Date>("updated_at")
+  let clothesId: Expression<String> = .init("id")
+  let clothesName: Expression<String> = .init("name")
+  let clothesCategory: Expression<String> = .init("category")
+  let clothesColor: Expression<String> = .init("color")
+  let clothesCreatedAt: Expression<Date> = .init("created_at")
+  let clothesUpdatedAt: Expression<Date> = .init("updated_at")
 
   // WearHistory テーブルのカラム
-  internal let wearId = SQLite.Expression<String>("id")
-  internal let wearClothingId = SQLite.Expression<String>("clothing_id")
-  internal let wearWornAt = SQLite.Expression<Date>("worn_at")
+  let wearId: Expression<String> = .init("id")
+  let wearClothingId: Expression<String> = .init("clothing_id")
+  let wearWornAt: Expression<Date> = .init("worn_at")
 
   // ImageMetadata テーブルのカラム
-  internal let imageId = SQLite.Expression<String>("id")
-  internal let imageClothingId = SQLite.Expression<String>("clothing_id")
-  internal let imageOriginalPath = SQLite.Expression<String?>("original_local_path")
-  internal let imageMaskPath = SQLite.Expression<String?>("mask_local_path")
-  internal let imageOriginalUrl = SQLite.Expression<String?>("original_url")
-  internal let imageMaskUrl = SQLite.Expression<String?>("mask_url")
-  internal let imageResultUrl = SQLite.Expression<String?>("result_url")
+  let imageId: Expression<String> = .init("id")
+  let imageClothingId: Expression<String> = .init("clothing_id")
+  let imageOriginalPath: Expression<String?> = .init("original_local_path")
+  let imageMaskPath: Expression<String?> = .init("mask_local_path")
+  let imageOriginalUrl: Expression<String?> = .init("original_url")
+  let imageMaskUrl: Expression<String?> = .init("mask_url")
+  let imageResultUrl: Expression<String?> = .init("result_url")
 
   private init() {
     // App Groupのコンテナディレクトリを取得
@@ -78,34 +78,34 @@ class SQLiteManager {
 
   private func createTables() {
     do {
-      // Clothesテーブル
-      try db?.run(clothesTable.create(ifNotExists: true) { t in
-        t.column(clothesId, primaryKey: true)
-        t.column(clothesName)
-        t.column(clothesCategory)
-        t.column(clothesColor)
-        t.column(clothesCreatedAt)
-        t.column(clothesUpdatedAt)
+      // Clothesテーブル - 変数名 't' を 'table' に変更
+      try db?.run(clothesTable.create(ifNotExists: true) { table in
+        table.column(clothesId, primaryKey: true)
+        table.column(clothesName)
+        table.column(clothesCategory)
+        table.column(clothesColor)
+        table.column(clothesCreatedAt)
+        table.column(clothesUpdatedAt)
       })
 
-      // WearHistoriesテーブル
-      try db?.run(wearHistoriesTable.create(ifNotExists: true) { t in
-        t.column(wearId, primaryKey: true)
-        t.column(wearClothingId)
-        t.column(wearWornAt)
-        t.foreignKey(wearClothingId, references: clothesTable, clothesId, delete: .cascade)
+      // WearHistoriesテーブル - 変数名 't' を 'table' に変更
+      try db?.run(wearHistoriesTable.create(ifNotExists: true) { table in
+        table.column(wearId, primaryKey: true)
+        table.column(wearClothingId)
+        table.column(wearWornAt)
+        table.foreignKey(wearClothingId, references: clothesTable, clothesId, delete: .cascade)
       })
 
-      // ImageMetadataテーブル
-      try db?.run(imageMetadataTable.create(ifNotExists: true) { t in
-        t.column(imageId, primaryKey: true)
-        t.column(imageClothingId)
-        t.column(imageOriginalPath)
-        t.column(imageMaskPath)
-        t.column(imageOriginalUrl)
-        t.column(imageMaskUrl)
-        t.column(imageResultUrl)
-        t.foreignKey(imageClothingId, references: clothesTable, clothesId, delete: .cascade)
+      // ImageMetadataテーブル - 変数名 't' を 'table' に変更
+      try db?.run(imageMetadataTable.create(ifNotExists: true) { table in
+        table.column(imageId, primaryKey: true)
+        table.column(imageClothingId)
+        table.column(imageOriginalPath)
+        table.column(imageMaskPath)
+        table.column(imageOriginalUrl)
+        table.column(imageMaskUrl)
+        table.column(imageResultUrl)
+        table.foreignKey(imageClothingId, references: clothesTable, clothesId, delete: .cascade)
       })
 
       print("✅ SQLiteテーブル作成完了")

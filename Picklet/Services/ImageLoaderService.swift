@@ -18,7 +18,7 @@ class ImageLoaderService {
   private init() {
     // メモリキャッシュの設定
     memoryCache.countLimit = 50 // 最大50枚まで
-    memoryCache.totalCostLimit = 50 * 1024 * 1024 // 50MB まで
+    memoryCache.totalCostLimit = 50 * 1_024 * 1_024 // 50MB まで
   }
 
   /// 服IDから最初の画像を読み込む（SQLite対応）
@@ -80,24 +80,24 @@ class ImageLoaderService {
       // 構造体の初期化順序がおかしいようです。Clothingクラスでの定義順に合わせます
       updatedImage = ClothingImage(
         id: updatedImage.id,
-        clothingId: updatedImage.clothingId,       // 追加
-        originalUrl: updatedImage.originalUrl,     // originalUrlが先
-        maskUrl: updatedImage.maskUrl,             // maskUrlが後
-        resultUrl: updatedImage.resultUrl,         // resultUrl
-        originalLocalPath: filename,               // originalLocalPath
-        maskLocalPath: updatedImage.maskLocalPath  // maskLocalPath
+        clothingId: updatedImage.clothingId, // 追加
+        originalUrl: updatedImage.originalUrl, // originalUrlが先
+        maskUrl: updatedImage.maskUrl, // maskUrlが後
+        resultUrl: updatedImage.resultUrl, // resultUrl
+        originalLocalPath: filename, // originalLocalPath
+        maskLocalPath: updatedImage.maskLocalPath // maskLocalPath
       )
       metadata[index] = updatedImage
     } else {
       // 新しいメタデータを追加
       let newImageMetadata = ClothingImage(
         id: id,
-        clothingId: clothingId,                  // 追加
-        originalUrl: nil,                        // originalUrlが先
-        maskUrl: nil,                            // maskUrlが後
-        resultUrl: nil,                          // resultUrl
-        originalLocalPath: filename,             // originalLocalPath
-        maskLocalPath: nil                       // maskLocalPath
+        clothingId: clothingId, // 追加
+        originalUrl: nil, // originalUrlが先
+        maskUrl: nil, // maskUrlが後
+        resultUrl: nil, // resultUrl
+        originalLocalPath: filename, // originalLocalPath
+        maskLocalPath: nil // maskLocalPath
       )
       metadata.append(newImageMetadata)
     }
@@ -158,7 +158,8 @@ class ImageLoaderService {
 
     // 削除対象の画像を探す
     guard let imageIndex = metadata.firstIndex(where: { $0.id == imageId }),
-          let localPath = metadata[imageIndex].originalLocalPath else {
+          let localPath = metadata[imageIndex].originalLocalPath
+    else {
       print("⚠️ 削除対象の画像が見つかりません: \(imageId)")
       return false
     }

@@ -42,12 +42,12 @@ class PickletOfflineImageMetadataService {
     // 新しい画像メタデータを作成 - 正しい引数順序
     let newImage = ClothingImage(
       id: imageId,
-      clothingId: clothingId,           // 追加
-      originalUrl: nil,                 // originalUrlが先
-      maskUrl: nil,                     // maskUrlが後
-      resultUrl: nil,                   // resultUrl
-      originalLocalPath: localPath,     // originalLocalPath
-      maskLocalPath: nil                // maskLocalPath
+      clothingId: clothingId, // 追加
+      originalUrl: nil, // originalUrlが先
+      maskUrl: nil, // maskUrlが後
+      resultUrl: nil, // resultUrl
+      originalLocalPath: localPath, // originalLocalPath
+      maskLocalPath: nil // maskLocalPath
     )
 
     // 既存のメタデータに追加

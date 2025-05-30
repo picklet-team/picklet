@@ -3,8 +3,8 @@ import SQLite
 import UIKit
 
 // MARK: - Image Management (Files + Metadata)
-extension SQLiteManager {
 
+extension SQLiteManager {
   // MARK: - Image Files
 
   /// 画像を保存
@@ -19,7 +19,7 @@ extension SQLiteManager {
     if !fileManager.fileExists(atPath: imageDirectory.path) {
       do {
         try fileManager.createDirectory(at: imageDirectory,
-                                       withIntermediateDirectories: true)  // nilを削除
+                                        withIntermediateDirectories: true) // nilを削除
       } catch {
         print("❌ imagesディレクトリ作成エラー: \(error)")
         return false
@@ -142,11 +142,11 @@ extension SQLiteManager {
         let image = ClothingImage(
           id: UUID(uuidString: row[imageId])!,
           clothingId: UUID(uuidString: row[imageClothingId])!,
-          originalUrl: row[imageOriginalUrl],        // originalUrlが先
-          maskUrl: row[imageMaskUrl],                // maskUrlが後
-          resultUrl: row[imageResultUrl],            // resultUrl
+          originalUrl: row[imageOriginalUrl], // originalUrlが先
+          maskUrl: row[imageMaskUrl], // maskUrlが後
+          resultUrl: row[imageResultUrl], // resultUrl
           originalLocalPath: row[imageOriginalPath], // originalLocalPath
-          maskLocalPath: row[imageMaskPath]          // maskLocalPath
+          maskLocalPath: row[imageMaskPath] // maskLocalPath
         )
         images.append(image)
       }

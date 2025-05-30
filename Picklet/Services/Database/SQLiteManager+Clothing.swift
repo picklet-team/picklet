@@ -2,8 +2,8 @@ import Foundation
 import SQLite
 
 // MARK: - Clothing Data Management
-extension SQLiteManager {
 
+extension SQLiteManager {
   /// 衣類データを保存
   func saveClothing(_ clothing: Clothing) -> Bool {
     do {
@@ -41,8 +41,7 @@ extension SQLiteManager {
         category: row[clothesCategory],
         color: row[clothesColor],
         createdAt: row[clothesCreatedAt],
-        updatedAt: row[clothesUpdatedAt]
-      )
+        updatedAt: row[clothesUpdatedAt])
 
       return clothing
     } catch {
@@ -67,8 +66,7 @@ extension SQLiteManager {
           category: row[clothesCategory],
           color: row[clothesColor],
           createdAt: row[clothesCreatedAt],
-          updatedAt: row[clothesUpdatedAt]
-        )
+          updatedAt: row[clothesUpdatedAt])
         clothes.append(clothing)
       }
 
