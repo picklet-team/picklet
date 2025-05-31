@@ -6,37 +6,37 @@ class SQLiteManager {
   static let shared = SQLiteManager()
 
   // privateからinternalに変更
-  internal var db: Connection?
-  internal let documentsDirectory: URL
-  internal let fileManager = FileManager.default
+  var db: Connection?
+  let documentsDirectory: URL
+  let fileManager = FileManager.default
 
   // テーブル定義
-  internal let clothesTable = Table("clothes")
-  internal let wearHistoriesTable = Table("wear_histories")
-  internal let imageMetadataTable = Table("image_metadata")
+  let clothesTable = Table("clothes")
+  let wearHistoriesTable = Table("wear_histories")
+  let imageMetadataTable = Table("image_metadata")
 
   // 完全修飾名を使用（SQLite.Expression）
   // Clothes テーブルのカラム
-  internal let clothesId = SQLite.Expression<String>("id")
-  internal let clothesName = SQLite.Expression<String>("name")
-  internal let clothesCategory = SQLite.Expression<String>("category")
-  internal let clothesColor = SQLite.Expression<String>("color")
-  internal let clothesCreatedAt = SQLite.Expression<Date>("created_at")
-  internal let clothesUpdatedAt = SQLite.Expression<Date>("updated_at")
+  let clothesId = SQLite.Expression<String>("id")
+  let clothesName = SQLite.Expression<String>("name")
+  let clothesCategory = SQLite.Expression<String>("category")
+  let clothesColor = SQLite.Expression<String>("color")
+  let clothesCreatedAt = SQLite.Expression<Date>("created_at")
+  let clothesUpdatedAt = SQLite.Expression<Date>("updated_at")
 
   // WearHistory テーブルのカラム
-  internal let wearId = SQLite.Expression<String>("id")
-  internal let wearClothingId = SQLite.Expression<String>("clothing_id")
-  internal let wearWornAt = SQLite.Expression<Date>("worn_at")
+  let wearId = SQLite.Expression<String>("id")
+  let wearClothingId = SQLite.Expression<String>("clothing_id")
+  let wearWornAt = SQLite.Expression<Date>("worn_at")
 
   // ImageMetadata テーブルのカラム
-  internal let imageId = SQLite.Expression<String>("id")
-  internal let imageClothingId = SQLite.Expression<String>("clothing_id")
-  internal let imageOriginalPath = SQLite.Expression<String?>("original_local_path")
-  internal let imageMaskPath = SQLite.Expression<String?>("mask_local_path")
-  internal let imageOriginalUrl = SQLite.Expression<String?>("original_url")
-  internal let imageMaskUrl = SQLite.Expression<String?>("mask_url")
-  internal let imageResultUrl = SQLite.Expression<String?>("result_url")
+  let imageId = SQLite.Expression<String>("id")
+  let imageClothingId = SQLite.Expression<String>("clothing_id")
+  let imageOriginalPath = SQLite.Expression<String?>("original_local_path")
+  let imageMaskPath = SQLite.Expression<String?>("mask_local_path")
+  let imageOriginalUrl = SQLite.Expression<String?>("original_url")
+  let imageMaskUrl = SQLite.Expression<String?>("mask_url")
+  let imageResultUrl = SQLite.Expression<String?>("result_url")
 
   private init() {
     // App Groupのコンテナディレクトリを取得

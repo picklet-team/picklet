@@ -3,9 +3,11 @@ import SDWebImageSwiftUI
 import SwiftUI
 
 // MARK: - Helper types
+
 struct IdentifiableUUID: Identifiable, Hashable { let id: UUID }
 
 // MARK: - Dock View
+
 struct ClothingDockView: View {
   let itemWidth = UIScreen.main.bounds.width * 0.38
   let itemHeight = UIScreen.main.bounds.width * 0.38
@@ -53,8 +55,7 @@ struct ClothingDockView: View {
                 rotationController.handleDrag(
                   currentPoint: value.location,
                   centerPoint: globalCenterPoint,
-                  isCardDrag: false
-                )
+                  isCardDrag: false)
               }
               .onEnded { _ in
                 guard !isCardDragging else { return }
@@ -65,8 +66,7 @@ struct ClothingDockView: View {
           clothingCardView(
             for: clothing,
             at: idx,
-            centerX: geo.size.width / 2,
-            centerY: geo.size.height / 2,
+            centerPoint: CGPoint(x: geo.size.width / 2, y: geo.size.height / 2),
             totalItems: min(viewModel.clothes.count, maxCards),
             geo: geo)
         }
@@ -84,14 +84,17 @@ struct ClothingDockView: View {
     }
   }
 
+  // 1つ目のメソッド: カードビューの作成（パラメータを減らす）
   @ViewBuilder
   private func clothingCardView(
     for clothing: Clothing,
     at index: Int,
-    centerX: CGFloat,
-    centerY: CGFloat,
+    centerPoint: CGPoint, // centerXとcenterYを一つにまとめる
     totalItems: Int,
     geo: GeometryProxy) -> some View {
+    let centerX = centerPoint.x
+    let centerY = centerPoint.y
+
     let position = calculatePosition(index: index, centerX: centerX, centerY: centerY, totalItems: totalItems)
     let scale = calculateScale(yPosition: position.y, centerY: centerY, totalItems: totalItems)
     let zIndex = calculateZIndex(yPosition: position.y, centerY: centerY, totalItems: totalItems)
@@ -110,15 +113,14 @@ struct ClothingDockView: View {
       onDrag: { location in
         isCardDragging = true
 
-        // グローバル座標での回転中心を計算（バックグラウンドと同じ）
+        // グローバル座標での回転中心を計算
         let globalCenterPoint = geo.frame(in: .global).center
 
         // 共通コントローラーを使用（カードドラッグ）
         rotationController.handleDrag(
           currentPoint: location,
           centerPoint: globalCenterPoint,
-          isCardDrag: false
-        )
+          isCardDrag: false)
       },
       onDragEnd: {
         isCardDragging = false
@@ -126,7 +128,7 @@ struct ClothingDockView: View {
       })
       .offset(y: yOffsetValue)
       .allowsHitTesting(true)
-      .zIndex(zIndex) // 明示的にzIndexを適用
+      .zIndex(zIndex)
   }
 
   // MARK: - Calculations（rotationController.currentRotationを使用）
