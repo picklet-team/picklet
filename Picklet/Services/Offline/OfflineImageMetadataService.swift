@@ -12,7 +12,8 @@ import UIKit
 class PickletOfflineImageMetadataService {
   static let shared = PickletOfflineImageMetadataService()
 
-  private let localStorageService = LocalStorageService.shared
+  // LocalStorageServiceの代わりにSQLiteManagerを使用
+  private let dataManager = SQLiteManager.shared
 
   private init() {
     print("🧩 オフラインImageMetadataServiceを初期化")
@@ -23,7 +24,7 @@ class PickletOfflineImageMetadataService {
   /// - Returns: 画像メタデータの配列
   func fetchImages(for clothingId: UUID) -> [ClothingImage] {
     print("🔍 ID=\(clothingId)の画像メタデータを取得")
-    return localStorageService.loadImageMetadata(for: clothingId)
+    return dataManager.loadImageMetadata(for: clothingId)
   }
 
   /// 新しい画像メタデータを追加
@@ -38,20 +39,23 @@ class PickletOfflineImageMetadataService {
                 localPath: String) -> ClothingImage {
     print("➕ 画像メタデータを追加: 服ID=\(clothingId), 画像ID=\(imageId)")
 
-    // 新しい画像メタデータを作成
+    // 新しい画像メタデータを作成 - 正しい引数順序
     let newImage = ClothingImage(
       id: imageId,
-      clothingId: clothingId,
-      originalLocalPath: localPath,
-      createdAt: Date(),
-      updatedAt: Date())
+      clothingId: clothingId, // 追加
+      originalUrl: nil, // originalUrlが先
+      maskUrl: nil, // maskUrlが後
+      resultUrl: nil, // resultUrl
+      originalLocalPath: localPath, // originalLocalPath
+      maskLocalPath: nil // maskLocalPath
+    )
 
     // 既存のメタデータに追加
-    var metadata = localStorageService.loadImageMetadata(for: clothingId)
+    var metadata = dataManager.loadImageMetadata(for: clothingId)
     metadata.append(newImage)
 
     // 保存
-    LocalStorageService.shared.saveImageMetadata(metadata, for: clothingId)
+    dataManager.saveImageMetadata(metadata, for: clothingId)
 
     return newImage
   }
@@ -67,7 +71,7 @@ class PickletOfflineImageMetadataService {
     print("🔄 画像メタデータを更新: ID=\(imageId)")
 
     // 既存のメタデータを取得
-    var metadata = localStorageService.loadImageMetadata(for: clothingId)
+    var metadata = dataManager.loadImageMetadata(for: clothingId)
 
     // 対象の画像を見つける
     guard let index = metadata.firstIndex(where: { $0.id == imageId }) else {
@@ -79,21 +83,11 @@ class PickletOfflineImageMetadataService {
     var updatedImage = metadata[index]
     updates(&updatedImage)
 
-    // 更新日時を設定
-    updatedImage = ClothingImage(
-      id: updatedImage.id,
-      clothingId: updatedImage.clothingId,
-      originalLocalPath: updatedImage.originalLocalPath,
-      maskLocalPath: updatedImage.maskLocalPath,
-      resultLocalPath: updatedImage.resultLocalPath,
-      createdAt: updatedImage.createdAt,
-      updatedAt: Date())
-
     // 更新したものを配列に戻す
     metadata[index] = updatedImage
 
     // 保存
-    LocalStorageService.shared.saveImageMetadata(metadata, for: clothingId)
+    dataManager.saveImageMetadata(metadata, for: clothingId)
     return true
   }
 
@@ -120,7 +114,7 @@ class PickletOfflineImageMetadataService {
     print("🗑️ 画像メタデータを削除: ID=\(imageId)")
 
     // 既存のメタデータを取得
-    var metadata = localStorageService.loadImageMetadata(for: clothingId)
+    var metadata = dataManager.loadImageMetadata(for: clothingId)
 
     // 対象の画像を削除
     let initialCount = metadata.count
@@ -133,7 +127,7 @@ class PickletOfflineImageMetadataService {
     }
 
     // 保存
-    LocalStorageService.shared.saveImageMetadata(metadata, for: clothingId)
+    dataManager.saveImageMetadata(metadata, for: clothingId)
     return true
   }
 }

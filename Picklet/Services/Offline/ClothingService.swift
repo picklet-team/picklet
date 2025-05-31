@@ -12,7 +12,8 @@ import SwiftUI
 class ClothingService {
   static let shared = ClothingService()
 
-  private let localStorageService = LocalStorageService.shared
+  // LocalStorageServiceの代わりにSQLiteManagerを使用
+  private let dataManager = SQLiteManager.shared
 
   private init() {
     // ファイル読み込みの初期化など必要であればここで
@@ -25,7 +26,7 @@ class ClothingService {
   /// - Returns: 服の配列
   func fetchClothes() -> [Clothing] {
     print("📋 すべての服を取得")
-    return localStorageService.loadAllClothing()
+    return dataManager.loadAllClothing()
   }
 
   /// 新しい服を追加する
@@ -34,7 +35,7 @@ class ClothingService {
   @discardableResult
   func addClothing(_ clothing: Clothing) -> Bool {
     print("➕ 新しい服を追加: \(clothing.id)")
-    return localStorageService.saveClothing(clothing)
+    return dataManager.saveClothing(clothing)
   }
 
   /// 既存の服を更新する
@@ -43,7 +44,7 @@ class ClothingService {
   @discardableResult
   func updateClothing(_ clothing: Clothing) -> Bool {
     print("🔄 服を更新: \(clothing.id)")
-    return localStorageService.saveClothing(clothing)
+    return dataManager.saveClothing(clothing)
   }
 
   /// 服を削除する
@@ -61,7 +62,7 @@ class ClothingService {
   @discardableResult
   func deleteClothingById(_ id: UUID) -> Bool {
     print("🗑️ IDで服を削除: \(id)")
-    return localStorageService.deleteClothing(id: id)
+    return dataManager.deleteClothing(id: id)
   }
 
   /// IDで服を取得する
@@ -69,6 +70,6 @@ class ClothingService {
   /// - Returns: 見つかった服、見つからない場合はnil
   func getClothingById(_ id: UUID) -> Clothing? {
     print("🔍 IDで服を検索: \(id)")
-    return localStorageService.loadClothing(id: id)
+    return dataManager.loadClothing(id: id)
   }
 }

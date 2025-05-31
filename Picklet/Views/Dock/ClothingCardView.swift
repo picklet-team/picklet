@@ -17,29 +17,30 @@ struct ClothingCardView: View {
   let xOffset: CGFloat
   let zIndex: Double
   let onTap: () -> Void
-  let onDrag: (CGFloat) -> Void
+  let onDrag: (CGPoint) -> Void
   let onDragEnd: () -> Void
 
   @State private var gestureStartTime: Date?
   @State private var hasMoved: Bool = false
-  @State private var lastDragValue: CGFloat = 0
+  @State private var lastLocation: CGPoint = .zero
 
   var body: some View {
+    // GeometryReaderを削除して単純化
     ClothingItemView(clothing: clothing, imageUrl: imageURL)
       .environmentObject(viewModel)
-      .frame(width: 120)
+      .frame(width: 120, height: 120)
       .scaleEffect(x: -1, y: 1) // X軸方向に反転して正しい向きに
       .rotation3DEffect(angle, axis: (0, -1, 0), perspective: 0.7)
       .scaleEffect(scale)
       .offset(x: xOffset)
       .zIndex(zIndex)
-      .gesture( // simultaneousGestureから.gestureに変更
-        DragGesture(minimumDistance: 0)
+      .gesture(
+        DragGesture(minimumDistance: 0, coordinateSpace: .global)
           .onChanged { value in
             if gestureStartTime == nil {
               gestureStartTime = Date()
               hasMoved = false
-              lastDragValue = 0
+              lastLocation = value.location
             }
 
             let distance = sqrt(pow(value.translation.width, 2) + pow(value.translation.height, 2))
@@ -47,17 +48,15 @@ struct ClothingCardView: View {
 
             if distance > 5 || timeElapsed > 0.2 {
               hasMoved = true
-              // ドラッグ処理
-              let dragDistance = value.translation.width - lastDragValue
-              onDrag(dragDistance)
-              lastDragValue = value.translation.width
+              // グローバル座標の指の位置を渡す
+              onDrag(value.location)
             }
           }
           .onEnded { value in
             defer {
               gestureStartTime = nil
               hasMoved = false
-              lastDragValue = 0
+              lastLocation = .zero
             }
 
             let distance = sqrt(pow(value.translation.width, 2) + pow(value.translation.height, 2))

@@ -11,12 +11,12 @@ extension ClothingEditView {
     Task(priority: .low) {
       defer { Task { await MainActor.run { isBackgroundLoading = false } } }
 
-      // Use localStorageService directly instead of imageMetadataService
-      let images = viewModel.localStorageService.loadImageMetadata(for: clothing.id)
-      let localStorageService = viewModel.localStorageService
+      // SQLiteManagerを使用
+      let images = viewModel.dataManager.loadImageMetadata(for: clothing.id)
+      let dataManager = viewModel.dataManager
 
       for image in images {
-        await tryUpdateLowQualityImage(image, using: localStorageService)
+        await tryUpdateLowQualityImage(image, using: dataManager)
       }
 
       await MainActor.run {
@@ -25,7 +25,7 @@ extension ClothingEditView {
     }
   }
 
-  func tryUpdateLowQualityImage(_ image: ClothingImage, using storageService: LocalStorageService) async {
+  func tryUpdateLowQualityImage(_ image: ClothingImage, using dataManager: SQLiteManager) async {
     guard let idx = editingSets.firstIndex(where: { $0.id == image.id }) else { return }
 
     let currentSet = editingSets[idx]
@@ -33,7 +33,7 @@ extension ClothingEditView {
     // 低品質画像のみ更新
     guard currentSet.original.size.width < 100 || currentSet.original.size.height < 100 else { return }
     guard let originalPath = image.originalLocalPath,
-          let loadedImage = storageService.loadImage(filename: originalPath)
+          let loadedImage = dataManager.loadImage(filename: originalPath)
     else { return }
 
     let updatedSet = createUpdatedImageSet(from: currentSet, with: loadedImage)
@@ -70,12 +70,12 @@ extension ClothingEditView {
   }
 
   func tryLoadImageFromLocal(_ set: EditableImageSet) async -> EditableImageSet? {
-    // Get image metadata directly from localStorageService
-    let images = viewModel.localStorageService.loadImageMetadata(for: clothing.id)
+    // localStorageService を dataManager に変更
+    let images = viewModel.dataManager.loadImageMetadata(for: clothing.id)
 
     guard let image = images.first(where: { $0.id == set.id }),
           let originalPath = image.originalLocalPath,
-          let loadedImage = viewModel.localStorageService.loadImage(filename: originalPath)
+          let loadedImage = viewModel.dataManager.loadImage(filename: originalPath)
     else {
       return nil
     }
@@ -102,9 +102,9 @@ extension ClothingEditView {
         if let downloadedImage = image {
           let updatedSet = self.createUpdatedImageSet(from: set, with: downloadedImage)
 
-          // ローカルに保存（新しいメソッドシグネチャに合わせて修正）
+          // localStorageService を dataManager に変更
           let filename = "\(set.id.uuidString)_original.jpg"
-          if self.viewModel.localStorageService.saveImage(downloadedImage, filename: filename) {
+          if self.viewModel.dataManager.saveImage(downloadedImage, filename: filename) {
             print("💾 高品質画像をローカルに保存: \(filename)")
           }
 

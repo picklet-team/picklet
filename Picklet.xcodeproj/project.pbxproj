@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B502C4C62DE9369F000B9559 /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = B502C4C52DE9369F000B9559 /* SQLite */; };
 		B53EF51A2DBA8C8B00F5CA39 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = B53EF5192DBA8C8B00F5CA39 /* Auth */; };
 		B53EF51C2DBA8C8B00F5CA39 /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = B53EF51B2DBA8C8B00F5CA39 /* Functions */; };
 		B53EF51E2DBA8C8B00F5CA39 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = B53EF51D2DBA8C8B00F5CA39 /* PostgREST */; };
@@ -60,6 +61,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B502C4C62DE9369F000B9559 /* SQLite in Frameworks */,
 				B57CB8AD2DBB457300789BEF /* SDWebImageSwiftUI in Frameworks */,
 				B53EF51E2DBA8C8B00F5CA39 /* PostgREST in Frameworks */,
 				B53EF51C2DBA8C8B00F5CA39 /* Functions in Frameworks */,
@@ -142,6 +144,7 @@
 				B53EF5212DBA8C8B00F5CA39 /* Storage */,
 				B53EF5232DBA8C8B00F5CA39 /* Supabase */,
 				B57CB8AC2DBB457300789BEF /* SDWebImageSwiftUI */,
+				B502C4C52DE9369F000B9559 /* SQLite */,
 			);
 			productName = Picklet;
 			productReference = B57C87D62DAA27A0001C2153 /* Picklet.app */;
@@ -228,6 +231,7 @@
 			packageReferences = (
 				B53EF5172DBA8AD700F5CA39 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 				B53EF53B2DBB3F6700F5CA39 /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */,
+				B502C41D2DE9357E000B9559 /* XCRemoteSwiftPackageReference "SQLite" */,
 			);
 			preferredProjectObjectVersion = 76;
 			productRefGroup = B57C87D72DAA27A0001C2153 /* Products */;
@@ -604,6 +608,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		B502C41D2DE9357E000B9559 /* XCRemoteSwiftPackageReference "SQLite" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/stephencelis/SQLite.swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.15.3;
+			};
+		};
 		B53EF5172DBA8AD700F5CA39 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/supabase/supabase-swift";
@@ -623,6 +635,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		B502C4C52DE9369F000B9559 /* SQLite */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B502C41D2DE9357E000B9559 /* XCRemoteSwiftPackageReference "SQLite" */;
+			productName = SQLite;
+		};
 		B53EF5192DBA8C8B00F5CA39 /* Auth */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = B53EF5172DBA8AD700F5CA39 /* XCRemoteSwiftPackageReference "supabase-swift" */;
