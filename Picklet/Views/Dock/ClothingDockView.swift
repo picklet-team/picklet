@@ -3,12 +3,9 @@ import SDWebImageSwiftUI
 import SwiftUI
 
 // MARK: - Helper types
-
-/// Wrapper so we can use UUID in sheet/navigationDestination
 struct IdentifiableUUID: Identifiable, Hashable { let id: UUID }
 
 // MARK: - Dock View
-
 struct ClothingDockView: View {
   let itemWidth = UIScreen.main.bounds.width * 0.38
   let itemHeight = UIScreen.main.bounds.width * 0.38
@@ -16,25 +13,18 @@ struct ClothingDockView: View {
 
   @EnvironmentObject private var viewModel: ClothingViewModel
   @EnvironmentObject private var overlayManager: GlobalOverlayManager
-  @EnvironmentObject private var themeManager: ThemeManager // この行を追加
+  @EnvironmentObject private var themeManager: ThemeManager
 
   private let imageLoaderService = ImageLoaderService.shared
 
   // 円形レイアウト設定
   private let maxCards = 20
-  private let baseRadius: CGFloat = 80 // 基本半径を大きく
-  private let radiusMultiplier: CGFloat = 12 // アイテム数に応じた半径の増加率を大きく
-  private let cardSize: CGFloat = 80 // カードサイズ
+  private let baseRadius: CGFloat = 80
+  private let radiusMultiplier: CGFloat = 12
+  private let cardSize: CGFloat = 80
 
-  // 回転制御
-  @State private var currentRotation: Double = 0 // 現在の回転角度（ラジアン）
-  @State private var lastDragValue: CGFloat = 0
-  @State private var velocity: Double = 0 // 慣性用の速度
-  @State private var timer: Timer? // 慣性アニメーション用
-
-  // タップ/ドラッグ判定用
-  @State private var gestureStartTime: Date? // ジェスチャー開始時刻
-  @State private var hasMoved: Bool = false // 移動したかどうか
+  // 共通の回転コントローラーを使用
+  @StateObject private var rotationController = RotationController()
 
   // Peek & Pop state
   @State private var previewId: IdentifiableUUID?
@@ -52,24 +42,23 @@ struct ClothingDockView: View {
           .fill(Color.clear)
           .contentShape(Rectangle())
           .gesture(
-            DragGesture(minimumDistance: 5)
+            DragGesture(minimumDistance: 5, coordinateSpace: .global)
               .onChanged { value in
-                // カードがドラッグ中の場合は背景ジェスチャーを無効化
                 guard !isCardDragging else { return }
 
-                // 上下の区別なく同じ回転方向で処理する
-                let dragDistance = value.translation.width - lastDragValue
+                // グローバル座標での回転中心を計算
+                let globalCenterPoint = geo.frame(in: .global).center
 
-                // 左右のドラッグで一貫した回転方向
-                currentRotation -= Double(dragDistance) * 0.004
-                velocity = -Double(dragDistance) * 0.004
-
-                lastDragValue = value.translation.width
+                // 共通コントローラーを使用（バックグラウンドドラッグ）
+                rotationController.handleDrag(
+                  currentPoint: value.location,
+                  centerPoint: globalCenterPoint,
+                  isCardDrag: false
+                )
               }
               .onEnded { _ in
                 guard !isCardDragging else { return }
-                lastDragValue = 0
-                startInertialRotation()
+                rotationController.endDrag()
               })
 
         ForEach(Array(viewModel.clothes.prefix(maxCards).enumerated()), id: \.element.id) { idx, clothing in
@@ -78,7 +67,8 @@ struct ClothingDockView: View {
             at: idx,
             centerX: geo.size.width / 2,
             centerY: geo.size.height / 2,
-            totalItems: min(viewModel.clothes.count, maxCards))
+            totalItems: min(viewModel.clothes.count, maxCards),
+            geo: geo)
         }
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -100,7 +90,8 @@ struct ClothingDockView: View {
     at index: Int,
     centerX: CGFloat,
     centerY: CGFloat,
-    totalItems: Int) -> some View {
+    totalItems: Int,
+    geo: GeometryProxy) -> some View {
     let position = calculatePosition(index: index, centerX: centerX, centerY: centerY, totalItems: totalItems)
     let scale = calculateScale(yPosition: position.y, centerY: centerY, totalItems: totalItems)
     let zIndex = calculateZIndex(yPosition: position.y, centerY: centerY, totalItems: totalItems)
@@ -116,24 +107,29 @@ struct ClothingDockView: View {
       xOffset: xOffsetValue,
       zIndex: zIndex,
       onTap: { handleClick(for: clothing.id) },
-      onDrag: { dragDistance in
-        // カードドラッグ開始をマーク
+      onDrag: { location in
         isCardDragging = true
 
-        // 上下関係なく一貫した回転方向（左右のドラッグで一貫した回転）
-        currentRotation -= Double(dragDistance) * 0.004
-        velocity = -Double(dragDistance) * 0.004
+        // グローバル座標での回転中心を計算（バックグラウンドと同じ）
+        let globalCenterPoint = geo.frame(in: .global).center
+
+        // 共通コントローラーを使用（カードドラッグ）
+        rotationController.handleDrag(
+          currentPoint: location,
+          centerPoint: globalCenterPoint,
+          isCardDrag: false
+        )
       },
       onDragEnd: {
-        // カードドラッグ終了をマーク
         isCardDragging = false
-        startInertialRotation()
+        rotationController.endDrag()
       })
       .offset(y: yOffsetValue)
       .allowsHitTesting(true)
+      .zIndex(zIndex) // 明示的にzIndexを適用
   }
 
-  // MARK: - Calculations
+  // MARK: - Calculations（rotationController.currentRotationを使用）
 
   private func calculateRadius(for totalItems: Int) -> CGFloat {
     return baseRadius + CGFloat(totalItems) * radiusMultiplier
@@ -142,7 +138,7 @@ struct ClothingDockView: View {
   private func calculatePosition(index: Int, centerX: CGFloat, centerY: CGFloat, totalItems: Int) -> CGPoint {
     let radius = calculateRadius(for: totalItems)
     let anglePerItem: Double = 2 * Double.pi / Double(totalItems)
-    let itemAngle: Double = currentRotation + Double(index) * anglePerItem
+    let itemAngle: Double = rotationController.currentRotation + Double(index) * anglePerItem
 
     let xPos: CGFloat = centerX + CGFloat(cos(itemAngle)) * radius
     let yPos: CGFloat = centerY + CGFloat(sin(itemAngle)) * radius
@@ -152,21 +148,28 @@ struct ClothingDockView: View {
 
   private func calculateScale(yPosition: CGFloat, centerY: CGFloat, totalItems: Int) -> CGFloat {
     let radius = calculateRadius(for: totalItems)
-    // 手前（下）が大きく、奥（上）が小さくなるように調整（遠近法）
-    let normalizedY: CGFloat = (yPosition - centerY + radius) / (2 * radius)
-    return 0.4 + 0.6 * normalizedY // 手前（下側/画面下部）が大きく、奥（上側/画面上部）がもっと小さく
+
+    // 相対的なY位置（-1.0から1.0の範囲）を計算
+    let relativeY = (yPosition - centerY) / radius
+
+    // -1.0（最も奥）→0.4倍、+1.0（最も手前）→1.0倍のスケール
+    return 0.4 + 0.3 * (relativeY + 1.0)
   }
 
   private func calculateZIndex(yPosition: CGFloat, centerY: CGFloat, totalItems: Int) -> Double {
     let radius = calculateRadius(for: totalItems)
-    // 手前（下）が前面に、奥（上）が背面になるように調整
-    let normalizedY: CGFloat = (yPosition - centerY + radius) / (2 * radius)
-    return Double(normalizedY) * 1_000 // 手前（下側/画面下部）が前面に
+
+    // 相対的なY位置（-1.0から1.0の範囲）を計算
+    let relativeY = (yPosition - centerY) / radius
+
+    // 下にあるカード（正のrelativeY）ほど高いzIndexを持つように
+    // 整数部の大きな値を使用して確実に重なりが正しく表示されるようにする
+    return relativeY * 1_000.0
   }
 
   private func calculateCardRotation(index: Int, totalItems: Int, centerX: CGFloat, centerY: CGFloat) -> Double {
     let anglePerItem: Double = 2 * Double.pi / Double(totalItems)
-    let itemAngle: Double = currentRotation + Double(index) * anglePerItem
+    let itemAngle: Double = rotationController.currentRotation + Double(index) * anglePerItem
 
     // アイテムの位置を計算
     let radius = calculateRadius(for: totalItems)
@@ -185,48 +188,7 @@ struct ClothingDockView: View {
     return rotationAngle + Double.pi / 2 // 90度調整
   }
 
-  // MARK: - Gestures
-
-  private var rotationGesture: some Gesture {
-    // カード個別のジェスチャーで処理するため、全体のジェスチャーは無効化または簡素化
-    DragGesture()
-      .onChanged { _ in }
-      .onEnded { _ in }
-  }
-
   // MARK: - Helper Methods
-
-  private func startInertialRotation() {
-    timer?.invalidate()
-
-    // 慣性のみ（スナップ機能削除）
-    timer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { [weak timer] _ in
-      Task { @MainActor in
-        currentRotation += velocity
-        velocity *= 0.98 // 減速をより緩やかに
-
-        // 速度の閾値をより小さく（慣性を長く保つ）
-        if abs(velocity) < 0.0001 {
-          timer?.invalidate()
-          self.timer = nil
-          // スナップ削除
-        }
-      }
-    }
-  }
-
-  private func snapToNearestItem(itemCount: Int) {
-    guard itemCount > 0 else { return }
-
-    let anglePerItem: Double = 2 * Double.pi / Double(itemCount)
-    let currentIndex: Double = currentRotation / anglePerItem
-    let nearestIndex: Double = round(currentIndex)
-    let targetRotation: Double = nearestIndex * anglePerItem
-
-    withAnimation(.easeOut(duration: 0.3)) {
-      currentRotation = targetRotation
-    }
-  }
 
   private func handleClick(for clothingId: UUID) {
     // 同じアイテムの場合は一度クリアしてから再設定
@@ -268,5 +230,12 @@ struct ClothingDockView: View {
   private func bindingFor(id: UUID) -> Binding<Clothing>? {
     guard let index = viewModel.clothes.firstIndex(where: { $0.id == id }) else { return nil }
     return $viewModel.clothes[index]
+  }
+}
+
+// CGRectの拡張を追加
+extension CGRect {
+  var center: CGPoint {
+    return CGPoint(x: midX, y: midY)
   }
 }
