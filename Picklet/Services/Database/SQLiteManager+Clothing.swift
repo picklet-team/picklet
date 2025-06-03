@@ -7,21 +7,32 @@ extension SQLiteManager {
   /// 衣類データを保存
   func saveClothing(_ clothing: Clothing) -> Bool {
     do {
-      // インサート文の構文修正
-      let insertStatement = clothesTable.insert(or: .replace, [
+      let encoder = JSONEncoder()
+      encoder.dateEncodingStrategy = .iso8601
+
+      // ColorDataをJSONエンコード
+      let colorsData = try encoder.encode(clothing.colors)
+      let colorsString = String(data: colorsData, encoding: .utf8) ?? "[]"
+
+      // CategoryIdsをJSONエンコード
+      let categoryIdsData = try encoder.encode(clothing.categoryIds)
+      let categoryIdsString = String(data: categoryIdsData, encoding: .utf8) ?? "[]"
+
+      let insert = clothesTable.insert(
         clothesId <- clothing.id.uuidString,
         clothesName <- clothing.name,
-        clothesCategory <- clothing.category,
-        clothesColor <- clothing.color,
+        clothesPurchasePrice <- clothing.purchasePrice,
+        clothesFavoriteRating <- clothing.favoriteRating,
+        clothesColors <- colorsString, // ColorDataのJSON文字列
+        clothesCategoryIds <- categoryIdsString, // 新しいカラム
         clothesCreatedAt <- clothing.createdAt,
         clothesUpdatedAt <- clothing.updatedAt
-      ])
+      )
 
-      try db?.run(insertStatement)
-      print("✅ SQLite: 衣類データ保存成功 - \(clothing.name)")
+      try db?.run(insert)
       return true
     } catch {
-      print("❌ SQLite: 衣類データ保存エラー - \(error)")
+      print("❌ 衣類保存エラー: \(error)")
       return false
     }
   }
@@ -35,11 +46,30 @@ extension SQLiteManager {
         return nil
       }
 
+      let decoder = JSONDecoder()
+      decoder.dateDecodingStrategy = .iso8601
+
+      // ColorDataをJSONから復元
+      var colors: [ColorData] = []
+      if let colorsString = row[clothesColors],
+         let colorsData = colorsString.data(using: .utf8) {
+        colors = (try? decoder.decode([ColorData].self, from: colorsData)) ?? []
+      }
+
+      // CategoryIdsをJSONから復元
+      var categoryIds: [UUID] = []
+      if let categoryIdsString = row[clothesCategoryIds],
+         let categoryIdsData = categoryIdsString.data(using: .utf8) {
+        categoryIds = (try? decoder.decode([UUID].self, from: categoryIdsData)) ?? []
+      }
+
       let clothing = Clothing(
         id: UUID(uuidString: row[clothesId])!,
         name: row[clothesName],
-        category: row[clothesCategory],
-        color: row[clothesColor],
+        purchasePrice: row[clothesPurchasePrice],
+        favoriteRating: row[clothesFavoriteRating],
+        colors: colors, // ColorDataの配列に変更
+        categoryIds: categoryIds, // 追加: カテゴリIDの配列
         createdAt: row[clothesCreatedAt],
         updatedAt: row[clothesUpdatedAt])
 
@@ -52,29 +82,80 @@ extension SQLiteManager {
 
   /// 全ての衣類データを読み込み
   func loadAllClothing() -> [Clothing] {
+    var clothingList: [Clothing] = []
+
     do {
-      var clothes: [Clothing] = []
+      guard let db = db else { return clothingList }
 
-      // ここを修正 - guard letとオプショナルチェーンを使用
-      guard let db = db else { return [] }
-
-      // 直接forループで回す
       for row in try db.prepare(clothesTable) {
-        let clothing = Clothing(
-          id: UUID(uuidString: row[clothesId])!,
-          name: row[clothesName],
-          category: row[clothesCategory],
-          color: row[clothesColor],
-          createdAt: row[clothesCreatedAt],
-          updatedAt: row[clothesUpdatedAt])
-        clothes.append(clothing)
-      }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
 
-      print("✅ SQLite: 衣類データ読み込み完了 - \(clothes.count)件")
-      return clothes
+        // ColorDataをJSONデコード
+        var colors: [ColorData] = []
+        if let colorsString = row[clothesColors],
+           let colorsData = colorsString.data(using: .utf8) {
+          colors = (try? decoder.decode([ColorData].self, from: colorsData)) ?? []
+        }
+
+        // CategoryIdsをJSONデコード
+        var categoryIds: [UUID] = []
+        if let categoryIdsString = row[clothesCategoryIds],
+           let categoryIdsData = categoryIdsString.data(using: .utf8) {
+          categoryIds = (try? decoder.decode([UUID].self, from: categoryIdsData)) ?? []
+        }
+
+        let clothing = Clothing(
+          id: UUID(uuidString: row[clothesId]) ?? UUID(),
+          name: row[clothesName],
+          purchasePrice: row[clothesPurchasePrice],
+          favoriteRating: row[clothesFavoriteRating],
+          colors: colors, // ColorDataの配列
+          categoryIds: categoryIds, // 追加: カテゴリIDの配列
+          createdAt: row[clothesCreatedAt],
+          updatedAt: row[clothesUpdatedAt]
+        )
+
+        clothingList.append(clothing)
+      }
     } catch {
-      print("❌ SQLite: 衣類データ読み込みエラー - \(error)")
-      return []
+      print("❌ 衣類読み込みエラー: \(error)")
+    }
+
+    return clothingList
+  }
+
+  /// 衣類データを更新
+  func updateClothing(_ clothing: Clothing) -> Bool {
+    do {
+      let encoder = JSONEncoder()
+      encoder.dateEncodingStrategy = .iso8601
+
+      // ColorDataをJSONエンコード
+      let colorsData = try encoder.encode(clothing.colors)
+      let colorsString = String(data: colorsData, encoding: .utf8) ?? "[]"
+
+      // CategoryIdsをJSONエンコード
+      let categoryIdsData = try encoder.encode(clothing.categoryIds)
+      let categoryIdsString = String(data: categoryIdsData, encoding: .utf8) ?? "[]"
+
+      let update = clothesTable
+        .filter(clothesId == clothing.id.uuidString)
+        .update(
+          clothesName <- clothing.name,
+          clothesPurchasePrice <- clothing.purchasePrice,
+          clothesFavoriteRating <- clothing.favoriteRating,
+          clothesColors <- colorsString,
+          clothesCategoryIds <- categoryIdsString, // 追加: カテゴリIDの更新
+          clothesUpdatedAt <- Date()
+        )
+
+      guard let db = db else { return false }
+      try db.run(update)
+      return true
+    } catch {
+      print("❌ 衣類更新エラー: \(error)")
+      return false
     }
   }
 

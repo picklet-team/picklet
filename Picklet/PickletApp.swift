@@ -11,6 +11,8 @@ import SwiftUI
 struct PickletApp: App {
   @StateObject private var clothingViewModel = ClothingViewModel()
   @StateObject private var themeManager = ThemeManager()
+  @StateObject private var categoryManager = CategoryManager()
+  @StateObject private var brandManager = BrandManager() // 追加
 
   // カラースキーム設定を監視
   @AppStorage("colorSchemePreference") private var colorSchemePreference: String = ColorSchemeSelection.system.rawValue
@@ -21,9 +23,11 @@ struct PickletApp: App {
         MainTabView()
           .environmentObject(clothingViewModel)
           .environmentObject(themeManager)
+          .environmentObject(categoryManager)
+          .environmentObject(brandManager) // 追加
           .accentColor(themeManager.currentTheme.accentColor)
       }
-      .preferredColorScheme(getPreferredColorScheme()) // この行を追加
+      .preferredColorScheme(getPreferredColorScheme())
     }
   }
 

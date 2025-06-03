@@ -14,13 +14,13 @@ class SQLiteManager {
   let clothesTable = Table("clothes")
   let wearHistoriesTable = Table("wear_histories")
   let imageMetadataTable = Table("image_metadata")
+  let categoriesTable = Table("categories") // カテゴリテーブル
+  let brandsTable = Table("brands") // ブランドテーブル
 
   // 完全修飾名を使用（SQLite.Expression）
   // Clothes テーブルのカラム
   let clothesId = SQLite.Expression<String>("id")
   let clothesName = SQLite.Expression<String>("name")
-  let clothesCategory = SQLite.Expression<String>("category")
-  let clothesColor = SQLite.Expression<String>("color")
   let clothesCreatedAt = SQLite.Expression<Date>("created_at")
   let clothesUpdatedAt = SQLite.Expression<Date>("updated_at")
 
@@ -37,6 +37,28 @@ class SQLiteManager {
   let imageOriginalUrl = SQLite.Expression<String?>("original_url")
   let imageMaskUrl = SQLite.Expression<String?>("mask_url")
   let imageResultUrl = SQLite.Expression<String?>("result_url")
+
+  // 新しいカラム定義
+  let clothesPurchasePrice = SQLite.Expression<Double?>("purchase_price")
+  let clothesFavoriteRating = SQLite.Expression<Int>("favorite_rating")
+  let clothesColors = SQLite.Expression<String?>("colors") // JSON文字列として保存
+  let clothesCategoryIds = SQLite.Expression<String?>("category_ids") // 追加
+
+  // 削除予定の古いカラム（マイグレーション用）
+  let clothesCategory = SQLite.Expression<String?>("category")
+  let clothesColor = SQLite.Expression<String?>("color")
+
+  // カテゴリテーブル
+  let categoryId = SQLite.Expression<String>("id")
+  let categoryName = SQLite.Expression<String>("name")
+  let categoryCreatedAt = SQLite.Expression<Date>("created_at")
+  let categoryUpdatedAt = SQLite.Expression<Date>("updated_at")
+
+  // ブランドテーブル
+  let brandId = SQLite.Expression<String>("id")
+  let brandName = SQLite.Expression<String>("name")
+  let brandCreatedAt = SQLite.Expression<Date>("created_at")
+  let brandUpdatedAt = SQLite.Expression<Date>("updated_at")
 
   private init() {
     // App Groupのコンテナディレクトリを取得
@@ -70,6 +92,9 @@ class SQLiteManager {
       // テーブル作成
       createTables()
 
+      // マイグレーション実行
+      performMigrations()
+
       print("✅ SQLiteデータベース初期化完了: \(dbPath)")
     } catch {
       print("❌ SQLiteデータベース初期化エラー: \(error)")
@@ -78,40 +103,118 @@ class SQLiteManager {
 
   private func createTables() {
     do {
-      // Clothesテーブル
-      try db?.run(clothesTable.create(ifNotExists: true) { table in
-        table.column(clothesId, primaryKey: true)
-        table.column(clothesName)
-        table.column(clothesCategory)
-        table.column(clothesColor)
-        table.column(clothesCreatedAt)
-        table.column(clothesUpdatedAt)
+      // 衣類テーブル
+      try db?.run(clothesTable.create(ifNotExists: true) { t in
+        t.column(clothesId, primaryKey: true)
+        t.column(clothesName)
+        t.column(clothesPurchasePrice)
+        t.column(clothesFavoriteRating)
+        t.column(clothesColors)
+        t.column(clothesCategoryIds) // 追加: カテゴリIDの配列（JSON文字列）
+        t.column(clothesCreatedAt)
+        t.column(clothesUpdatedAt)
       })
 
-      // WearHistoriesテーブル
-      try db?.run(wearHistoriesTable.create(ifNotExists: true) { table in
-        table.column(wearId, primaryKey: true)
-        table.column(wearClothingId)
-        table.column(wearWornAt)
-        table.foreignKey(wearClothingId, references: clothesTable, clothesId, delete: .cascade)
+      // カテゴリテーブル
+      try db?.run(categoriesTable.create(ifNotExists: true) { t in
+        t.column(categoryId, primaryKey: true)
+        t.column(categoryName)
+        t.column(categoryCreatedAt)
+        t.column(categoryUpdatedAt)
+        // is_defaultカラムを削除
       })
 
-      // ImageMetadataテーブル
-      try db?.run(imageMetadataTable.create(ifNotExists: true) { table in
-        table.column(imageId, primaryKey: true)
-        table.column(imageClothingId)
-        table.column(imageOriginalPath)
-        table.column(imageMaskPath)
-        table.column(imageOriginalUrl)
-        table.column(imageMaskUrl)
-        table.column(imageResultUrl)
-        table.foreignKey(imageClothingId, references: clothesTable, clothesId, delete: .cascade)
+      // ブランドテーブル
+      try db?.run(brandsTable.create(ifNotExists: true) { t in
+        t.column(brandId, primaryKey: true)
+        t.column(brandName)
+        t.column(brandCreatedAt)
+        t.column(brandUpdatedAt)
       })
 
-      print("✅ SQLiteテーブル作成完了")
+      print("✅ SQLite: テーブル作成完了")
     } catch {
-      print("❌ SQLiteテーブル作成エラー: \(error)")
+      print("❌ SQLite: テーブル作成エラー - \(error)")
     }
+  }
+
+  private func performMigrations() {
+    guard let db = db else { return }
+
+    // カテゴリIDカラムの追加（既存テーブルに存在しない場合）
+    do {
+      try db.run(clothesTable.addColumn(clothesCategoryIds, defaultValue: nil))
+      print("✅ category_ids カラムを追加しました")
+    } catch {
+      // カラムが既に存在する場合はエラーを無視
+      if error.localizedDescription.contains("duplicate column name") ||
+         error.localizedDescription.contains("already exists") {
+        print("ℹ️ category_ids カラムは既に存在します")
+      } else {
+        print("⚠️ category_ids カラム追加エラー: \(error)")
+      }
+    }
+  }
+
+  private func migrateClothingTable() throws {
+    // テーブルが存在しない場合は新しい構造で作成
+    // 1. 既存データをバックアップ
+    let existingData = try backupExistingClothingData()
+
+    // 2. 古いテーブルを削除
+    try db?.run(clothesTable.drop(ifExists: true))
+
+    // 3. 新しい構造でテーブルを作成
+    try db?.run(clothesTable.create { t in
+      t.column(clothesId, primaryKey: true)
+      t.column(clothesName)
+      t.column(clothesPurchasePrice)
+      t.column(clothesFavoriteRating, defaultValue: 3)
+      t.column(clothesColors, defaultValue: "[]")
+      t.column(clothesCategoryIds) // 追加: カテゴリIDの配列（JSON文字列）
+      t.column(clothesCreatedAt)
+      t.column(clothesUpdatedAt)
+    })
+
+    // 4. データを新しい構造で復元
+    try restoreClothingData(existingData)
+  }
+
+  private func backupExistingClothingData() throws -> [(id: String, name: String, createdAt: Date, updatedAt: Date)] {
+    var backup: [(id: String, name: String, createdAt: Date, updatedAt: Date)] = []
+
+    do {
+      guard let db = db else { return backup }
+
+      for row in try db.prepare(clothesTable) {
+        backup.append((
+          id: row[clothesId],
+          name: row[clothesName],
+          createdAt: row[clothesCreatedAt],
+          updatedAt: row[clothesUpdatedAt]
+        ))
+      }
+    } catch {
+      print("⚠️ SQLite: 既存データバックアップ時のエラー - \(error)")
+    }
+
+    return backup
+  }
+
+  private func restoreClothingData(_ data: [(id: String, name: String, createdAt: Date, updatedAt: Date)]) throws {
+    for item in data {
+      try db?.run(clothesTable.insert(
+        clothesId <- item.id,
+        clothesName <- item.name,
+        clothesPurchasePrice <- nil,
+        clothesFavoriteRating <- 3,
+        clothesColors <- "[]",
+        clothesCategoryIds <- nil, // 修正済み
+        clothesCreatedAt <- item.createdAt,
+        clothesUpdatedAt <- item.updatedAt
+      ))
+    }
+    print("✅ SQLite: \(data.count)件のデータを復元完了")
   }
 
   /// レガシーストレージからSQLiteに移行
