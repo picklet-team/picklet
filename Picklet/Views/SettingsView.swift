@@ -156,10 +156,10 @@ struct SettingsView: View {
                       .foregroundColor(.secondary)
                     Group {
                       Text("Open Database License (") +
-                      Text("ODbL")
+                        Text("ODbL")
                         .foregroundColor(themeManager.currentTheme.primaryColor)
                         .underline() +
-                      Text(")")
+                        Text(")")
                     }
                     .font(.footnote)
                     .foregroundColor(.secondary)
@@ -182,10 +182,10 @@ struct SettingsView: View {
                       .foregroundColor(.secondary)
                     Group {
                       Text("Creative Commons (") +
-                      Text("CC BY-SA 4.0")
+                        Text("CC BY-SA 4.0")
                         .foregroundColor(themeManager.currentTheme.primaryColor)
                         .underline() +
-                      Text(")")
+                        Text(")")
                     }
                     .font(.footnote)
                     .foregroundColor(.secondary)
@@ -200,7 +200,6 @@ struct SettingsView: View {
             }
             .padding(.vertical, 4)
           }
-
         }
         .scrollContentBackground(.hidden)
       }
