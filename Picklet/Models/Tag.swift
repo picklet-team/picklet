@@ -8,17 +8,17 @@ struct Tag: Codable, Identifiable, Equatable {
   var description: String?
   let createdAt: Date
   var updatedAt: Date
-  
+
   enum TagColor: String, CaseIterable, Codable {
-    case blue = "blue"
-    case green = "green"
-    case orange = "orange"
-    case red = "red"
-    case purple = "purple"
-    case pink = "pink"
-    case yellow = "yellow"
-    case gray = "gray"
-    
+    case blue
+    case green
+    case orange
+    case red
+    case purple
+    case pink
+    case yellow
+    case gray
+
     var color: Color {
       switch self {
       case .blue: return .blue
@@ -32,7 +32,7 @@ struct Tag: Codable, Identifiable, Equatable {
       }
     }
   }
-  
+
   init(id: UUID = UUID(),
        name: String,
        color: TagColor = .blue,

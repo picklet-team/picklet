@@ -80,9 +80,8 @@ struct ClothingEditView: View {
           imageSets: $editingSets,
           addAction: { showPhotoPicker = true },
           selectAction: prepareImageForEditing,
-          isLoading: isBackgroundLoading
-        )
-        .padding(.top, 8)
+          isLoading: isBackgroundLoading)
+          .padding(.top, 8)
 
         // 名前編集セクション
         nameEditSection
@@ -109,8 +108,7 @@ struct ClothingEditView: View {
         .cornerRadius(12)
         .overlay(
           RoundedRectangle(cornerRadius: 12)
-            .stroke(themeManager.currentTheme.primaryColor.opacity(0.3), lineWidth: 1)
-        )
+            .stroke(themeManager.currentTheme.primaryColor.opacity(0.3), lineWidth: 1))
         .padding(.horizontal)
     }
   }
@@ -159,5 +157,4 @@ struct ClothingEditView: View {
     }
     return $editingSets[idx]
   }
-
 }

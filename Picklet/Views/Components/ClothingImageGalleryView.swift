@@ -164,7 +164,6 @@ struct ImageThumbnailView: View {
     .cornerRadius(cornerRadius)
     .overlay(
       RoundedRectangle(cornerRadius: cornerRadius)
-        .stroke(themeManager.currentTheme.primaryColor.opacity(0.15), lineWidth: 1)
-    )
+        .stroke(themeManager.currentTheme.primaryColor.opacity(0.15), lineWidth: 1))
   }
 }

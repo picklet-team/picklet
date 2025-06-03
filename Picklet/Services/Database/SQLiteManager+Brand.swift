@@ -2,15 +2,13 @@ import Foundation
 import SQLite
 
 extension SQLiteManager {
-
   func saveBrand(_ brand: Brand) -> Bool {
     do {
       let insert = brandsTable.insert(
         brandId <- brand.id.uuidString,
         brandName <- brand.name,
         brandCreatedAt <- brand.createdAt,
-        brandUpdatedAt <- brand.updatedAt
-      )
+        brandUpdatedAt <- brand.updatedAt)
 
       try db?.run(insert)
       return true
@@ -31,8 +29,7 @@ extension SQLiteManager {
           id: UUID(uuidString: row[brandId]) ?? UUID(),
           name: row[brandName],
           createdAt: row[brandCreatedAt],
-          updatedAt: row[brandUpdatedAt]
-        )
+          updatedAt: row[brandUpdatedAt])
         brands.append(brand)
       }
     } catch {
@@ -48,8 +45,7 @@ extension SQLiteManager {
         .filter(brandId == brand.id.uuidString)
         .update(
           brandName <- brand.name,
-          brandUpdatedAt <- Date()
-        )
+          brandUpdatedAt <- Date())
 
       guard let db = db else { return false }
       try db.run(update)

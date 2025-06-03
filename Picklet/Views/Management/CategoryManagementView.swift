@@ -22,8 +22,7 @@ struct CategoryManagementView: View {
             onDelete: {
               // すべてのカテゴリが削除可能
               _ = categoryManager.deleteCategory(category)
-            }
-          )
+            })
         }
       }
 

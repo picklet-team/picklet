@@ -38,17 +38,14 @@ struct ModeSwitchBarView: View {
           Color(.secondarySystemBackground).opacity(0.95)
         ],
         startPoint: .top,
-        endPoint: .bottom
-      )
-    )
+        endPoint: .bottom))
   }
 
   private func modeButton(
     icon: String,
     title: String,
     isSelected: Bool,
-    action: @escaping () -> Void
-  ) -> some View {
+    action: @escaping () -> Void) -> some View {
     Button(action: action) {
       VStack(spacing: 4) {
         Image(systemName: icon)
@@ -64,8 +61,7 @@ struct ModeSwitchBarView: View {
       .padding(.vertical, 8)
       .background(
         RoundedRectangle(cornerRadius: 8)
-          .fill(isSelected ? themeManager.currentTheme.primaryColor.opacity(0.1) : Color.clear)
-      )
+          .fill(isSelected ? themeManager.currentTheme.primaryColor.opacity(0.1) : Color.clear))
     }
     .buttonStyle(PlainButtonStyle())
   }

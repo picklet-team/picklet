@@ -12,8 +12,7 @@ struct ManagementView: View {
               icon: "tag.fill",
               title: "カテゴリ",
               subtitle: "衣類のカテゴリを管理",
-              color: .blue
-            )
+              color: .blue)
           }
 
           NavigationLink(destination: BrandManagementView()) {
@@ -21,8 +20,7 @@ struct ManagementView: View {
               icon: "star.fill",
               title: "ブランド",
               subtitle: "お気に入りブランドを管理",
-              color: .purple
-            )
+              color: .purple)
           }
 
           NavigationLink(destination: TagManagementView()) {
@@ -30,11 +28,9 @@ struct ManagementView: View {
               icon: "number",
               title: "タグ",
               subtitle: "カスタムタグを管理",
-              color: .green
-            )
+              color: .green)
           }
         }
-
       }
       .navigationTitle("管理")
       .navigationBarTitleDisplayMode(.large)

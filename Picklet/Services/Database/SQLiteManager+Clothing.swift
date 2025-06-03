@@ -26,8 +26,7 @@ extension SQLiteManager {
         clothesColors <- colorsString, // ColorDataのJSON文字列
         clothesCategoryIds <- categoryIdsString, // 新しいカラム
         clothesCreatedAt <- clothing.createdAt,
-        clothesUpdatedAt <- clothing.updatedAt
-      )
+        clothesUpdatedAt <- clothing.updatedAt)
 
       try db?.run(insert)
       return true
@@ -113,8 +112,7 @@ extension SQLiteManager {
           colors: colors, // ColorDataの配列
           categoryIds: categoryIds, // 追加: カテゴリIDの配列
           createdAt: row[clothesCreatedAt],
-          updatedAt: row[clothesUpdatedAt]
-        )
+          updatedAt: row[clothesUpdatedAt])
 
         clothingList.append(clothing)
       }
@@ -147,8 +145,7 @@ extension SQLiteManager {
           clothesFavoriteRating <- clothing.favoriteRating,
           clothesColors <- colorsString,
           clothesCategoryIds <- categoryIdsString, // 追加: カテゴリIDの更新
-          clothesUpdatedAt <- Date()
-        )
+          clothesUpdatedAt <- Date())
 
       guard let db = db else { return false }
       try db.run(update)

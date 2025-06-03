@@ -376,7 +376,6 @@ class ClothingViewModel: ObservableObject {
 }
 
 extension ClothingViewModel {
-
   /// 新規衣類追加（データベースに保存）
   func addClothing(_ clothing: Clothing, imageSets: [EditableImageSet] = []) {
     saveClothing(clothing, imageSets: imageSets, isNew: true)

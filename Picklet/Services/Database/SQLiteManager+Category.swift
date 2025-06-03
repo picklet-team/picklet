@@ -2,7 +2,6 @@ import Foundation
 import SQLite
 
 extension SQLiteManager {
-
   // カテゴリ保存
   func saveCategory(_ category: Category) -> Bool {
     do {

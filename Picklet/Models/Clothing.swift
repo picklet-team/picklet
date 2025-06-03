@@ -16,7 +16,7 @@ struct ColorData: Codable, Identifiable, Hashable, Equatable {
   let brightness: Double
 
   init(hue: Double, saturation: Double, brightness: Double) {
-    self.id = UUID()
+    id = UUID()
     self.hue = hue
     self.saturation = saturation
     self.brightness = brightness
@@ -28,8 +28,8 @@ struct ColorData: Codable, Identifiable, Hashable, Equatable {
 
   static func == (lhs: ColorData, rhs: ColorData) -> Bool {
     return abs(lhs.hue - rhs.hue) < 0.01 &&
-           abs(lhs.saturation - rhs.saturation) < 0.01 &&
-           abs(lhs.brightness - rhs.brightness) < 0.01
+      abs(lhs.saturation - rhs.saturation) < 0.01 &&
+      abs(lhs.brightness - rhs.brightness) < 0.01
   }
 }
 

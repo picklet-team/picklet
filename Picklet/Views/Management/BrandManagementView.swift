@@ -20,8 +20,7 @@ struct BrandManagementView: View {
             },
             onDelete: {
               _ = brandManager.deleteBrand(brand)
-            }
-          )
+            })
         }
       }
 

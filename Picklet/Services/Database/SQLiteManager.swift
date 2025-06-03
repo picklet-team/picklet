@@ -148,7 +148,7 @@ class SQLiteManager {
     } catch {
       // カラムが既に存在する場合はエラーを無視
       if error.localizedDescription.contains("duplicate column name") ||
-         error.localizedDescription.contains("already exists") {
+        error.localizedDescription.contains("already exists") {
         print("ℹ️ category_ids カラムは既に存在します")
       } else {
         print("⚠️ category_ids カラム追加エラー: \(error)")
@@ -191,8 +191,7 @@ class SQLiteManager {
           id: row[clothesId],
           name: row[clothesName],
           createdAt: row[clothesCreatedAt],
-          updatedAt: row[clothesUpdatedAt]
-        ))
+          updatedAt: row[clothesUpdatedAt]))
       }
     } catch {
       print("⚠️ SQLite: 既存データバックアップ時のエラー - \(error)")
@@ -211,8 +210,7 @@ class SQLiteManager {
         clothesColors <- "[]",
         clothesCategoryIds <- nil, // 修正済み
         clothesCreatedAt <- item.createdAt,
-        clothesUpdatedAt <- item.updatedAt
-      ))
+        clothesUpdatedAt <- item.updatedAt))
     }
     print("✅ SQLite: \(data.count)件のデータを復元完了")
   }

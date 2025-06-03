@@ -118,8 +118,7 @@ struct PhotoThumbnailCell: View {
     .cornerRadius(8)
     .overlay(
       RoundedRectangle(cornerRadius: 8)
-        .stroke(Color(.systemGray4), lineWidth: 0.5)
-    )
+        .stroke(Color(.systemGray4), lineWidth: 0.5))
     .onAppear(perform: loadThumb)
     .onTapGesture { requestFull() }
   }

@@ -11,7 +11,7 @@ class CategoryManager: ObservableObject {
 
   private func loadCategories() {
     categories = sqliteManager.loadAllCategories()
-    
+
     // 初回起動時のみ初期カテゴリを追加
     if categories.isEmpty {
       for initialCategory in Category.initialCategories {
@@ -33,7 +33,7 @@ class CategoryManager: ObservableObject {
   func updateCategory(_ category: Category) -> Bool {
     var updatedCategory = category
     updatedCategory.updatedAt = Date()
-    
+
     if sqliteManager.updateCategory(updatedCategory) {
       if let index = categories.firstIndex(where: { $0.id == category.id }) {
         categories[index] = updatedCategory

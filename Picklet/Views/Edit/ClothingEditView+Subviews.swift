@@ -127,8 +127,7 @@ struct ClothingFormSection: View {
       .cornerRadius(8)
       .overlay(
         RoundedRectangle(cornerRadius: 8)
-          .stroke(themeManager.currentTheme.primaryColor.opacity(0.3), lineWidth: 1)
-      )
+          .stroke(themeManager.currentTheme.primaryColor.opacity(0.3), lineWidth: 1))
     }
   }
 
@@ -140,7 +139,7 @@ struct ClothingFormSection: View {
         .foregroundColor(themeManager.currentTheme.primaryColor)
 
       HStack(spacing: 8) {
-        ForEach(1...5, id: \.self) { rating in
+        ForEach(1 ... 5, id: \.self) { rating in
           Button(action: {
             clothing.favoriteRating = rating
           }) {
@@ -190,8 +189,7 @@ struct ClothingFormSection: View {
               .frame(width: 16, height: 16)
               .overlay(
                 Circle()
-                  .stroke(Color(.systemGray4), lineWidth: 0.5)
-              )
+                  .stroke(Color(.systemGray4), lineWidth: 0.5))
           }
         }
         .padding(.top, 4)
@@ -201,32 +199,32 @@ struct ClothingFormSection: View {
 
   private var colorGrid: some View {
     VStack(spacing: 3) {
-      ForEach(0..<4, id: \.self) { brightnessIndex in
+      ForEach(0 ..< 4, id: \.self) { brightnessIndex in
         HStack(spacing: 3) {
           // モノクロ（4段階：白→黒）
           colorButton(hue: 0, saturation: 0, brightness: Double(3 - brightnessIndex) / 3.0)
 
           // 色相環（4段階のトーン）
-          ForEach(0..<9, id: \.self) { hueIndex in
+          ForEach(0 ..< 9, id: \.self) { hueIndex in
             let hue = switch hueIndex {
-            case 0: 0.0      // 赤
-            case 1: 0.08     // オレンジ
-            case 2: 0.16     // 黄色
-            case 3: 0.25     // 黄緑
-            case 4: 0.33     // 緑
-            case 5: 0.5      // 水色
-            case 6: 0.66     // 青
-            case 7: 0.75     // 紫
-            case 8: 0.9      // ピンク
+            case 0: 0.0 // 赤
+            case 1: 0.08 // オレンジ
+            case 2: 0.16 // 黄色
+            case 3: 0.25 // 黄緑
+            case 4: 0.33 // 緑
+            case 5: 0.5 // 水色
+            case 6: 0.66 // 青
+            case 7: 0.75 // 紫
+            case 8: 0.9 // ピンク
             default: 0.0
             }
 
             // トーン別の彩度と明度設定
             let (saturation, brightness) = switch brightnessIndex {
-            case 0: (0.25, 0.95)  // ペールトーン（薄く淡い）
-            case 1: (0.45, 0.85)  // ペールと中間の間（元気さを下げる）
-            case 2: (0.75, 0.75)  // 中程度（鮮やかではなく適度に）
-            case 3: (0.8, 0.55)   // ちょっと暗め
+            case 0: (0.25, 0.95) // ペールトーン（薄く淡い）
+            case 1: (0.45, 0.85) // ペールと中間の間（元気さを下げる）
+            case 2: (0.75, 0.75) // 中程度（鮮やかではなく適度に）
+            case 3: (0.8, 0.55) // ちょっと暗め
             default: (0.5, 0.7)
             }
 
@@ -241,8 +239,8 @@ struct ClothingFormSection: View {
     let colorData = ColorData(hue: hue, saturation: saturation, brightness: brightness)
     let isSelected = clothing.colors.contains { colorData in
       abs(colorData.hue - hue) < 0.01 &&
-      abs(colorData.saturation - saturation) < 0.01 &&
-      abs(colorData.brightness - brightness) < 0.01
+        abs(colorData.saturation - saturation) < 0.01 &&
+        abs(colorData.brightness - brightness) < 0.01
     }
     let isMaxSelected = clothing.colors.count >= 3 && !isSelected
 
@@ -250,8 +248,8 @@ struct ClothingFormSection: View {
       if isSelected {
         clothing.colors.removeAll { colorData in
           abs(colorData.hue - hue) < 0.01 &&
-          abs(colorData.saturation - saturation) < 0.01 &&
-          abs(colorData.brightness - brightness) < 0.01
+            abs(colorData.saturation - saturation) < 0.01 &&
+            abs(colorData.brightness - brightness) < 0.01
         }
       } else if clothing.colors.count < 3 {
         clothing.colors.append(colorData)
@@ -264,9 +262,7 @@ struct ClothingFormSection: View {
           Rectangle()
             .stroke(
               isSelected ? themeManager.currentTheme.primaryColor : Color.clear,
-              lineWidth: isSelected ? 2 : 0
-            )
-        )
+              lineWidth: isSelected ? 2 : 0))
         .opacity(isMaxSelected ? 0.4 : 1.0)
     }
     .buttonStyle(PlainButtonStyle())
@@ -311,8 +307,7 @@ struct ClothingFormSection: View {
             .padding(.vertical, 4)
             .background(
               RoundedRectangle(cornerRadius: 8)
-                .fill(themeManager.currentTheme.primaryColor.opacity(0.1))
-            )
+                .fill(themeManager.currentTheme.primaryColor.opacity(0.1)))
         }
       }
     }
@@ -365,9 +360,7 @@ struct ClothingFormSection: View {
           .fill(isSelected ? themeManager.currentTheme.primaryColor.opacity(0.1) : Color(.systemGray6))
           .overlay(
             RoundedRectangle(cornerRadius: 8)
-              .stroke(isSelected ? themeManager.currentTheme.primaryColor : Color.clear, lineWidth: 1)
-          )
-      )
+              .stroke(isSelected ? themeManager.currentTheme.primaryColor : Color.clear, lineWidth: 1)))
     }
     .buttonStyle(PlainButtonStyle())
   }
@@ -420,8 +413,7 @@ struct ClothingFormSection: View {
         .cornerRadius(8)
         .overlay(
           RoundedRectangle(cornerRadius: 8)
-            .stroke(themeManager.currentTheme.primaryColor.opacity(0.3), lineWidth: 1)
-        )
+            .stroke(themeManager.currentTheme.primaryColor.opacity(0.3), lineWidth: 1))
       }
     }
     .alert("ブランドを追加", isPresented: $showingQuickAddBrand) {

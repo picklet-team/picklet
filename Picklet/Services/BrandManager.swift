@@ -53,7 +53,8 @@ class BrandManager: ObservableObject {
 
   func getBrandName(for id: UUID?) -> String {
     guard let id = id,
-          let brand = brands.first(where: { $0.id == id }) else {
+          let brand = brands.first(where: { $0.id == id })
+    else {
       return "未選択"
     }
     return brand.name

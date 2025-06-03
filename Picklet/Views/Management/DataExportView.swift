@@ -68,7 +68,7 @@ struct DataExportView: View {
     .navigationTitle("データエクスポート")
     .navigationBarTitleDisplayMode(.inline)
     .alert("準備中", isPresented: $showingExportAlert) {
-      Button("OK") { }
+      Button("OK") {}
     } message: {
       Text("この機能は現在開発中です。今後のアップデートをお待ちください。")
     }

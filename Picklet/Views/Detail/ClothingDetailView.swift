@@ -32,18 +32,17 @@ struct ClothingDetailView: View {
         clothing: $clothing,
         openPhotoPickerOnAppear: false,
         canDelete: true,
-        isNew: false
-      )
-      .environmentObject(viewModel)
-      .environmentObject(themeManager)
-      .environmentObject(categoryManager)
-      .environmentObject(brandManager)
+        isNew: false)
+        .environmentObject(viewModel)
+        .environmentObject(themeManager)
+        .environmentObject(categoryManager)
+        .environmentObject(brandManager)
     }
     .confirmationDialog("本当に削除しますか？", isPresented: $showDeleteConfirm) {
       Button("削除", role: .destructive) {
         deleteClothing()
       }
-      Button("キャンセル", role: .cancel) { }
+      Button("キャンセル", role: .cancel) {}
     }
     .onChange(of: viewModel.clothes) { _, newClothes in
       if !newClothes.contains(where: { $0.id == clothingId }) {
@@ -53,6 +52,7 @@ struct ClothingDetailView: View {
   }
 
   // MARK: - メインコンテンツ
+
   private var mainContent: some View {
     VStack(spacing: 0) {
       scrollContent
@@ -61,14 +61,14 @@ struct ClothingDetailView: View {
   }
 
   // MARK: - スクロールコンテンツ
+
   private var scrollContent: some View {
     ScrollView {
       LazyVStack(spacing: 20) {
         // 画像ギャラリー
         ClothingImageGalleryView(
           imageSets: viewModel.imageSetsMap[clothingId] ?? [],
-          showAddButton: false
-        )
+          showAddButton: false)
 
         // 詳細情報セクション
         detailInfoSection
@@ -93,6 +93,7 @@ struct ClothingDetailView: View {
   }
 
   // MARK: - 詳細情報セクション
+
   private var detailInfoSection: some View {
     VStack(alignment: .leading, spacing: 16) {
       Text("詳細情報")
@@ -112,8 +113,7 @@ struct ClothingDetailView: View {
           icon: "yensign.circle.fill",
           title: "購入価格",
           value: "¥\(Int(price).formatted())",
-          color: .green
-        )
+          color: .green)
       }
 
       // お気に入り度
@@ -121,16 +121,14 @@ struct ClothingDetailView: View {
         icon: "star.fill",
         title: "お気に入り度",
         value: "\(clothing.favoriteRating)/5",
-        color: .yellow
-      )
+        color: .yellow)
 
       // 登録日
       DetailRowView(
         icon: "calendar",
         title: "登録日",
         value: DateFormatter.shortDate.string(from: clothing.createdAt),
-        color: .blue
-      )
+        color: .blue)
 
       // 最終更新
       if clothing.updatedAt != clothing.createdAt {
@@ -138,8 +136,7 @@ struct ClothingDetailView: View {
           icon: "clock",
           title: "最終更新",
           value: DateFormatter.shortDate.string(from: clothing.updatedAt),
-          color: .orange
-        )
+          color: .orange)
       }
     }
     .padding()
@@ -148,6 +145,7 @@ struct ClothingDetailView: View {
   }
 
   // MARK: - カテゴリ・ブランドセクション
+
   private var categoryBrandSection: some View {
     VStack(alignment: .leading, spacing: 16) {
       Text("分類")
@@ -167,8 +165,7 @@ struct ClothingDetailView: View {
           icon: "tag.fill",
           title: "カテゴリ",
           tags: categoryManager.getCategoryNames(for: clothing.categoryIds),
-          color: themeManager.currentTheme.primaryColor
-        )
+          color: themeManager.currentTheme.primaryColor)
       }
 
       // ブランド
@@ -177,8 +174,7 @@ struct ClothingDetailView: View {
           icon: "star.fill",
           title: "ブランド",
           tags: [brandManager.getBrandName(for: brandId)],
-          color: .purple
-        )
+          color: .purple)
       }
     }
     .padding()
@@ -187,6 +183,7 @@ struct ClothingDetailView: View {
   }
 
   // MARK: - カラーセクション
+
   private var colorSection: some View {
     VStack(alignment: .leading, spacing: 16) {
       Text("カラー")
@@ -208,8 +205,7 @@ struct ClothingDetailView: View {
               .frame(width: 40, height: 40)
               .overlay(
                 Circle()
-                  .stroke(Color.primary.opacity(0.2), lineWidth: 1)
-              )
+                  .stroke(Color.primary.opacity(0.2), lineWidth: 1))
               .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
           }
         }
@@ -228,6 +224,7 @@ struct ClothingDetailView: View {
   }
 
   // MARK: - 統計セクション
+
   private var statisticsSection: some View {
     VStack(alignment: .leading, spacing: 16) {
       Text("統計")
@@ -248,8 +245,7 @@ struct ClothingDetailView: View {
         icon: "calendar.badge.clock",
         title: "登録からの日数",
         value: "\(daysSinceCreation)日",
-        color: .indigo
-      )
+        color: .indigo)
 
       // 写真枚数
       let imageCount = viewModel.imageSetsMap[clothingId]?.count ?? 0
@@ -257,8 +253,7 @@ struct ClothingDetailView: View {
         icon: "photo",
         title: "写真枚数",
         value: "\(imageCount)枚",
-        color: .cyan
-      )
+        color: .cyan)
 
       // 1日あたりコスト（購入価格がある場合）
       if let price = clothing.purchasePrice, daysSinceCreation > 0 {
@@ -267,8 +262,7 @@ struct ClothingDetailView: View {
           icon: "chart.line.uptrend.xyaxis",
           title: "1日あたりコスト",
           value: "¥\(Int(costPerDay))",
-          color: .mint
-        )
+          color: .mint)
       }
     }
     .padding()
@@ -277,6 +271,7 @@ struct ClothingDetailView: View {
   }
 
   // MARK: - アクションセクション
+
   private var actionSection: some View {
     VStack(alignment: .leading, spacing: 16) {
       Text("アクション")
@@ -294,28 +289,25 @@ struct ClothingDetailView: View {
       ActionRowView(
         icon: clothing.favoriteRating >= 4 ? "heart.fill" : "heart",
         title: clothing.favoriteRating >= 4 ? "お気に入りから削除" : "お気に入りに追加",
-        color: .red
-      ) {
-        toggleFavorite()
-      }
+        color: .red) {
+          toggleFavorite()
+        }
 
       // 複製
       ActionRowView(
         icon: "doc.on.doc",
         title: "この衣類を複製",
-        color: .blue
-      ) {
-        duplicateClothing()
-      }
+        color: .blue) {
+          duplicateClothing()
+        }
 
       // 削除
       ActionRowView(
         icon: "trash",
         title: "削除",
-        color: .red
-      ) {
-        showDeleteConfirm = true
-      }
+        color: .red) {
+          showDeleteConfirm = true
+        }
     }
     .padding()
     .background(Color(.secondarySystemBackground))
@@ -323,6 +315,7 @@ struct ClothingDetailView: View {
   }
 
   // MARK: - 編集ボタン
+
   private var editButton: some View {
     PrimaryActionButton(title: "編集する") {
       showEdit = true
@@ -332,6 +325,7 @@ struct ClothingDetailView: View {
   }
 
   // MARK: - アクション関数
+
   private func toggleFavorite() {
     clothing.favoriteRating = clothing.favoriteRating >= 4 ? 3 : 5
     // ViewModelの更新は不要（Bindingで自動反映）
@@ -345,8 +339,7 @@ struct ClothingDetailView: View {
       colors: clothing.colors,
       categoryIds: clothing.categoryIds,
       brandId: clothing.brandId,
-      tagIds: clothing.tagIds
-    )
+      tagIds: clothing.tagIds)
 
     viewModel.addClothing(newClothing, imageSets: [])
   }
@@ -442,6 +435,7 @@ struct ActionRowView: View {
 }
 
 // MARK: - DateFormatter Extension
+
 extension DateFormatter {
   static let shortDate: DateFormatter = {
     let formatter = DateFormatter()

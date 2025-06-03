@@ -32,8 +32,8 @@ struct ClothingListView: View {
                 favoriteRating: 3,
                 colors: [],
                 categoryIds: [], // 追加
-                brandId: nil,    // 追加
-                tagIds: []       // 追加
+                brandId: nil, // 追加
+                tagIds: [] // 追加
               )
               isNewClothing = true
               navigateToEdit = true
@@ -46,12 +46,11 @@ struct ClothingListView: View {
               clothing: .constant(editingClothing), // Bindingに変換
               openPhotoPickerOnAppear: true,
               canDelete: false,
-              isNew: true
-            )
-            .environmentObject(viewModel)
-            .environmentObject(themeManager)
-            .environmentObject(categoryManager)
-            .environmentObject(brandManager)
+              isNew: true)
+              .environmentObject(viewModel)
+              .environmentObject(themeManager)
+              .environmentObject(categoryManager)
+              .environmentObject(brandManager)
           }
         }
         .refreshable {
