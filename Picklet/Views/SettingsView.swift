@@ -13,7 +13,7 @@ struct SettingsView: View {
   @AppStorage("colorSchemePreference") private var colorSchemePreference: String = ColorSchemeSelection.system.rawValue
   @AppStorage("selectedTheme") private var selectedTheme: String = ThemeColor.blue.rawValue
 
-  @EnvironmentObject var themeManager: ThemeManager // 追加
+  @EnvironmentObject var themeManager: ThemeManager
   @Environment(\.colorScheme) var systemColorScheme
 
   private var selectedColorScheme: ColorSchemeSelection {
@@ -80,11 +80,127 @@ struct SettingsView: View {
               .foregroundColor(.secondary)
           }
 
+          // 情報セクションを拡張
           Section(header: Text("情報")) {
+            // アプリバージョン
             Text(appVersion)
               .foregroundColor(.gray)
               .accessibility(identifier: "versionLabel")
+
+            // サポートページ
+            HStack {
+              Image(systemName: "questionmark.circle")
+                .foregroundColor(themeManager.currentTheme.primaryColor)
+              Text("サポート")
+              Spacer()
+              Image(systemName: "arrow.up.right")
+                .foregroundColor(.secondary)
+                .font(.caption)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+              if let url = URL(string: "https://support.picklet.app") {
+                UIApplication.shared.open(url)
+              }
+            }
+
+            // プライバシーポリシー
+            HStack {
+              Image(systemName: "hand.raised")
+                .foregroundColor(themeManager.currentTheme.primaryColor)
+              Text("プライバシーポリシー")
+              Spacer()
+              Image(systemName: "arrow.up.right")
+                .foregroundColor(.secondary)
+                .font(.caption)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+              if let url = URL(string: "https://privacy.picklet.app") {
+                UIApplication.shared.open(url)
+              }
+            }
           }
+
+          // ライセンス情報セクションを修正
+          Section(header: Text("ライセンス")) {
+            // OpenWeatherMapライセンス情報
+            VStack(alignment: .leading, spacing: 12) {
+              // ヘッダー
+              HStack {
+                Image(systemName: "cloud.sun.fill")
+                  .foregroundColor(themeManager.currentTheme.primaryColor)
+                Text("天気情報")
+                  .font(.subheadline)
+                  .fontWeight(.semibold)
+              }
+
+              // ライセンス内容
+              VStack(alignment: .leading, spacing: 8) {
+                Text("Weather data provided by OpenWeatherMap.")
+                  .font(.footnote)
+                  .foregroundColor(.secondary)
+
+                Text("This data is made available under the following licenses:")
+                  .font(.footnote)
+                  .foregroundColor(.secondary)
+
+                // ODbL情報
+                HStack(alignment: .top, spacing: 6) {
+                  Text("•")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+                  VStack(alignment: .leading, spacing: 4) {
+                    Text("Data/Databases:")
+                      .font(.footnote)
+                      .foregroundColor(.secondary)
+                    Group {
+                      Text("Open Database License (") +
+                      Text("ODbL")
+                        .foregroundColor(themeManager.currentTheme.primaryColor)
+                        .underline() +
+                      Text(")")
+                    }
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+                    .onTapGesture {
+                      if let url = URL(string: "https://opendatacommons.org/licenses/odbl/") {
+                        UIApplication.shared.open(url)
+                      }
+                    }
+                  }
+                }
+
+                // CC BY-SA 4.0情報
+                HStack(alignment: .top, spacing: 6) {
+                  Text("•")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+                  VStack(alignment: .leading, spacing: 4) {
+                    Text("Content descriptions:")
+                      .font(.footnote)
+                      .foregroundColor(.secondary)
+                    Group {
+                      Text("Creative Commons (") +
+                      Text("CC BY-SA 4.0")
+                        .foregroundColor(themeManager.currentTheme.primaryColor)
+                        .underline() +
+                      Text(")")
+                    }
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+                    .onTapGesture {
+                      if let url = URL(string: "https://creativecommons.org/licenses/by-sa/4.0/") {
+                        UIApplication.shared.open(url)
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            .padding(.vertical, 4)
+          }
+
         }
         .scrollContentBackground(.hidden)
       }
