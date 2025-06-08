@@ -70,8 +70,8 @@ struct Clothing: Identifiable, Codable, Equatable {
     self.tagIds = tagIds
     self.wearCount = wearCount
     self.wearLimit = wearLimit
-    self.createdAt = Date() // 現在時刻で作成
-    self.updatedAt = Date()
+    createdAt = Date() // 現在時刻で作成
+    updatedAt = Date()
   }
 
   // データベースから復元用の初期化メソッド
@@ -87,7 +87,7 @@ struct Clothing: Identifiable, Codable, Equatable {
     wearCount: Int = 0,
     wearLimit: Int? = nil,
     createdAt: Date, // データベースから取得した作成日時
-    updatedAt: Date  // データベースから取得した更新日時
+    updatedAt: Date // データベースから取得した更新日時
   ) {
     self.id = id
     self.name = name

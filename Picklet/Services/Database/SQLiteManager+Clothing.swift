@@ -44,9 +44,9 @@ extension SQLiteManager {
         clothesBrandId <- clothing.brandId?.uuidString,
         clothesTagIds <- tagIdsString,
         clothesWearCount <- clothing.wearCount,
+        clothesWearLimit <- clothing.wearLimit,
         clothesCreatedAt <- clothing.createdAt,
-        clothesUpdatedAt <- clothing.updatedAt
-      )
+        clothesUpdatedAt <- clothing.updatedAt)
 
       try db?.run(insert)
       print("✅ SQLite: 新規衣類データ挿入成功 - \(clothing.id)")
@@ -90,9 +90,11 @@ extension SQLiteManager {
       }
 
       // BrandIdの復元
-      var brandId: UUID? = nil
+      let brandId: UUID?
       if let brandIdString = row[clothesBrandId] {
         brandId = UUID(uuidString: brandIdString)
+      } else {
+        brandId = nil
       }
 
       // データベースから取得した日時を使用して正しく初期化
@@ -106,9 +108,9 @@ extension SQLiteManager {
         brandId: brandId,
         tagIds: tagIds,
         wearCount: row[clothesWearCount],
-        createdAt: row[clothesCreatedAt], // データベースの値を使用
-        updatedAt: row[clothesUpdatedAt]  // データベースの値を使用
-      )
+        wearLimit: row[clothesWearLimit],
+        createdAt: row[clothesCreatedAt],
+        updatedAt: row[clothesUpdatedAt])
 
       return clothing
     } catch {
@@ -122,10 +124,8 @@ extension SQLiteManager {
     do {
       var clothes: [Clothing] = []
 
-      // ここを修正 - guard letとオプショナルチェーンを使用
       guard let db = db else { return [] }
 
-      // 直接forループで回す
       for row in try db.prepare(clothesTable) {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
@@ -152,9 +152,11 @@ extension SQLiteManager {
         }
 
         // BrandIdの復元
-        var brandId: UUID? = nil
+        let brandId: UUID?
         if let brandIdString = row[clothesBrandId] {
           brandId = UUID(uuidString: brandIdString)
+        } else {
+          brandId = nil
         }
 
         // データベースから取得した日時を使用して正しく初期化
@@ -168,17 +170,18 @@ extension SQLiteManager {
           brandId: brandId,
           tagIds: tagIds,
           wearCount: row[clothesWearCount],
-          createdAt: row[clothesCreatedAt], // データベースの値を使用
-          updatedAt: row[clothesUpdatedAt]  // データベースの値を使用
-        )
+          wearLimit: row[clothesWearLimit],
+          createdAt: row[clothesCreatedAt],
+          updatedAt: row[clothesUpdatedAt])
 
-        clothingList.append(clothing)
+        clothes.append(clothing)
       }
+
+      return clothes
     } catch {
       print("❌ 衣類読み込みエラー: \(error)")
+      return []
     }
-
-    return clothingList
   }
 
   /// 衣類データを更新
@@ -210,8 +213,8 @@ extension SQLiteManager {
           clothesBrandId <- clothing.brandId?.uuidString,
           clothesTagIds <- tagIdsString,
           clothesWearCount <- clothing.wearCount,
-          clothesUpdatedAt <- clothing.updatedAt
-        )
+          clothesWearLimit <- clothing.wearLimit,
+          clothesUpdatedAt <- clothing.updatedAt)
 
       guard let db = db else { return false }
       let rowsAffected = try db.run(update)
@@ -224,8 +227,8 @@ extension SQLiteManager {
         return false
       }
     } catch {
-      print("❌ SQLite: 衣類データ読み込みエラー - \(error)")
-      return []
+      print("❌ 衣類更新エラー: \(error)")
+      return false
     }
   }
 

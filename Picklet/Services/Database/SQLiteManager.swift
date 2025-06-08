@@ -14,13 +14,13 @@ class SQLiteManager {
   let clothesTable = Table("clothes")
   let wearHistoriesTable = Table("wear_histories")
   let imageMetadataTable = Table("image_metadata")
+  let categoriesTable = Table("categories")
+  let brandsTable = Table("brands")
 
   // 完全修飾名を使用（SQLite.Expression）
   // Clothes テーブルのカラム
   let clothesId = SQLite.Expression<String>("id")
   let clothesName = SQLite.Expression<String>("name")
-  let clothesCategory = SQLite.Expression<String>("category")
-  let clothesColor = SQLite.Expression<String>("color")
   let clothesCreatedAt = SQLite.Expression<Date>("created_at")
   let clothesUpdatedAt = SQLite.Expression<Date>("updated_at")
 
@@ -38,14 +38,15 @@ class SQLiteManager {
   let imageMaskUrl = SQLite.Expression<String?>("mask_url")
   let imageResultUrl = SQLite.Expression<String?>("result_url")
 
-  // 新しいカラム定義（修正版）
+  // 新しいカラム定義
   let clothesPurchasePrice = SQLite.Expression<Double?>("purchase_price")
   let clothesFavoriteRating = SQLite.Expression<Int>("favorite_rating")
-  let clothesColors = SQLite.Expression<String?>("colors") // JSON文字列として保存
-  let clothesCategoryIds = SQLite.Expression<String?>("category_ids") // String?に修正
+  let clothesColors = SQLite.Expression<String?>("colors")
+  let clothesCategoryIds = SQLite.Expression<String?>("category_ids")
   let clothesBrandId = SQLite.Expression<String?>("brand_id")
-  let clothesTagIds = SQLite.Expression<String?>("tag_ids") // String?に修正
+  let clothesTagIds = SQLite.Expression<String?>("tag_ids")
   let clothesWearCount = SQLite.Expression<Int>("wear_count")
+  let clothesWearLimit = SQLite.Expression<Int?>("wear_limit")
 
   // 削除予定の古いカラム（マイグレーション用）
   let clothesCategory = SQLite.Expression<String?>("category")
@@ -116,6 +117,7 @@ class SQLiteManager {
       table.column(clothesBrandId)
       table.column(clothesTagIds, defaultValue: "[]")
       table.column(clothesWearCount, defaultValue: 0)
+      table.column(clothesWearLimit)
       table.column(clothesCreatedAt)
       table.column(clothesUpdatedAt)
     })
@@ -139,19 +141,19 @@ class SQLiteManager {
     })
 
     // カテゴリテーブル
-    try db?.run(categoriesTable.create(ifNotExists: true) { t in
-      t.column(categoryId, primaryKey: true)
-      t.column(categoryName)
-      t.column(categoryCreatedAt)
-      t.column(categoryUpdatedAt)
+    try db?.run(categoriesTable.create(ifNotExists: true) { table in
+      table.column(categoryId, primaryKey: true)
+      table.column(categoryName)
+      table.column(categoryCreatedAt)
+      table.column(categoryUpdatedAt)
     })
 
     // ブランドテーブル
-    try db?.run(brandsTable.create(ifNotExists: true) { t in
-      t.column(brandId, primaryKey: true)
-      t.column(brandName)
-      t.column(brandCreatedAt)
-      t.column(brandUpdatedAt)
+    try db?.run(brandsTable.create(ifNotExists: true) { table in
+      table.column(brandId, primaryKey: true)
+      table.column(brandName)
+      table.column(brandCreatedAt)
+      table.column(brandUpdatedAt)
     })
 
     print("✅ SQLite: テーブル作成完了")
@@ -165,7 +167,6 @@ class SQLiteManager {
       try db.run("ALTER TABLE clothes ADD COLUMN brand_id TEXT")
       print("✅ brand_id カラムを追加しました")
     } catch {
-      // カラムが既に存在する場合はエラーを無視
       print("ℹ️ brand_id カラムは既に存在します")
     }
 
@@ -183,7 +184,13 @@ class SQLiteManager {
       print("ℹ️ wear_count カラムは既に存在します")
     }
 
-    // カテゴリIDカラムの追加
+    do {
+      try db.run("ALTER TABLE clothes ADD COLUMN wear_limit INTEGER")
+      print("✅ wear_limit カラムを追加しました")
+    } catch {
+      print("ℹ️ wear_limit カラムは既に存在します")
+    }
+
     do {
       try db.run("ALTER TABLE clothes ADD COLUMN category_ids TEXT DEFAULT '[]'")
       print("✅ category_ids カラムを追加しました")
@@ -193,40 +200,47 @@ class SQLiteManager {
   }
 
   private func migrateClothingTable() throws {
-    // テーブルが存在しない場合は新しい構造で作成
-    // 1. 既存データをバックアップ
+    // 既存データをバックアップ
     let existingData = try backupExistingClothingData()
 
-    // 2. 古いテーブルを削除
+    // 古いテーブルを削除
     try db?.run(clothesTable.drop(ifExists: true))
 
-    // 3. 新しい構造でテーブルを作成
-    try db?.run(clothesTable.create { t in
-      t.column(clothesId, primaryKey: true)
-      t.column(clothesName)
-      t.column(clothesPurchasePrice)
-      t.column(clothesFavoriteRating, defaultValue: 3)
-      t.column(clothesColors, defaultValue: "[]")
-      t.column(clothesCategoryIds, defaultValue: "[]")
-      t.column(clothesBrandId)
-      t.column(clothesTagIds, defaultValue: "[]")
-      t.column(clothesWearCount, defaultValue: 0)
-      t.column(clothesCreatedAt)
-      t.column(clothesUpdatedAt)
+    // 新しい構造でテーブルを作成
+    try db?.run(clothesTable.create { table in
+      table.column(clothesId, primaryKey: true)
+      table.column(clothesName)
+      table.column(clothesPurchasePrice)
+      table.column(clothesFavoriteRating, defaultValue: 3)
+      table.column(clothesColors, defaultValue: "[]")
+      table.column(clothesCategoryIds, defaultValue: "[]")
+      table.column(clothesBrandId)
+      table.column(clothesTagIds, defaultValue: "[]")
+      table.column(clothesWearCount, defaultValue: 0)
+      table.column(clothesWearLimit)
+      table.column(clothesCreatedAt)
+      table.column(clothesUpdatedAt)
     })
 
-    // 4. データを新しい構造で復元
+    // データを新しい構造で復元
     try restoreClothingData(existingData)
   }
 
-  private func backupExistingClothingData() throws -> [(id: String, name: String, createdAt: Date, updatedAt: Date)] {
-    var backup: [(id: String, name: String, createdAt: Date, updatedAt: Date)] = []
+  struct ClothingBackupData {
+    let id: String
+    let name: String
+    let createdAt: Date
+    let updatedAt: Date
+  }
+
+  private func backupExistingClothingData() throws -> [ClothingBackupData] {
+    var backup: [ClothingBackupData] = []
 
     do {
       guard let db = db else { return backup }
 
       for row in try db.prepare(clothesTable) {
-        backup.append((
+        backup.append(ClothingBackupData(
           id: row[clothesId],
           name: row[clothesName],
           createdAt: row[clothesCreatedAt],
@@ -239,7 +253,7 @@ class SQLiteManager {
     return backup
   }
 
-  private func restoreClothingData(_ data: [(id: String, name: String, createdAt: Date, updatedAt: Date)]) throws {
+  private func restoreClothingData(_ data: [ClothingBackupData]) throws {
     for item in data {
       try db?.run(clothesTable.insert(
         clothesId <- item.id,
@@ -251,6 +265,7 @@ class SQLiteManager {
         clothesBrandId <- nil,
         clothesTagIds <- "[]",
         clothesWearCount <- 0,
+        clothesWearLimit <- nil,
         clothesCreatedAt <- item.createdAt,
         clothesUpdatedAt <- item.updatedAt))
     }
