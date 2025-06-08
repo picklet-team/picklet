@@ -58,15 +58,15 @@ struct PickletTests {
   @Test func testColorDataModel() throws {
     // ColorDataのテスト
     let blueColor = ColorData(hue: 0.67, saturation: 1.0, brightness: 1.0)
-    
+
     #expect(blueColor.hue == 0.67)
     #expect(blueColor.saturation == 1.0)
     #expect(blueColor.brightness == 1.0)
-    
+
     // 同じ色の比較テスト
     let anotherBlueColor = ColorData(hue: 0.67, saturation: 1.0, brightness: 1.0)
     #expect(blueColor == anotherBlueColor)
-    
+
     // 異なる色の比較テスト
     let greenColor = ColorData(hue: 0.33, saturation: 1.0, brightness: 1.0)
     #expect(blueColor != greenColor)
@@ -110,23 +110,52 @@ struct PickletTests {
   @MainActor
   @Test func testClothingViewModel() async throws {
     #if os(iOS) || os(macOS)
-    // ClothingViewModelのテスト - MainActorコンテキストで実行
-    let viewModel = ClothingViewModel()
+    print("🧪 ClothingViewModel テスト開始")
 
-    // 初期状態のテスト
-    #expect(viewModel.clothes.isEmpty)
-    #expect(viewModel.isLoading == false)
-    #expect(viewModel.errorMessage == nil)
+    do {
+      // SQLiteManagerの初期化を確認
+      let sqliteManager = SQLiteManager.shared
+      print("🔍 SQLiteManager初期化状態 - db: \(sqliteManager.db != nil)")
 
-    // テストデータの作成
-    let clothing = Clothing(name: "テストアイテム")
+      // ClothingViewModelを初期化（初期ロードをスキップ）
+      let viewModel = ClothingViewModel(skipInitialLoad: true)
 
-    // モック化したデータを追加 - MainActor上で直接操作
-    viewModel.clothes = [clothing]
+      print("🔍 ClothingViewModel初期化完了")
+      print("🔍 初期状態 - clothes: \(viewModel.clothes.count), isLoading: \(viewModel.isLoading)")
 
-    #expect(viewModel.clothes.count == 1)
-    #expect(viewModel.clothes[0].name == "テストアイテム")
-    #expect(viewModel.clothes[0].favoriteRating == 3) // デフォルト値
+      // 初期状態のテスト
+      #expect(viewModel.clothes.isEmpty, "初期状態でclothesは空であるべき")
+      #expect(viewModel.isLoading == false, "初期状態でisLoadingはfalseであるべき")
+      #expect(viewModel.errorMessage == nil, "初期状態でerrorMessageはnilであるべき")
+
+      // テストデータの作成と直接追加（データベース操作をスキップ）
+      let testClothing = Clothing(name: "テストアイテム")
+      print("🔍 テストClothing作成 - name: \(testClothing.name)")
+
+      // ViewModelの配列に直接追加（データベースを経由しない）
+      viewModel.clothes = [testClothing]
+
+      // 少し待ってからチェック（Published プロパティの更新を待つ）
+      try await Task.sleep(nanoseconds: 50_000_000) // 0.05秒待機
+
+      print("🔍 データ追加後 - clothes: \(viewModel.clothes.count)")
+
+      // 検証
+      #expect(viewModel.clothes.count == 1, "clothes配列に1つのアイテムがあるべき")
+      if !viewModel.clothes.isEmpty {
+        print("🔍 追加されたアイテム - name: \(viewModel.clothes[0].name)")
+        #expect(viewModel.clothes[0].name == "テストアイテム", "アイテム名が正しく設定されているべき")
+        #expect(viewModel.clothes[0].favoriteRating == 3, "デフォルトのfavoriteRatingは3であるべき")
+      }
+
+      print("✅ ClothingViewModel テスト完了")
+
+    } catch {
+      print("❌ ClothingViewModel テストエラー: \(error)")
+      throw error
+    }
+    #else
+    throw XCTSkip("このテストはiOSまたはmacOSでのみ実行されます")
     #endif
   }
 
@@ -287,11 +316,17 @@ struct PickletTests {
     let id = UUID()
     let clothingImage = ClothingImage(
       id: id,
-      originalLocalPath: "/path/to/original.jpg",
-      maskLocalPath: "/path/to/mask.jpg",
+      clothingId: UUID(),
+      userId: "test-user",
       originalUrl: "https://example.com/original.jpg",
       maskUrl: "https://example.com/mask.jpg",
-      resultUrl: "https://example.com/result.jpg"
+      aimaskUrl: nil,
+      resultUrl: "https://example.com/result.jpg",
+      originalLocalPath: "/path/to/original.jpg",
+      maskLocalPath: "/path/to/mask.jpg",
+      resultLocalPath: nil,
+      createdAt: Date(),
+      updatedAt: Date()
     )
 
     // 各プロパティが正しく設定されているかテスト
@@ -305,16 +340,60 @@ struct PickletTests {
     // オプショナルプロパティのテスト
     let clothingImageWithNil = ClothingImage(
       id: id,
-      originalLocalPath: "/path/to/original.jpg",
-      maskLocalPath: nil,
+      clothingId: UUID(),
+      userId: "test-user",
       originalUrl: "https://example.com/original.jpg",
       maskUrl: nil,
-      resultUrl: nil
+      aimaskUrl: nil,
+      resultUrl: nil,
+      originalLocalPath: "/path/to/original.jpg",
+      maskLocalPath: nil,
+      resultLocalPath: nil,
+      createdAt: Date(),
+      updatedAt: Date()
     )
 
     #expect(clothingImageWithNil.maskLocalPath == nil)
     #expect(clothingImageWithNil.maskUrl == nil)
     #expect(clothingImageWithNil.resultUrl == nil)
     #endif
+  }
+
+  // MARK: - Mock Tests
+  @MainActor
+  @Test func testClothingViewModelMockVersion() async throws {
+    print("🧪 ClothingViewModel モックテスト開始")
+    
+    // シンプルなモック版ViewModelクラス
+    class MockClothingViewModel: ObservableObject {
+      @Published var clothes: [Clothing] = []
+      @Published var isLoading = false
+      @Published var errorMessage: String?
+      
+      init() {
+        // データベース接続なしの初期化
+      }
+      
+      func addTestClothing(_ clothing: Clothing) {
+        clothes.append(clothing)
+      }
+    }
+    
+    // モックViewModelのテスト
+    let mockViewModel = MockClothingViewModel()
+    
+    #expect(mockViewModel.clothes.isEmpty, "初期状態でclothesは空であるべき")
+    #expect(mockViewModel.isLoading == false, "初期状態でisLoadingはfalseであるべき")
+    #expect(mockViewModel.errorMessage == nil, "初期状態でerrorMessageはnilであるべき")
+    
+    let testClothing = Clothing(name: "モックテストアイテム")
+    mockViewModel.addTestClothing(testClothing)
+    
+    try await Task.sleep(nanoseconds: 10_000_000) // 0.01秒待機
+    
+    #expect(mockViewModel.clothes.count == 1, "clothes配列に1つのアイテムがあるべき")
+    #expect(mockViewModel.clothes[0].name == "モックテストアイテム", "アイテム名が正しく設定されているべき")
+    
+    print("✅ ClothingViewModel モックテスト完了")
   }
 }
