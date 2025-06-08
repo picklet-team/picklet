@@ -1,15 +1,17 @@
 import SwiftUI
 
 // MARK: - Array Extension for chunked method
+
 extension Array {
   func chunked(into size: Int) -> [[Element]] {
     return stride(from: 0, to: count, by: size).map {
-      Array(self[$0..<Swift.min($0 + size, count)])
+      Array(self[$0 ..< Swift.min($0 + size, count)])
     }
   }
 }
 
 // MARK: - EditableImageSet Extension
+
 extension EditableImageSet {
   var hasHighQuality: Bool {
     return original.size.width >= 100 && original.size.height >= 100
@@ -17,6 +19,7 @@ extension EditableImageSet {
 }
 
 // MARK: - Image Section Component
+
 struct ImageListSection: View {
   @EnvironmentObject var themeManager: ThemeManager
   @Binding var imageSets: [EditableImageSet]

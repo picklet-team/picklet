@@ -1,6 +1,7 @@
 import SwiftUI
 
 // MARK: - カテゴリ選択を独立したViewに分離
+
 struct CategorySelectionView: View {
   @Binding var categoryIds: [UUID]
   @EnvironmentObject var categoryManager: CategoryManager
@@ -13,9 +14,9 @@ struct CategorySelectionView: View {
         Text("\(categoryIds.count)個選択中")
           .font(.caption)
           .foregroundColor(.secondary)
-        
+
         Spacer()
-        
+
         if !categoryIds.isEmpty {
           Button("すべて解除") {
             categoryIds.removeAll()
@@ -34,8 +35,7 @@ struct CategorySelectionView: View {
           CategoryChip(
             category: category,
             categoryIds: $categoryIds,
-            themeManager: themeManager
-          )
+            themeManager: themeManager)
         }
       }
     }
@@ -43,6 +43,7 @@ struct CategorySelectionView: View {
 }
 
 // MARK: - カテゴリチップ（改良版）
+
 struct CategoryChip: View {
   let category: Category
   @Binding var categoryIds: [UUID]
@@ -72,19 +73,16 @@ struct CategoryChip: View {
       .frame(maxWidth: .infinity)
       .background(
         RoundedRectangle(cornerRadius: 22)
-          .fill(isSelected ? 
-            themeManager.currentTheme.primaryColor : 
-            Color(.secondarySystemBackground))
-      )
+          .fill(isSelected ?
+            themeManager.currentTheme.primaryColor :
+            Color(.secondarySystemBackground)))
       .overlay(
         RoundedRectangle(cornerRadius: 22)
           .stroke(
-            isSelected ? 
-              Color.clear : 
+            isSelected ?
+              Color.clear :
               themeManager.currentTheme.primaryColor.opacity(0.3),
-            lineWidth: 1.5
-          )
-      )
+            lineWidth: 1.5))
       .scaleEffect(isPressed ? 0.95 : 1.0)
     }
     .buttonStyle(PlainButtonStyle())
@@ -98,7 +96,7 @@ struct CategoryChip: View {
   private func toggleCategory() {
     let impactFeedback = UIImpactFeedbackGenerator(style: .light)
     impactFeedback.impactOccurred()
-    
+
     withAnimation(.easeInOut(duration: 0.2)) {
       if isSelected {
         categoryIds.removeAll { $0 == category.id }

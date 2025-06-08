@@ -28,14 +28,13 @@ struct ClothingEditView: View {
     clothing: Binding<Clothing>,
     openPhotoPickerOnAppear: Bool = false,
     canDelete: Bool = true,
-    isNew: Bool = false
-  ) {
-    self._clothing = clothing
+    isNew: Bool = false) {
+    _clothing = clothing
     self.openPhotoPickerOnAppear = openPhotoPickerOnAppear
     self.canDelete = canDelete
     self.isNew = isNew
     // 編集用の一時的なコピーを作成
-    self._editingClothing = State(initialValue: clothing.wrappedValue)
+    _editingClothing = State(initialValue: clothing.wrappedValue)
   }
 
   var body: some View {
@@ -48,8 +47,7 @@ struct ClothingEditView: View {
             imageSets: $editingSets,
             isBackgroundLoading: isBackgroundLoading,
             onAddImage: { showPhotoPicker = true },
-            onSelectImage: prepareImageForEditing
-          )
+            onSelectImage: prepareImageForEditing)
         }
       }
       .dismissKeyboardOnTap()

@@ -15,7 +15,6 @@ struct CompactTagView: View {
       .cornerRadius(8)
       .overlay(
         RoundedRectangle(cornerRadius: 8)
-          .stroke(color.opacity(0.3), lineWidth: 1)
-      )
+          .stroke(color.opacity(0.3), lineWidth: 1))
   }
 }

@@ -1,8 +1,8 @@
 import SwiftUI
 
 // MARK: - Form Sections Extension
-extension UnifiedClothingFormSection {
 
+extension UnifiedClothingFormSection {
   // 画像セクション
   var imageSection: some View {
     VStack(alignment: .leading, spacing: 12) {
@@ -24,8 +24,7 @@ extension UnifiedClothingFormSection {
         imageSets: $imageSets,
         showAddButton: true,
         onSelectImage: onSelectImage,
-        onAddButtonTap: onAddImage
-      )
+        onAddButtonTap: onAddImage)
     }
   }
 

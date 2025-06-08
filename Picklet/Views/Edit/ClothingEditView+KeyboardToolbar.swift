@@ -4,8 +4,7 @@ import SwiftUI
 
 extension View {
   func dismissKeyboardOnTap() -> some View {
-    self
-      .contentShape(Rectangle())
+    contentShape(Rectangle())
       .onTapGesture {
         UIApplication.shared.endEditing()
       }

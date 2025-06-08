@@ -1,6 +1,7 @@
 import SwiftUI
 
 // MARK: - Unified Clothing Form Section
+
 struct UnifiedClothingFormSection: View {
   @Binding var clothing: Clothing
   @Binding var imageSets: [EditableImageSet]
@@ -65,13 +66,10 @@ struct UnifiedClothingFormSection: View {
             color: Color.black.opacity(0.05),
             radius: 8,
             x: 0,
-            y: 2
-          )
-      )
+            y: 2))
       .overlay(
         RoundedRectangle(cornerRadius: 16)
-          .stroke(Color(.systemGray5), lineWidth: 1)
-      )
+          .stroke(Color(.systemGray5), lineWidth: 1))
   }
 
   // セクションタイトル（統一）- internalに変更
