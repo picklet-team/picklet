@@ -54,22 +54,6 @@ struct PriceDisplayView: View {
   }
 }
 
-struct CompactTagView: View {
-  let text: String
-  let color: Color
-
-  var body: some View {
-    Text(text)
-      .font(.caption)
-      .fontWeight(.medium)
-      .padding(.horizontal, 12)
-      .padding(.vertical, 6)
-      .background(color.opacity(0.15))
-      .foregroundColor(color)
-      .cornerRadius(16)
-  }
-}
-
 extension DateFormatter {
   static let detailViewShortDate: DateFormatter = {
     let formatter = DateFormatter()

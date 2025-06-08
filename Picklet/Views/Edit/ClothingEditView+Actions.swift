@@ -41,10 +41,13 @@ extension ClothingEditView {
   }
 
   func updateImageCache() {
-    viewModel.updateLocalImagesCache(clothing.id, imageSets: editingSets)
+    viewModel.updateLocalImagesCache(editingClothing.id, imageSets: editingSets)
   }
 
   func saveChanges() {
+    // 保存時にのみ元のClothingデータを更新
+    clothing = editingClothing
+
     Task {
       viewModel.saveClothing(clothing, imageSets: editingSets, isNew: isNew)
       dismiss()
@@ -55,4 +58,8 @@ extension ClothingEditView {
     viewModel.deleteClothing(clothing)
     dismiss()
   }
+
+  // 既存のメソッドがある場合はここで実装（重複を避ける）
+  // enhanceImagesInBackground() と ensureHighQualityImage(for:completion:) は
+  // 既に別の場所で定義されている場合は削除
 }
