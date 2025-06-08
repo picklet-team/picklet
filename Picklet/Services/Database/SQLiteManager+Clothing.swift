@@ -47,7 +47,6 @@ extension SQLiteManager {
         clothesWearLimit <- clothing.wearLimit,
         clothesCreatedAt <- clothing.createdAt,
         clothesUpdatedAt <- clothing.updatedAt)
-        clothesUpdatedAt <- clothing.updatedAt)
 
       try db?.run(insert)
       print("✅ SQLite: 新規衣類データ挿入成功 - \(clothing.id)")
@@ -122,8 +121,6 @@ extension SQLiteManager {
 
   /// 全ての衣類データを読み込み
   func loadAllClothing() -> [Clothing] {
-    var clothingList: [Clothing] = []
-
     do {
       var clothes: [Clothing] = []
 
