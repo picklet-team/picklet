@@ -24,8 +24,7 @@ struct ClothingDetailView: View {
             // 画像ギャラリー
             ClothingImageGalleryView(
               imageSets: viewModel.imageSetsMap[clothingId] ?? [],
-              showAddButton: false
-            )
+              showAddButton: false)
 
             // ヘッダーセクション（お気に入り度・価格）- $clothingでBindingを渡す
             ClothingDetailHeaderSection(clothing: $clothing)
@@ -83,12 +82,11 @@ struct ClothingDetailView: View {
         clothing: $clothing,
         openPhotoPickerOnAppear: false,
         canDelete: true,
-        isNew: false
-      )
-      .environmentObject(viewModel)
-      .environmentObject(themeManager)
-      .environmentObject(categoryManager)
-      .environmentObject(brandManager)
+        isNew: false)
+        .environmentObject(viewModel)
+        .environmentObject(themeManager)
+        .environmentObject(categoryManager)
+        .environmentObject(brandManager)
     }
     .onChange(of: viewModel.clothes) { _, newClothes in
       if !newClothes.contains(where: { $0.id == clothingId }) {
