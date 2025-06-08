@@ -110,23 +110,52 @@ struct PickletTests {
   @MainActor
   @Test func testClothingViewModel() async throws {
     #if os(iOS) || os(macOS)
-    // ClothingViewModelのテスト - MainActorコンテキストで実行
-    let viewModel = ClothingViewModel()
-
-    // 初期状態のテスト
-    #expect(viewModel.clothes.isEmpty)
-    #expect(viewModel.isLoading == false)
-    #expect(viewModel.errorMessage == nil)
-
-    // テストデータの作成
-    let clothing = Clothing(name: "テストアイテム")
-
-    // モック化したデータを追加 - MainActor上で直接操作
-    viewModel.clothes = [clothing]
-
-    #expect(viewModel.clothes.count == 1)
-    #expect(viewModel.clothes[0].name == "テストアイテム")
-    #expect(viewModel.clothes[0].favoriteRating == 3) // デフォルト値
+    print("🧪 ClothingViewModel テスト開始")
+    
+    do {
+      // SQLiteManagerの初期化を確認
+      let sqliteManager = SQLiteManager.shared
+      print("🔍 SQLiteManager初期化状態 - db: \(sqliteManager.db != nil)")
+      
+      // ClothingViewModelを初期化（初期ロードをスキップ）
+      let viewModel = ClothingViewModel(skipInitialLoad: true)
+      
+      print("🔍 ClothingViewModel初期化完了")
+      print("🔍 初期状態 - clothes: \(viewModel.clothes.count), isLoading: \(viewModel.isLoading)")
+      
+      // 初期状態のテスト
+      #expect(viewModel.clothes.isEmpty, "初期状態でclothesは空であるべき")
+      #expect(viewModel.isLoading == false, "初期状態でisLoadingはfalseであるべき")
+      #expect(viewModel.errorMessage == nil, "初期状態でerrorMessageはnilであるべき")
+      
+      // テストデータの作成と直接追加（データベース操作をスキップ）
+      let testClothing = Clothing(name: "テストアイテム")
+      print("🔍 テストClothing作成 - name: \(testClothing.name)")
+      
+      // ViewModelの配列に直接追加（データベースを経由しない）
+      viewModel.clothes = [testClothing]
+      
+      // 少し待ってからチェック（Published プロパティの更新を待つ）
+      try await Task.sleep(nanoseconds: 50_000_000) // 0.05秒待機
+      
+      print("🔍 データ追加後 - clothes: \(viewModel.clothes.count)")
+      
+      // 検証
+      #expect(viewModel.clothes.count == 1, "clothes配列に1つのアイテムがあるべき")
+      if !viewModel.clothes.isEmpty {
+        print("🔍 追加されたアイテム - name: \(viewModel.clothes[0].name)")
+        #expect(viewModel.clothes[0].name == "テストアイテム", "アイテム名が正しく設定されているべき")
+        #expect(viewModel.clothes[0].favoriteRating == 3, "デフォルトのfavoriteRatingは3であるべき")
+      }
+      
+      print("✅ ClothingViewModel テスト完了")
+      
+    } catch {
+      print("❌ ClothingViewModel テストエラー: \(error)")
+      throw error
+    }
+    #else
+    throw XCTSkip("このテストはiOSまたはmacOSでのみ実行されます")
     #endif
   }
 
