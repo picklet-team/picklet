@@ -46,8 +46,7 @@ extension SQLiteManager {
         clothesWearCount <- clothing.wearCount,
         clothesWearLimit <- clothing.wearLimit,
         clothesCreatedAt <- clothing.createdAt,
-        clothesUpdatedAt <- clothing.updatedAt
-      )
+        clothesUpdatedAt <- clothing.updatedAt)
 
       try db?.run(insert)
       print("✅ SQLite: 新規衣類データ挿入成功 - \(clothing.id)")
@@ -111,8 +110,7 @@ extension SQLiteManager {
         wearCount: row[clothesWearCount],
         wearLimit: row[clothesWearLimit],
         createdAt: row[clothesCreatedAt],
-        updatedAt: row[clothesUpdatedAt]
-      )
+        updatedAt: row[clothesUpdatedAt])
 
       return clothing
     } catch {
@@ -174,8 +172,7 @@ extension SQLiteManager {
           wearCount: row[clothesWearCount],
           wearLimit: row[clothesWearLimit],
           createdAt: row[clothesCreatedAt],
-          updatedAt: row[clothesUpdatedAt]
-        )
+          updatedAt: row[clothesUpdatedAt])
 
         clothes.append(clothing)
       }
@@ -217,8 +214,7 @@ extension SQLiteManager {
           clothesTagIds <- tagIdsString,
           clothesWearCount <- clothing.wearCount,
           clothesWearLimit <- clothing.wearLimit,
-          clothesUpdatedAt <- clothing.updatedAt
-        )
+          clothesUpdatedAt <- clothing.updatedAt)
 
       guard let db = db else { return false }
       let rowsAffected = try db.run(update)
