@@ -104,15 +104,15 @@ final class LinuxCompatibleTests: XCTestCase {
         let createdDate = Date()
         let updatedDate = Date()
 
-        // ClothingImageインスタンスの作成テスト
+        // ClothingImageインスタンスの作成テスト - 引数の順序を修正
         let id = UUID()
         let clothingId = UUID()
         let clothingImage = ClothingImage(
             id: id,
-            originalLocalPath: "/path/to/original.jpg",
-            maskLocalPath: "/path/to/mask.jpg",
             originalUrl: "https://example.com/original.jpg",
+            originalLocalPath: "/path/to/original.jpg",
             maskUrl: "https://example.com/mask.jpg",
+            maskLocalPath: "/path/to/mask.jpg",
             resultUrl: "https://example.com/result.jpg"
         )
 
@@ -126,10 +126,10 @@ final class LinuxCompatibleTests: XCTestCase {
 
         let clothingImageWithNil = ClothingImage(
             id: id,
-            originalLocalPath: "/path/to/original.jpg",
-            maskLocalPath: nil,
             originalUrl: "https://example.com/original.jpg",
+            originalLocalPath: "/path/to/original.jpg",
             maskUrl: nil,
+            maskLocalPath: nil,
             resultUrl: nil
         )
 
