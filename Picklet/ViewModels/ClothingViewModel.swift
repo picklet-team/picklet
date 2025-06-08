@@ -59,27 +59,9 @@ class ClothingViewModel: ObservableObject {
 
   /// 着用履歴をローカルストレージから読み込む
   func loadWearHistories() {
-    print("📂 着用履歴を読み込み開始")
-
-    guard let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
-      print("❌ ドキュメントディレクトリが見つかりません")
-      return
-    }
-
-    let filePath = documentsPath.appendingPathComponent("wear_histories.json")
-
-    guard FileManager.default.fileExists(atPath: filePath.path) else {
-      print("📂 着用履歴ファイルが存在しません（初回起動）")
-      return
-    }
-
-    do {
-      let data = try Data(contentsOf: filePath)
-      wearHistories = try JSONDecoder().decode([WearHistory].self, from: data)
-      print("✅ 着用履歴読み込み完了: \(wearHistories.count)件")
-    } catch {
-      print("❌ 着用履歴読み込みエラー: \(error)")
-    }
+    print("📂 SQLiteから着用履歴を読み込み開始")
+    wearHistories = SQLiteManager.shared.loadWearHistories()
+    print("✅ 着用履歴読み込み完了: \(wearHistories.count)件")
   }
 
   /// 着用履歴をローカルストレージに保存
@@ -108,7 +90,18 @@ class ClothingViewModel: ObservableObject {
 
     let history = WearHistory(clothingId: clothingId, notes: notes)
     wearHistories.append(history)
-    saveWearHistories()
+
+    // 1. SQLiteに着用履歴を保存
+    SQLiteManager.shared.saveWearHistories(wearHistories)
+
+    // 2. Clothingの着用回数を更新
+    if let index = clothes.firstIndex(where: { $0.id == clothingId }) {
+      clothes[index].wearCount += 1
+      clothes[index].updatedAt = Date()
+
+      // 3. 更新されたClothingをデータベースに保存
+      clothingService.updateClothing(clothes[index])
+    }
 
     print("✅ 着用履歴追加完了")
   }
@@ -356,21 +349,42 @@ class ClothingViewModel: ObservableObject {
     let today = Calendar.current.startOfDay(for: Date())
     let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today)!
 
+    // 削除対象の履歴数をカウント
+    let removedCount = wearHistories.filter { history in
+      history.clothingId == clothingId &&
+        history.wornAt >= today &&
+        history.wornAt < tomorrow
+    }.count
+
+    // 着用履歴を削除
     wearHistories.removeAll { history in
       history.clothingId == clothingId &&
         history.wornAt >= today &&
         history.wornAt < tomorrow
     }
 
-    // ローカルストレージに保存
-    saveWearHistoriesToLocal()
+    // 1. SQLiteに着用履歴を保存
+    SQLiteManager.shared.saveWearHistories(wearHistories)
+
+    // 2. Clothingの着用回数を減らす
+    if removedCount > 0, let index = clothes.firstIndex(where: { $0.id == clothingId }) {
+      clothes[index].wearCount = max(0, clothes[index].wearCount - removedCount)
+      clothes[index].updatedAt = Date()
+
+      // 3. 更新されたClothingをデータベースに保存
+      clothingService.updateClothing(clothes[index])
+    }
+  }
+}
+
+extension ClothingViewModel {
+  /// 新規衣類追加（データベースに保存）
+  func addClothing(_ clothing: Clothing, imageSets: [EditableImageSet] = []) {
+    saveClothing(clothing, imageSets: imageSets, isNew: true)
   }
 
-  /// 着用履歴をローカルストレージに保存
-  private func saveWearHistoriesToLocal() {
-    let encoder = JSONEncoder()
-    if let data = try? encoder.encode(wearHistories) {
-      UserDefaults.standard.set(data, forKey: "wear_histories")
-    }
+  /// 既存衣類更新（データベースに保存）
+  func updateClothing(_ clothing: Clothing, imageSets: [EditableImageSet] = []) {
+    saveClothing(clothing, imageSets: imageSets, isNew: false)
   }
 }

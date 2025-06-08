@@ -9,36 +9,47 @@
 import SwiftUI
 
 struct CropingMessageView: View {
-  var body: some View {
-    Color.black.opacity(0.4) // 🔲 全体を暗くする
-      .ignoresSafeArea()
+  @EnvironmentObject var themeManager: ThemeManager // 追加
 
-    VStack {
-      ProgressView("AIが画像を切り抜いています")
-        .padding()
-        .background(.ultraThinMaterial)
-        .cornerRadius(12)
-        .foregroundColor(.primary)
+  var body: some View {
+    ZStack {
+      Color.black.opacity(0.4) // 全体を暗くする
+        .ignoresSafeArea()
+
+      VStack {
+        ProgressView("AIが画像を切り抜いています")
+          .tint(themeManager.currentTheme.primaryColor) // テーマカラーを適用
+          .padding()
+          .background(.ultraThinMaterial)
+          .cornerRadius(12)
+          .foregroundColor(.primary)
+      }
+      .padding()
+      .transition(.opacity)
     }
-    .padding()
-    .transition(.opacity)
   }
 }
 
 struct ImageEditView: View {
+  @EnvironmentObject var themeManager: ThemeManager // 追加
   @StateObject private var viewModel: ImageEditViewModel
   @Binding var imageSet: EditableImageSet?
 
-//  @State private var isCropping = true
-
   var body: some View {
-    VStack {
-      if viewModel.isProcessing {
-        ProgressView("処理中…")
-      } else {
-        Image(uiImage: viewModel.imageSet.mask ?? viewModel.imageSet.original)
-          .resizable()
-          .scaledToFit()
+    ZStack {
+      // 背景グラデーション
+      themeManager.currentTheme.backgroundGradient
+        .ignoresSafeArea()
+
+      VStack {
+        if viewModel.isProcessing {
+          ProgressView("処理中…")
+            .tint(themeManager.currentTheme.primaryColor) // テーマカラーを適用
+        } else {
+          Image(uiImage: viewModel.imageSet.mask ?? viewModel.imageSet.original)
+            .resizable()
+            .scaledToFit()
+        }
       }
     }
     .onAppear { viewModel.runSegmentation() }
