@@ -23,13 +23,19 @@ struct PickletTests {
     // テスト用の日付
     let date = Date()
 
-    // Clothingインスタンスの作成テスト
+    // Clothingインスタンスの作成テスト - 新しい構造に対応
     let id = UUID()
     let clothing = Clothing(
       id: id,
       name: "テストTシャツ",
-      category: "トップス",
-      color: "白",
+      purchasePrice: 1_500.0,
+      favoriteRating: 5,
+      colors: [ColorData(hue: 0.0, saturation: 0.0, brightness: 1.0)], // 白色
+      categoryIds: [UUID()], // テスト用のカテゴリID
+      brandId: UUID(), // テスト用のブランドID
+      tagIds: [],
+      wearCount: 3,
+      wearLimit: 20,
       createdAt: date,
       updatedAt: date
     )
@@ -37,10 +43,33 @@ struct PickletTests {
     // 各プロパティが正しく設定されているかテスト
     #expect(clothing.id == id)
     #expect(clothing.name == "テストTシャツ")
-    #expect(clothing.category == "トップス")
-    #expect(clothing.color == "白")
+    #expect(clothing.purchasePrice == 1_500.0)
+    #expect(clothing.favoriteRating == 5)
+    #expect(clothing.colors.count == 1)
+    #expect(clothing.categoryIds.count == 1)
+    #expect(clothing.brandId != nil)
+    #expect(clothing.tagIds.isEmpty)
+    #expect(clothing.wearCount == 3)
+    #expect(clothing.wearLimit == 20)
     #expect(clothing.createdAt == date)
     #expect(clothing.updatedAt == date)
+  }
+
+  @Test func testColorDataModel() throws {
+    // ColorDataのテスト
+    let blueColor = ColorData(hue: 0.67, saturation: 1.0, brightness: 1.0)
+    
+    #expect(blueColor.hue == 0.67)
+    #expect(blueColor.saturation == 1.0)
+    #expect(blueColor.brightness == 1.0)
+    
+    // 同じ色の比較テスト
+    let anotherBlueColor = ColorData(hue: 0.67, saturation: 1.0, brightness: 1.0)
+    #expect(blueColor == anotherBlueColor)
+    
+    // 異なる色の比較テスト
+    let greenColor = ColorData(hue: 0.33, saturation: 1.0, brightness: 1.0)
+    #expect(blueColor != greenColor)
   }
 
   @Test func testWeatherModel() throws {
@@ -82,30 +111,22 @@ struct PickletTests {
   @Test func testClothingViewModel() async throws {
     #if os(iOS) || os(macOS)
     // ClothingViewModelのテスト - MainActorコンテキストで実行
-    let viewModel = ClothingViewModel(skipInitialLoad: true)  // テスト用に初期ロードをスキップ
+    let viewModel = ClothingViewModel()
 
-    // MainActor上で実行されているのでawaitは不要
+    // 初期状態のテスト
     #expect(viewModel.clothes.isEmpty)
-    #expect(viewModel.isLoading == false)  // 初期ロードをスキップしたのでfalseのまま
+    #expect(viewModel.isLoading == false)
     #expect(viewModel.errorMessage == nil)
 
     // テストデータの作成
-    let testDate = Date()  // Date型のまま使用
-    let clothing = Clothing(
-      id: UUID(),
-      name: "テストアイテム",
-      category: "ボトムス",
-      color: "青",
-      createdAt: testDate,  // Date型をそのまま使用
-      updatedAt: testDate   // Date型をそのまま使用
-    )
+    let clothing = Clothing(name: "テストアイテム")
 
     // モック化したデータを追加 - MainActor上で直接操作
     viewModel.clothes = [clothing]
 
     #expect(viewModel.clothes.count == 1)
     #expect(viewModel.clothes[0].name == "テストアイテム")
-    #expect(viewModel.clothes[0].category == "ボトムス")
+    #expect(viewModel.clothes[0].favoriteRating == 3) // デフォルト値
     #endif
   }
 
@@ -262,47 +283,36 @@ struct PickletTests {
 
   @Test func testClothingImageModel() throws {
     #if os(iOS) || os(macOS)
-    // テスト用の日付
-    let createdDate = Date()
-    let updatedDate = Date()
-
-    // ClothingImageインスタンスの作成テスト
+    // ClothingImageインスタンスの作成テスト - 新しい構造に対応
     let id = UUID()
-    let clothingId = UUID()
-    let userId = "user123" // String型に変更
     let clothingImage = ClothingImage(
       id: id,
-      clothingId: clothingId,
-      userId: userId,
+      originalLocalPath: "/path/to/original.jpg",
+      maskLocalPath: "/path/to/mask.jpg",
       originalUrl: "https://example.com/original.jpg",
       maskUrl: "https://example.com/mask.jpg",
-      resultUrl: "https://example.com/result.jpg",
-      createdAt: createdDate,
-      updatedAt: updatedDate
+      resultUrl: "https://example.com/result.jpg"
     )
 
     // 各プロパティが正しく設定されているかテスト
     #expect(clothingImage.id == id)
-    #expect(clothingImage.clothingId == clothingId)
-    #expect(clothingImage.userId == userId)
+    #expect(clothingImage.originalLocalPath == "/path/to/original.jpg")
+    #expect(clothingImage.maskLocalPath == "/path/to/mask.jpg")
     #expect(clothingImage.originalUrl == "https://example.com/original.jpg")
     #expect(clothingImage.maskUrl == "https://example.com/mask.jpg")
     #expect(clothingImage.resultUrl == "https://example.com/result.jpg")
-    #expect(clothingImage.createdAt == createdDate)
-    #expect(clothingImage.updatedAt == updatedDate)
 
     // オプショナルプロパティのテスト
     let clothingImageWithNil = ClothingImage(
       id: id,
-      clothingId: clothingId,
-      userId: userId,
+      originalLocalPath: "/path/to/original.jpg",
+      maskLocalPath: nil,
       originalUrl: "https://example.com/original.jpg",
       maskUrl: nil,
-      resultUrl: nil,
-      createdAt: createdDate,
-      updatedAt: updatedDate
+      resultUrl: nil
     )
 
+    #expect(clothingImageWithNil.maskLocalPath == nil)
     #expect(clothingImageWithNil.maskUrl == nil)
     #expect(clothingImageWithNil.resultUrl == nil)
     #endif

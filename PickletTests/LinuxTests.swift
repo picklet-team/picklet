@@ -14,34 +14,79 @@ final class LinuxCompatibleTests: XCTestCase {
         // テスト用の日付作成
         let date = Date()
 
-        // Clothingインスタンスの作成テスト
+        // Clothingインスタンスの作成テスト - 新しい構造に対応
         let id = UUID()
         let clothing = Clothing(
-          id: id,
-          name: "テストTシャツ",
-          category: "トップス",
-          color: "白",
-          createdAt: date,
-          updatedAt: date
+            id: id,
+            name: "テストTシャツ",
+            purchasePrice: 2_000.0,
+            favoriteRating: 4,
+            colors: [ColorData(hue: 0.0, saturation: 0.0, brightness: 1.0)], // 白色
+            categoryIds: [UUID()], // テスト用のカテゴリID
+            brandId: UUID(), // テスト用のブランドID
+            tagIds: [],
+            wearCount: 5,
+            wearLimit: 30,
+            createdAt: date,
+            updatedAt: date
         )
 
         // 各プロパティが正しく設定されているかテスト
         XCTAssertEqual(clothing.id, id)
         XCTAssertEqual(clothing.name, "テストTシャツ")
-        XCTAssertEqual(clothing.category, "トップス")
-        XCTAssertEqual(clothing.color, "白")
+        XCTAssertEqual(clothing.purchasePrice, 2_000.0)
+        XCTAssertEqual(clothing.favoriteRating, 4)
+        XCTAssertEqual(clothing.colors.count, 1)
+        XCTAssertEqual(clothing.categoryIds.count, 1)
+        XCTAssertNotNil(clothing.brandId)
+        XCTAssertTrue(clothing.tagIds.isEmpty)
+        XCTAssertEqual(clothing.wearCount, 5)
+        XCTAssertEqual(clothing.wearLimit, 30)
         XCTAssertEqual(clothing.createdAt, date)
         XCTAssertEqual(clothing.updatedAt, date)
     }
 
+    func testClothingModelMinimal() {
+        // 最小限のプロパティでのテスト
+        let clothing = Clothing(name: "シンプルTシャツ")
+
+        XCTAssertEqual(clothing.name, "シンプルTシャツ")
+        XCTAssertNil(clothing.purchasePrice)
+        XCTAssertEqual(clothing.favoriteRating, 3) // デフォルト値
+        XCTAssertTrue(clothing.colors.isEmpty)
+        XCTAssertTrue(clothing.categoryIds.isEmpty)
+        XCTAssertNil(clothing.brandId)
+        XCTAssertTrue(clothing.tagIds.isEmpty)
+        XCTAssertEqual(clothing.wearCount, 0) // デフォルト値
+        XCTAssertNil(clothing.wearLimit)
+    }
+
+    func testColorDataModel() {
+        // ColorDataのテスト
+        let redColor = ColorData(hue: 0.0, saturation: 1.0, brightness: 1.0)
+        
+        XCTAssertEqual(redColor.hue, 0.0)
+        XCTAssertEqual(redColor.saturation, 1.0)
+        XCTAssertEqual(redColor.brightness, 1.0)
+        XCTAssertNotNil(redColor.id)
+        
+        // 同じ色の比較テスト
+        let anotherRedColor = ColorData(hue: 0.0, saturation: 1.0, brightness: 1.0)
+        XCTAssertTrue(redColor == anotherRedColor)
+        
+        // 異なる色の比較テスト
+        let blueColor = ColorData(hue: 0.67, saturation: 1.0, brightness: 1.0)
+        XCTAssertFalse(redColor == blueColor)
+    }
+
     func testWeatherModel() {
         let weather = Weather(
-          city: "東京",
-          date: "2025-05-01",
-          temperature: 25.5,
-          condition: "晴れ",
-          icon: "clear-day",
-          updatedAt: "2025-05-01T08:00:00Z"
+            city: "東京",
+            date: "2025-05-01",
+            temperature: 25.5,
+            condition: "晴れ",
+            icon: "clear-day",
+            updatedAt: "2025-05-01T08:00:00Z"
         )
 
         XCTAssertEqual(weather.city, "東京")
@@ -62,39 +107,33 @@ final class LinuxCompatibleTests: XCTestCase {
         // ClothingImageインスタンスの作成テスト
         let id = UUID()
         let clothingId = UUID()
-        let userId = "user123" // String型
         let clothingImage = ClothingImage(
-          id: id,
-          clothingId: clothingId,
-          userId: userId,
-          originalUrl: "https://example.com/original.jpg",
-          maskUrl: "https://example.com/mask.jpg",
-          resultUrl: "https://example.com/result.jpg",
-          createdAt: createdDate,
-          updatedAt: updatedDate
+            id: id,
+            originalLocalPath: "/path/to/original.jpg",
+            maskLocalPath: "/path/to/mask.jpg",
+            originalUrl: "https://example.com/original.jpg",
+            maskUrl: "https://example.com/mask.jpg",
+            resultUrl: "https://example.com/result.jpg"
         )
 
         // 各プロパティが正しく設定されているかテスト
         XCTAssertEqual(clothingImage.id, id)
-        XCTAssertEqual(clothingImage.clothingId, clothingId)
-        XCTAssertEqual(clothingImage.userId, userId)
+        XCTAssertEqual(clothingImage.originalLocalPath, "/path/to/original.jpg")
+        XCTAssertEqual(clothingImage.maskLocalPath, "/path/to/mask.jpg")
         XCTAssertEqual(clothingImage.originalUrl, "https://example.com/original.jpg")
         XCTAssertEqual(clothingImage.maskUrl, "https://example.com/mask.jpg")
         XCTAssertEqual(clothingImage.resultUrl, "https://example.com/result.jpg")
-        XCTAssertEqual(clothingImage.createdAt, createdDate)
-        XCTAssertEqual(clothingImage.updatedAt, updatedDate)
 
         let clothingImageWithNil = ClothingImage(
-          id: id,
-          clothingId: clothingId,
-          userId: userId,
-          originalUrl: "https://example.com/original.jpg",
-          maskUrl: nil,
-          resultUrl: nil,
-          createdAt: createdDate,
-          updatedAt: updatedDate
+            id: id,
+            originalLocalPath: "/path/to/original.jpg",
+            maskLocalPath: nil,
+            originalUrl: "https://example.com/original.jpg",
+            maskUrl: nil,
+            resultUrl: nil
         )
 
+        XCTAssertNil(clothingImageWithNil.maskLocalPath)
         XCTAssertNil(clothingImageWithNil.maskUrl)
         XCTAssertNil(clothingImageWithNil.resultUrl)
     }
@@ -105,6 +144,8 @@ final class LinuxCompatibleTests: XCTestCase {
     // Linux環境でもテストが実行されるようにするための特別なセットアップ
     static var allTests = [
         ("testClothingModel", testClothingModel),
+        ("testClothingModelMinimal", testClothingModelMinimal),
+        ("testColorDataModel", testColorDataModel),
         ("testWeatherModel", testWeatherModel)
         // ClothingImageモデルのテストはLinux環境では実行されません
     ]
