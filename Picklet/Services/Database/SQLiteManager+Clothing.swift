@@ -5,7 +5,20 @@ import SQLite
 
 extension SQLiteManager {
   /// 衣類データを保存または更新（UPSERT操作）
+  /// 衣類データを保存または更新（UPSERT操作）
   func saveClothing(_ clothing: Clothing) -> Bool {
+    // 既存データをチェック
+    if loadClothing(id: clothing.id) != nil {
+      // 既存データがある場合は更新
+      return updateClothing(clothing)
+    } else {
+      // 新規データの場合は挿入
+      return insertClothing(clothing)
+    }
+  }
+
+  /// 新規衣類データを挿入（内部用）
+  private func insertClothing(_ clothing: Clothing) -> Bool {
     // 既存データをチェック
     if loadClothing(id: clothing.id) != nil {
       // 既存データがある場合は更新
@@ -34,6 +47,10 @@ extension SQLiteManager {
       let tagIdsData = try encoder.encode(clothing.tagIds)
       let tagIdsString = String(data: tagIdsData, encoding: .utf8) ?? "[]"
 
+      // TagIdsをJSONエンコード
+      let tagIdsData = try encoder.encode(clothing.tagIds)
+      let tagIdsString = String(data: tagIdsData, encoding: .utf8) ?? "[]"
+
       let insert = clothesTable.insert(
         clothesId <- clothing.id.uuidString,
         clothesName <- clothing.name,
@@ -46,12 +63,15 @@ extension SQLiteManager {
         clothesWearCount <- clothing.wearCount,
         clothesWearLimit <- clothing.wearLimit,
         clothesCreatedAt <- clothing.createdAt,
-        clothesUpdatedAt <- clothing.updatedAt)
+        clothesUpdatedAt <- clothing.updatedAt
+      )
 
       try db?.run(insert)
       print("✅ SQLite: 新規衣類データ挿入成功 - \(clothing.id)")
+      print("✅ SQLite: 新規衣類データ挿入成功 - \(clothing.id)")
       return true
     } catch {
+      print("❌ 衣類挿入エラー: \(error)")
       print("❌ 衣類挿入エラー: \(error)")
       return false
     }
@@ -202,6 +222,10 @@ extension SQLiteManager {
       let tagIdsData = try encoder.encode(clothing.tagIds)
       let tagIdsString = String(data: tagIdsData, encoding: .utf8) ?? "[]"
 
+      // TagIdsをJSONエンコード
+      let tagIdsData = try encoder.encode(clothing.tagIds)
+      let tagIdsString = String(data: tagIdsData, encoding: .utf8) ?? "[]"
+
       let update = clothesTable
         .filter(clothesId == clothing.id.uuidString)
         .update(
@@ -217,6 +241,15 @@ extension SQLiteManager {
           clothesUpdatedAt <- clothing.updatedAt)
 
       guard let db = db else { return false }
+      let rowsAffected = try db.run(update)
+
+      if rowsAffected > 0 {
+        print("✅ SQLite: 衣類データ更新成功 - \(clothing.id)")
+        return true
+      } else {
+        print("⚠️ SQLite: 更新対象の衣類データが見つかりません - \(clothing.id)")
+        return false
+      }
       let rowsAffected = try db.run(update)
 
       if rowsAffected > 0 {

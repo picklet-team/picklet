@@ -34,6 +34,7 @@ struct ColorData: Codable, Identifiable, Hashable, Equatable {
 }
 
 struct Clothing: Identifiable, Codable, Equatable {
+struct Clothing: Identifiable, Codable, Equatable {
   let id: UUID
   var name: String
   var purchasePrice: Double?
@@ -44,9 +45,39 @@ struct Clothing: Identifiable, Codable, Equatable {
   var tagIds: [UUID]
   var wearCount: Int
   var wearLimit: Int? // 着用上限を追加
+  var brandId: UUID?
+  var tagIds: [UUID]
+  var wearCount: Int
+  var wearLimit: Int? // 着用上限を追加
   let createdAt: Date
   var updatedAt: Date
+  var updatedAt: Date
 
+  // 新規作成用の初期化メソッド
+  init(
+    id: UUID = UUID(),
+    name: String,
+    purchasePrice: Double? = nil,
+    favoriteRating: Int = 3,
+    colors: [ColorData] = [],
+    categoryIds: [UUID] = [],
+    brandId: UUID? = nil,
+    tagIds: [UUID] = [],
+    wearCount: Int = 0,
+    wearLimit: Int? = nil // 着用上限
+  ) {
+    self.id = id
+    self.name = name
+    self.purchasePrice = purchasePrice
+    self.favoriteRating = favoriteRating
+    self.colors = colors
+    self.categoryIds = categoryIds
+    self.brandId = brandId
+    self.tagIds = tagIds
+    self.wearCount = wearCount
+    self.wearLimit = wearLimit
+    self.createdAt = Date() // 現在時刻で作成
+    self.updatedAt = Date()
   // 新規作成用の初期化メソッド
   init(
     id: UUID = UUID(),
@@ -87,6 +118,21 @@ struct Clothing: Identifiable, Codable, Equatable {
     wearCount: Int = 0,
     wearLimit: Int? = nil,
     createdAt: Date, // データベースから取得した作成日時
+    updatedAt: Date  // データベースから取得した更新日時
+  ) {
+  // データベースから復元用の初期化メソッド
+  init(
+    id: UUID,
+    name: String,
+    purchasePrice: Double? = nil,
+    favoriteRating: Int = 3,
+    colors: [ColorData] = [],
+    categoryIds: [UUID] = [],
+    brandId: UUID? = nil,
+    tagIds: [UUID] = [],
+    wearCount: Int = 0,
+    wearLimit: Int? = nil,
+    createdAt: Date, // データベースから取得した作成日時
     updatedAt: Date // データベースから取得した更新日時
   ) {
     self.id = id
@@ -94,9 +140,12 @@ struct Clothing: Identifiable, Codable, Equatable {
     self.purchasePrice = purchasePrice
     self.favoriteRating = favoriteRating
     self.colors = colors
+    self.colors = colors
     self.categoryIds = categoryIds
     self.brandId = brandId
     self.tagIds = tagIds
+    self.wearCount = wearCount
+    self.wearLimit = wearLimit
     self.wearCount = wearCount
     self.wearLimit = wearLimit
     self.createdAt = createdAt

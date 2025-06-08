@@ -38,7 +38,7 @@ class SQLiteManager {
   let imageMaskUrl = SQLite.Expression<String?>("mask_url")
   let imageResultUrl = SQLite.Expression<String?>("result_url")
 
-  // 新しいカラム定義
+  // 新しいカラム定義（修正版）
   let clothesPurchasePrice = SQLite.Expression<Double?>("purchase_price")
   let clothesFavoriteRating = SQLite.Expression<Int>("favorite_rating")
   let clothesColors = SQLite.Expression<String?>("colors")
@@ -94,6 +94,7 @@ class SQLiteManager {
       db = try Connection(dbPath)
 
       // テーブル作成
+      try createTables()
       try createTables()
 
       // マイグレーション実行
@@ -157,11 +158,13 @@ class SQLiteManager {
     })
 
     print("✅ SQLite: テーブル作成完了")
+    print("✅ SQLite: テーブル作成完了")
   }
 
   private func performMigrations() {
     guard let db = db else { return }
 
+    // 新しいカラムの追加（エラーを無視）
     // 新しいカラムの追加（エラーを無視）
     do {
       try db.run("ALTER TABLE clothes ADD COLUMN brand_id TEXT")
@@ -195,6 +198,7 @@ class SQLiteManager {
       try db.run("ALTER TABLE clothes ADD COLUMN category_ids TEXT DEFAULT '[]'")
       print("✅ category_ids カラムを追加しました")
     } catch {
+      print("ℹ️ category_ids カラムは既に存在します")
       print("ℹ️ category_ids カラムは既に存在します")
     }
   }
