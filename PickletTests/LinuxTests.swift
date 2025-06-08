@@ -101,7 +101,7 @@ final class LinuxCompatibleTests: XCTestCase {
     #if os(macOS) || os(iOS)
     func testClothingImageModel() {
         let testData = createClothingImageTestData()
-        
+
         let clothingImage = ClothingImage(
             id: testData.id,
             clothingId: testData.clothingId,
@@ -122,7 +122,7 @@ final class LinuxCompatibleTests: XCTestCase {
 
     func testClothingImageModelWithNilValues() {
         let testData = createClothingImageTestData()
-        
+
         let clothingImageWithNil = ClothingImage(
             id: testData.id,
             clothingId: testData.clothingId,
@@ -155,14 +155,14 @@ final class LinuxCompatibleTests: XCTestCase {
 // MARK: - Helper Methods
 #if os(macOS) || os(iOS)
 extension LinuxCompatibleTests {
-    
+
     struct ClothingImageTestData {
         let id: UUID
         let clothingId: UUID
         let createdDate: Date
         let updatedDate: Date
     }
-    
+
     private func createClothingImageTestData() -> ClothingImageTestData {
         return ClothingImageTestData(
             id: UUID(),
@@ -171,7 +171,7 @@ extension LinuxCompatibleTests {
             updatedDate: Date()
         )
     }
-    
+
     private func verifyClothingImageProperties(_ clothingImage: ClothingImage, testData: ClothingImageTestData) {
         XCTAssertEqual(clothingImage.id, testData.id)
         XCTAssertEqual(clothingImage.clothingId, testData.clothingId)
@@ -186,7 +186,7 @@ extension LinuxCompatibleTests {
         XCTAssertEqual(clothingImage.createdAt, testData.createdDate)
         XCTAssertEqual(clothingImage.updatedAt, testData.updatedDate)
     }
-    
+
     private func verifyClothingImageNilProperties(_ clothingImage: ClothingImage, testData: ClothingImageTestData) {
         XCTAssertEqual(clothingImage.id, testData.id)
         XCTAssertEqual(clothingImage.clothingId, testData.clothingId)

@@ -58,15 +58,15 @@ struct PickletTests {
   @Test func testColorDataModel() throws {
     // ColorDataのテスト
     let blueColor = ColorData(hue: 0.67, saturation: 1.0, brightness: 1.0)
-    
+
     #expect(blueColor.hue == 0.67)
     #expect(blueColor.saturation == 1.0)
     #expect(blueColor.brightness == 1.0)
-    
+
     // 同じ色の比較テスト
     let anotherBlueColor = ColorData(hue: 0.67, saturation: 1.0, brightness: 1.0)
     #expect(blueColor == anotherBlueColor)
-    
+
     // 異なる色の比較テスト
     let greenColor = ColorData(hue: 0.33, saturation: 1.0, brightness: 1.0)
     #expect(blueColor != greenColor)
@@ -287,11 +287,17 @@ struct PickletTests {
     let id = UUID()
     let clothingImage = ClothingImage(
       id: id,
-      originalLocalPath: "/path/to/original.jpg",
-      maskLocalPath: "/path/to/mask.jpg",
+      clothingId: UUID(),
+      userId: "test-user",
       originalUrl: "https://example.com/original.jpg",
       maskUrl: "https://example.com/mask.jpg",
-      resultUrl: "https://example.com/result.jpg"
+      aimaskUrl: nil,
+      resultUrl: "https://example.com/result.jpg",
+      originalLocalPath: "/path/to/original.jpg",
+      maskLocalPath: "/path/to/mask.jpg",
+      resultLocalPath: nil,
+      createdAt: Date(),
+      updatedAt: Date()
     )
 
     // 各プロパティが正しく設定されているかテスト
@@ -305,11 +311,17 @@ struct PickletTests {
     // オプショナルプロパティのテスト
     let clothingImageWithNil = ClothingImage(
       id: id,
-      originalLocalPath: "/path/to/original.jpg",
-      maskLocalPath: nil,
+      clothingId: UUID(),
+      userId: "test-user",
       originalUrl: "https://example.com/original.jpg",
       maskUrl: nil,
-      resultUrl: nil
+      aimaskUrl: nil,
+      resultUrl: nil,
+      originalLocalPath: "/path/to/original.jpg",
+      maskLocalPath: nil,
+      resultLocalPath: nil,
+      createdAt: Date(),
+      updatedAt: Date()
     )
 
     #expect(clothingImageWithNil.maskLocalPath == nil)
