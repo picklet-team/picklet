@@ -2,23 +2,34 @@ import SDWebImageSwiftUI
 import SwiftUI
 
 struct ClothingEditView: View {
-  @EnvironmentObject var viewModel: ClothingViewModel // private を削除
-  @Environment(\.dismiss) var dismiss // private を削除
+  @EnvironmentObject var viewModel: ClothingViewModel
+  @EnvironmentObject var themeManager: ThemeManager
+  @EnvironmentObject var categoryManager: CategoryManager
+  @EnvironmentObject var brandManager: BrandManager
+  @Environment(\.dismiss) var dismiss
+
   @Binding var clothing: Clothing
   let openPhotoPickerOnAppear: Bool
   let canDelete: Bool
   let isNew: Bool
 
+  // privateを削除してinternalにする
   @State var editingSets: [EditableImageSet] = []
-  @State var selectedImageSet: EditableImageSet? // private を削除
-  @State var showPhotoPicker = false // private を削除
-  @State var showDeleteConfirm = false // private を削除
+  @State var selectedImageSet: EditableImageSet?
+  @State var showPhotoPicker = false
+  @State var showDeleteConfirm = false
   @State var isBackgroundLoading = false
 
   var body: some View {
-    ZStack(alignment: .bottom) {
-      mainContent
-      saveButton
+    ZStack {
+      themeManager.currentTheme.backgroundGradient
+        .ignoresSafeArea()
+
+      VStack(spacing: 0) {
+        headerSection
+        scrollableContent
+        saveButtonSection
+      }
     }
     .ignoresSafeArea(.keyboard, edges: .bottom)
     .onAppear(perform: setupInitialData)
@@ -27,37 +38,44 @@ struct ClothingEditView: View {
     .confirmationDialog("本当に削除しますか？", isPresented: $showDeleteConfirm) {
       deleteConfirmationButtons
     }
+    .tint(themeManager.currentTheme.accentColor)
   }
 
-  private var mainContent: some View {
-    VStack(spacing: 0) {
-      customHeader
-      scrollableContent
-    }
-    .onTapGesture(perform: dismissKeyboard)
-    .navigationBarHidden(true)
-  }
+  private var headerSection: some View {
+    HStack {
+      // キャンセルボタン
+      Button("キャンセル") {
+        dismiss() // ViewModelは一切触らない
+      }
+      .foregroundColor(themeManager.currentTheme.primaryColor)
 
-  private var customHeader: some View {
-    VStack {
-      TextField("名前", text: $clothing.name)
-        .font(.title.weight(.bold))
-        .padding(10)
-        .cornerRadius(10)
-        .multilineTextAlignment(.center)
-        .overlay(
-          Rectangle()
-            .frame(height: 1)
-            .padding(.horizontal, 40)
-            .foregroundColor(Color.gray.opacity(0.3)),
-          alignment: .bottom)
+      Spacer()
+
+      Text(isNew ? "新規登録" : "編集")
+        .font(.headline)
+        .fontWeight(.semibold)
+
+      Spacer()
+
+      // 削除ボタン（既存衣類のみ）
+      if canDelete && !isNew {
+        Button("削除") {
+          showDeleteConfirm = true
+        }
+        .foregroundColor(.red)
+      } else {
+        Text("")
+          .frame(width: 40)
+      }
     }
-    .background(Color(.systemBackground))
+    .padding()
+    .background(.ultraThinMaterial)
   }
 
   private var scrollableContent: some View {
     ScrollView {
-      VStack {
+      VStack(spacing: 16) {
+        // 画像リスト
         ImageListSection(
           imageSets: $editingSets,
           addAction: { showPhotoPicker = true },
@@ -65,18 +83,44 @@ struct ClothingEditView: View {
           isLoading: isBackgroundLoading)
           .padding(.top, 8)
 
-        ClothingFormSection(
-          clothing: $clothing,
-          canDelete: canDelete,
-          onDelete: { showDeleteConfirm = true })
+        // 名前編集セクション
+        nameEditSection
+
+        // その他のフォーム
+        ClothingFormSection(clothing: $clothing)
       }
-      .padding(.bottom, 80)
+      .padding(.bottom, 100)
     }
   }
 
-  private var saveButton: some View {
-    VStack {
-      PrimaryActionButton(title: "保存", action: saveChanges)
+  private var nameEditSection: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      Text("名前")
+        .font(.headline)
+        .foregroundColor(themeManager.currentTheme.primaryColor)
+        .padding(.horizontal)
+
+      TextField("服の名前を入力", text: $clothing.name)
+        .font(.title3)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(12)
+        .overlay(
+          RoundedRectangle(cornerRadius: 12)
+            .stroke(themeManager.currentTheme.primaryColor.opacity(0.3), lineWidth: 1))
+        .padding(.horizontal)
+    }
+  }
+
+  private var saveButtonSection: some View {
+    PrimaryActionButton(title: isNew ? "登録する" : "保存する") {
+      if isNew {
+        viewModel.addClothing(clothing, imageSets: editingSets)
+      } else {
+        viewModel.updateClothing(clothing, imageSets: editingSets)
+      }
+      dismiss()
     }
     .padding(.horizontal)
     .padding(.bottom, 16)
@@ -86,10 +130,12 @@ struct ClothingEditView: View {
     CaptureOrLibraryView { image in
       addNewImageSet(image)
     }
+    .environmentObject(themeManager)
   }
 
   private func maskEditorSheet(_ imageSet: EditableImageSet) -> some View {
     MaskEditorView(imageSet: bindingFor(imageSet))
+      .environmentObject(themeManager)
       .onDisappear {
         updateImageCache()
       }
@@ -98,7 +144,8 @@ struct ClothingEditView: View {
   private var deleteConfirmationButtons: some View {
     Group {
       Button("削除する", role: .destructive) {
-        Task { await deleteClothing() }
+        viewModel.deleteClothing(clothing)
+        dismiss()
       }
       Button("キャンセル", role: .cancel) {}
     }
@@ -109,11 +156,5 @@ struct ClothingEditView: View {
       fatalError("Invalid imageSet")
     }
     return $editingSets[idx]
-  }
-
-  private func dismissKeyboard() {
-    UIApplication.shared.sendAction(
-      #selector(UIResponder.resignFirstResponder),
-      to: nil, from: nil, for: nil)
   }
 }

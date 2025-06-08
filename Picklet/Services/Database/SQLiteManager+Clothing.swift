@@ -47,6 +47,7 @@ extension SQLiteManager {
         clothesWearLimit <- clothing.wearLimit,
         clothesCreatedAt <- clothing.createdAt,
         clothesUpdatedAt <- clothing.updatedAt)
+        clothesUpdatedAt <- clothing.updatedAt)
 
       try db?.run(insert)
       print("✅ SQLite: 新規衣類データ挿入成功 - \(clothing.id)")
@@ -121,6 +122,8 @@ extension SQLiteManager {
 
   /// 全ての衣類データを読み込み
   func loadAllClothing() -> [Clothing] {
+    var clothingList: [Clothing] = []
+
     do {
       var clothes: [Clothing] = []
 
@@ -161,7 +164,7 @@ extension SQLiteManager {
 
         // データベースから取得した日時を使用して正しく初期化
         let clothing = Clothing(
-          id: UUID(uuidString: row[clothesId])!,
+          id: UUID(uuidString: row[clothesId]) ?? UUID(),
           name: row[clothesName],
           purchasePrice: row[clothesPurchasePrice],
           favoriteRating: row[clothesFavoriteRating],

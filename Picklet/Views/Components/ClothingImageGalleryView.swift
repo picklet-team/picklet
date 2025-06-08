@@ -3,7 +3,8 @@ import SwiftUI
 
 /// 服の画像一覧を表示する共通コンポーネント
 struct ClothingImageGalleryView: View {
-  @Binding var imageSets: [EditableImageSet] // バインディングに変更
+  @EnvironmentObject var themeManager: ThemeManager // 追加
+  @Binding var imageSets: [EditableImageSet]
   let imageSize: CGFloat
   let cornerRadius: CGFloat
   let spacing: CGFloat
@@ -13,7 +14,7 @@ struct ClothingImageGalleryView: View {
   var onAddButtonTap: (() -> Void)?
 
   init(
-    imageSets: Binding<[EditableImageSet]>, // バインディングパラメータに変更
+    imageSets: Binding<[EditableImageSet]>,
     imageSize: CGFloat = 150,
     cornerRadius: CGFloat = 8,
     spacing: CGFloat = 12,
@@ -21,7 +22,7 @@ struct ClothingImageGalleryView: View {
     showAddButton: Bool = false,
     onSelectImage: ((EditableImageSet) -> Void)? = nil,
     onAddButtonTap: (() -> Void)? = nil) {
-    _imageSets = imageSets // _で始まる変数にバインディングを割り当て
+    _imageSets = imageSets
     self.imageSize = imageSize
     self.cornerRadius = cornerRadius
     self.spacing = spacing
@@ -37,10 +38,11 @@ struct ClothingImageGalleryView: View {
         // 既存の画像アイテム
         ForEach(imageSets) { set in
           ImageThumbnailView(
-            image: set.original, // originalプロパティを渡す
+            image: set.original,
             imageURL: set.originalUrl,
             size: imageSize,
             cornerRadius: cornerRadius)
+            .environmentObject(themeManager) // テーマを渡す
             .onTapGesture {
               if let onSelect = onSelectImage {
                 onSelect(set)
@@ -48,7 +50,7 @@ struct ClothingImageGalleryView: View {
             }
         }
 
-        // シンプルな追加ボタン
+        // テーマカラーを適用した追加ボタン
         if showAddButton, let addAction = onAddButtonTap {
           Button(action: addAction) {
             ZStack {
@@ -56,15 +58,28 @@ struct ClothingImageGalleryView: View {
                 .fill(Color(.systemBackground))
                 .overlay(
                   RoundedRectangle(cornerRadius: cornerRadius)
-                    .strokeBorder(Color.gray.opacity(0.3), lineWidth: 1))
-                .shadow(color: .gray.opacity(0.1), radius: 1, x: 0, y: 1)
+                    .strokeBorder(
+                      themeManager.currentTheme.primaryColor.opacity(0.3),
+                      lineWidth: 2) // テーマカラーの境界線
+                )
+                .shadow(
+                  color: themeManager.currentTheme.primaryColor.opacity(0.1),
+                  radius: 3, x: 0, y: 2) // テーマカラーの影
 
-              Image(systemName: "plus")
-                .font(.title2)
-                .foregroundColor(.blue)
+              VStack(spacing: 4) {
+                Image(systemName: "plus.circle.fill")
+                  .font(.title)
+                  .foregroundColor(themeManager.currentTheme.primaryColor)
+
+                Text("追加")
+                  .font(.caption)
+                  .fontWeight(.medium)
+                  .foregroundColor(themeManager.currentTheme.primaryColor)
+              }
             }
             .frame(width: imageSize, height: imageSize)
           }
+          .buttonStyle(PlainButtonStyle())
         }
       }
       .padding()
@@ -84,7 +99,7 @@ extension ClothingImageGalleryView {
     onSelectImage: ((EditableImageSet) -> Void)? = nil,
     onAddButtonTap: (() -> Void)? = nil) {
     self.init(
-      imageSets: .constant(imageSets), // 固定値のバインディングを作成
+      imageSets: .constant(imageSets),
       imageSize: imageSize,
       cornerRadius: cornerRadius,
       spacing: spacing,
@@ -96,10 +111,11 @@ extension ClothingImageGalleryView {
 }
 
 struct ImageThumbnailView: View {
+  @EnvironmentObject var themeManager: ThemeManager // 追加
   let imageURL: String?
   let size: CGFloat
   let cornerRadius: CGFloat
-  let image: UIImage? // 追加: 直接UIImageを受け取るプロパティ
+  let image: UIImage?
 
   // 既存のイニシャライザをオーバーロード（下位互換性のため）
   init(imageURL: String?, size: CGFloat, cornerRadius: CGFloat) {
@@ -125,19 +141,29 @@ struct ImageThumbnailView: View {
           url: url,
           options: [.queryMemoryData, .queryDiskDataSync, .refreshCached])
           .resizable()
-          .indicator(.activity)
+          .indicator(.activity) // シンプルなアクティビティインジケーター
       } else if let uiImage = image {
         // URLがなくUIImageがある場合は直接表示
         Image(uiImage: uiImage)
           .resizable()
       } else {
-        // どちらもない場合はグレーの長方形
-        Rectangle().fill(Color.gray.opacity(0.2))
+        // どちらもない場合はテーマカラーのプレースホルダー
+        ZStack {
+          Rectangle()
+            .fill(themeManager.currentTheme.primaryColor.opacity(0.1))
+
+          Image(systemName: "photo")
+            .font(.title2)
+            .foregroundColor(themeManager.currentTheme.primaryColor.opacity(0.6))
+        }
       }
     }
     .scaledToFill()
     .frame(width: size, height: size)
     .clipped()
     .cornerRadius(cornerRadius)
+    .overlay(
+      RoundedRectangle(cornerRadius: cornerRadius)
+        .stroke(themeManager.currentTheme.primaryColor.opacity(0.15), lineWidth: 1))
   }
 }

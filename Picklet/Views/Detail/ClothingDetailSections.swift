@@ -88,7 +88,7 @@ struct ClothingDetailInfoSection: View {
             .font(.subheadline)
             .foregroundColor(.secondary)
           Spacer()
-          Text(DateFormatter.shortDate.string(from: clothing.createdAt))
+          Text(DateFormatter.detailViewShortDate.string(from: clothing.createdAt))
             .font(.subheadline)
             .fontWeight(.medium)
         }
