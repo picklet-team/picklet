@@ -75,8 +75,8 @@ extension ClothingViewModel {
           let price = clothing.purchasePrice
     else { return nil }
 
-    let count = getWearCount(for: clothingId)
-    return count.isEmpty ? price : price / Double(count)
+    let wearHistoriesForClothing = getWearHistories(for: clothingId)
+    return wearHistoriesForClothing.isEmpty ? price : price / Double(wearHistoriesForClothing.count)
   }
 
   /// 今日着用済みかどうかを判定
