@@ -58,7 +58,15 @@ final class LinuxCompatibleTests: XCTestCase {
         XCTAssertNil(clothing.brandId)
         XCTAssertTrue(clothing.tagIds.isEmpty)
         XCTAssertEqual(clothing.wearCount, 0) // デフォルト値
-        XCTAssertNil(clothing.wearLimit)
+
+        // wearLimitはDefaultSettingsManagerから値が設定されるため、nilではない
+        XCTAssertNotNil(clothing.wearLimit) // 変更: XCTAssertNil → XCTAssertNotNil
+
+        // 自動生成されるプロパティの検証
+        XCTAssertNotNil(clothing.id)
+        XCTAssertNotNil(clothing.createdAt)
+        XCTAssertNotNil(clothing.updatedAt)
+        XCTAssertEqual(clothing.createdAt, clothing.updatedAt)
     }
 
     func testColorDataModel() {
