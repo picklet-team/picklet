@@ -153,21 +153,36 @@ class ImageLoaderService {
   ///   - clothingId: 服のID
   /// - Returns: 削除が成功したかどうか
   func deleteImage(imageId: UUID, from clothingId: UUID) -> Bool {
+    print("🗑️ ImageLoaderService: 画像削除開始 - imageId: \(imageId), clothingId: \(clothingId)")
+
     // メタデータを取得
     var metadata = dataManager.loadImageMetadata(for: clothingId)
 
     // 削除対象の画像を探す
-    guard let imageIndex = metadata.firstIndex(where: { $0.id == imageId }),
-          let localPath = metadata[imageIndex].originalLocalPath
-    else {
+    guard let imageIndex = metadata.firstIndex(where: { $0.id == imageId }) else {
       print("⚠️ 削除対象の画像が見つかりません: \(imageId)")
       return false
     }
 
-    // ファイルを削除
-    if !dataManager.deleteImage(filename: localPath) {
-      print("❌ 画像ファイル削除に失敗: \(localPath)")
-      return false
+    let imageToDelete = metadata[imageIndex]
+
+    // オリジナル画像ファイルを削除
+    if let localPath = imageToDelete.originalLocalPath {
+      if !dataManager.deleteImage(filename: localPath) {
+        print("❌ オリジナル画像ファイル削除に失敗: \(localPath)")
+        return false
+      }
+      print("✅ オリジナル画像ファイル削除成功: \(localPath)")
+    }
+
+    // マスク画像ファイルを削除
+    if let maskPath = imageToDelete.maskLocalPath {
+      if !dataManager.deleteImage(filename: maskPath) {
+        print("❌ マスク画像ファイル削除に失敗: \(maskPath)")
+        // マスクの削除に失敗しても続行する
+      } else {
+        print("✅ マスク画像ファイル削除成功: \(maskPath)")
+      }
     }
 
     // メタデータから削除
@@ -177,7 +192,7 @@ class ImageLoaderService {
     // メモリキャッシュからも削除
     memoryCache.removeObject(forKey: clothingId as NSUUID)
 
-    print("✅ 画像を削除しました: \(imageId)")
+    print("✅ 画像を完全に削除しました: \(imageId)")
     return true
   }
 

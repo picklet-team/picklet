@@ -54,6 +54,11 @@ struct ClothingEditView: View {
     }
     .ignoresSafeArea(.keyboard, edges: .bottom)
     .onAppear(perform: setupInitialData)
+    .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("DeleteImageSet"))) { notification in
+      if let imageSetId = notification.object as? UUID {
+        deleteImageSet(imageSetId)
+      }
+    }
     .sheet(isPresented: $showPhotoPicker) { photoPickerSheet }
     .sheet(item: $selectedImageSet) { maskEditorSheet($0) }
     .tint(themeManager.currentTheme.accentColor)
