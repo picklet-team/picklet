@@ -4,8 +4,7 @@ struct ClothingListView: View {
   @EnvironmentObject private var viewModel: ClothingViewModel
   @EnvironmentObject private var themeManager: ThemeManager
   @EnvironmentObject private var overlayManager: GlobalOverlayManager
-  @EnvironmentObject private var categoryManager: CategoryManager
-  @EnvironmentObject private var brandManager: BrandManager
+  @EnvironmentObject private var referenceDataManager: ReferenceDataManager // 変更
 
   @State private var navigateToEdit = false
   @State private var editingClothing: Clothing?
@@ -31,10 +30,9 @@ struct ClothingListView: View {
                 purchasePrice: nil,
                 favoriteRating: 3,
                 colors: [],
-                categoryIds: [], // 追加
-                brandId: nil, // 追加
-                tagIds: [] // 追加
-              )
+                categoryIds: [],
+                brandId: nil,
+                tagIds: [])
               isNewClothing = true
               navigateToEdit = true
             }
@@ -43,14 +41,13 @@ struct ClothingListView: View {
         .navigationDestination(isPresented: $navigateToEdit) {
           if let editingClothing = editingClothing {
             ClothingEditView(
-              clothing: .constant(editingClothing), // Bindingに変換
+              clothing: .constant(editingClothing),
               openPhotoPickerOnAppear: true,
               canDelete: false,
               isNew: true)
               .environmentObject(viewModel)
               .environmentObject(themeManager)
-              .environmentObject(categoryManager)
-              .environmentObject(brandManager)
+              .environmentObject(referenceDataManager) // 変更
           }
         }
         .refreshable {

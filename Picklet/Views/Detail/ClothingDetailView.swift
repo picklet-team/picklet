@@ -4,8 +4,7 @@ import SwiftUI
 struct ClothingDetailView: View {
   @EnvironmentObject var viewModel: ClothingViewModel
   @EnvironmentObject var themeManager: ThemeManager
-  @EnvironmentObject var categoryManager: CategoryManager
-  @EnvironmentObject var brandManager: BrandManager
+  @EnvironmentObject var referenceDataManager: ReferenceDataManager // 変更
   @Environment(\.dismiss) private var dismiss
 
   @Binding var clothing: Clothing
@@ -26,7 +25,7 @@ struct ClothingDetailView: View {
               imageSets: viewModel.imageSetsMap[clothingId] ?? [],
               showAddButton: false)
 
-            // ヘッダーセクション（お気に入り度・価格）- $clothingでBindingを渡す
+            // ヘッダーセクション（お気に入り度・価格）
             ClothingDetailHeaderSection(clothing: $clothing)
               .environmentObject(themeManager)
               .environmentObject(viewModel)
@@ -48,12 +47,12 @@ struct ClothingDetailView: View {
             // カテゴリ情報
             ClothingCategorySection(clothing: clothing)
               .environmentObject(themeManager)
-              .environmentObject(categoryManager)
+              .environmentObject(referenceDataManager) // 変更
 
             // ブランド情報
             ClothingBrandSection(clothing: clothing)
               .environmentObject(themeManager)
-              .environmentObject(brandManager)
+              .environmentObject(referenceDataManager) // 変更
 
             // カラー情報
             ClothingColorSection(clothing: clothing)
@@ -85,8 +84,7 @@ struct ClothingDetailView: View {
         isNew: false)
         .environmentObject(viewModel)
         .environmentObject(themeManager)
-        .environmentObject(categoryManager)
-        .environmentObject(brandManager)
+        .environmentObject(referenceDataManager) // 変更
     }
     .onChange(of: viewModel.clothes) { _, newClothes in
       if !newClothes.contains(where: { $0.id == clothingId }) {

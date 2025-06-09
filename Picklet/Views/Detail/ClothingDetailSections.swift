@@ -103,7 +103,7 @@ struct ClothingDetailInfoSection: View {
 struct ClothingCategorySection: View {
   let clothing: Clothing
   @EnvironmentObject var themeManager: ThemeManager
-  @EnvironmentObject var categoryManager: CategoryManager
+  @EnvironmentObject var referenceDataManager: ReferenceDataManager // 変更
 
   var body: some View {
     VStack(alignment: .leading, spacing: 16) {
@@ -118,7 +118,7 @@ struct ClothingCategorySection: View {
 
       if !clothing.categoryIds.isEmpty {
         FlowLayout(spacing: 8) {
-          ForEach(categoryManager.getCategoryNames(for: clothing.categoryIds), id: \.self) { category in
+          ForEach(referenceDataManager.getCategoryNames(for: clothing.categoryIds), id: \.self) { category in
             CompactTagView(text: category, color: themeManager.currentTheme.primaryColor)
           }
         }
@@ -144,7 +144,7 @@ struct ClothingCategorySection: View {
 struct ClothingBrandSection: View {
   let clothing: Clothing
   @EnvironmentObject var themeManager: ThemeManager
-  @EnvironmentObject var brandManager: BrandManager
+  @EnvironmentObject var referenceDataManager: ReferenceDataManager // 変更
 
   var body: some View {
     VStack(alignment: .leading, spacing: 16) {
@@ -158,7 +158,7 @@ struct ClothingBrandSection: View {
       }
 
       if let brandId = clothing.brandId {
-        CompactTagView(text: brandManager.getBrandName(for: brandId), color: .purple)
+        CompactTagView(text: referenceDataManager.getBrandName(for: brandId), color: .purple)
           .padding()
           .frame(maxWidth: .infinity, alignment: .leading)
           .background(Color(.secondarySystemBackground))

@@ -29,14 +29,12 @@ struct MainTabView: View {
       ManagementView()
         .tabItem {
           Image(systemName: "gear.circle")
-          Text("管理")
         }
         .tag(4)
 
       SettingsView()
         .tabItem {
           Image(systemName: "gearshape")
-          Text("設定")
         }
         .tag(5)
     }

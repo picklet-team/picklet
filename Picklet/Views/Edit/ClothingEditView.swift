@@ -4,8 +4,7 @@ import SwiftUI
 struct ClothingEditView: View {
   @EnvironmentObject var viewModel: ClothingViewModel
   @EnvironmentObject var themeManager: ThemeManager
-  @EnvironmentObject var categoryManager: CategoryManager
-  @EnvironmentObject var brandManager: BrandManager
+  @EnvironmentObject var referenceDataManager: ReferenceDataManager // 変更
   @Environment(\.dismiss) var dismiss
 
   @Binding var clothing: Clothing
@@ -13,39 +12,66 @@ struct ClothingEditView: View {
   let canDelete: Bool
   let isNew: Bool
 
-  // privateを削除してinternalにする
+  // 編集用の一時的なコピーを作成
+  @State var editingClothing: Clothing
   @State var editingSets: [EditableImageSet] = []
   @State var selectedImageSet: EditableImageSet?
   @State var showPhotoPicker = false
   @State var showDeleteConfirm = false
   @State var isBackgroundLoading = false
 
-  var body: some View {
-    ZStack {
-      themeManager.currentTheme.backgroundGradient
-        .ignoresSafeArea()
+  // 初期化時に編集用のコピーを作成
+  init(
+    clothing: Binding<Clothing>,
+    openPhotoPickerOnAppear: Bool = false,
+    canDelete: Bool = true,
+    isNew: Bool = false) {
+    _clothing = clothing
+    self.openPhotoPickerOnAppear = openPhotoPickerOnAppear
+    self.canDelete = canDelete
+    self.isNew = isNew
+    _editingClothing = State(initialValue: clothing.wrappedValue)
+  }
 
-      VStack(spacing: 0) {
+  var body: some View {
+    NavigationView {
+      ScrollView {
+        LazyVStack(spacing: 0) {
+          // 全てのフォーム項目を統一
+          UnifiedClothingFormSection(
+            clothing: $editingClothing,
+            imageSets: $editingSets,
+            isBackgroundLoading: isBackgroundLoading,
+            onAddImage: { showPhotoPicker = true },
+            onSelectImage: prepareImageForEditing)
+        }
+      }
+      .dismissKeyboardOnTap()
+      .navigationBarHidden(true)
+      .safeAreaInset(edge: .top) {
         headerSection
-        scrollableContent
-        saveButtonSection
       }
     }
     .ignoresSafeArea(.keyboard, edges: .bottom)
     .onAppear(perform: setupInitialData)
+    .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("DeleteImageSet"))) { notification in
+      if let imageSetId = notification.object as? UUID {
+        deleteImageSet(imageSetId)
+      }
+    }
     .sheet(isPresented: $showPhotoPicker) { photoPickerSheet }
     .sheet(item: $selectedImageSet) { maskEditorSheet($0) }
-    .confirmationDialog("本当に削除しますか？", isPresented: $showDeleteConfirm) {
-      deleteConfirmationButtons
-    }
     .tint(themeManager.currentTheme.accentColor)
+    .presentationDetents([.large])
+    .presentationDragIndicator(.visible)
   }
 
   private var headerSection: some View {
     HStack {
       // キャンセルボタン
       Button("キャンセル") {
-        dismiss() // ViewModelは一切触らない
+        // 何もしないでそのまま閉じる（元のデータは変更されない）
+        dismiss()
       }
       .foregroundColor(themeManager.currentTheme.primaryColor)
 
@@ -57,73 +83,15 @@ struct ClothingEditView: View {
 
       Spacer()
 
-      // 削除ボタン（既存衣類のみ）
-      if canDelete && !isNew {
-        Button("削除") {
-          showDeleteConfirm = true
-        }
-        .foregroundColor(.red)
-      } else {
-        Text("")
-          .frame(width: 40)
+      // 保存ボタン（右上に移動）
+      Button(isNew ? "登録" : "保存") {
+        saveChanges()
       }
+      .foregroundColor(themeManager.currentTheme.primaryColor)
+      .fontWeight(.semibold)
     }
     .padding()
     .background(.ultraThinMaterial)
-  }
-
-  private var scrollableContent: some View {
-    ScrollView {
-      VStack(spacing: 16) {
-        // 画像リスト
-        ImageListSection(
-          imageSets: $editingSets,
-          addAction: { showPhotoPicker = true },
-          selectAction: prepareImageForEditing,
-          isLoading: isBackgroundLoading)
-          .padding(.top, 8)
-
-        // 名前編集セクション
-        nameEditSection
-
-        // その他のフォーム
-        ClothingFormSection(clothing: $clothing)
-      }
-      .padding(.bottom, 100)
-    }
-  }
-
-  private var nameEditSection: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      Text("名前")
-        .font(.headline)
-        .foregroundColor(themeManager.currentTheme.primaryColor)
-        .padding(.horizontal)
-
-      TextField("服の名前を入力", text: $clothing.name)
-        .font(.title3)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
-        .overlay(
-          RoundedRectangle(cornerRadius: 12)
-            .stroke(themeManager.currentTheme.primaryColor.opacity(0.3), lineWidth: 1))
-        .padding(.horizontal)
-    }
-  }
-
-  private var saveButtonSection: some View {
-    PrimaryActionButton(title: isNew ? "登録する" : "保存する") {
-      if isNew {
-        viewModel.addClothing(clothing, imageSets: editingSets)
-      } else {
-        viewModel.updateClothing(clothing, imageSets: editingSets)
-      }
-      dismiss()
-    }
-    .padding(.horizontal)
-    .padding(.bottom, 16)
   }
 
   private var photoPickerSheet: some View {
@@ -139,16 +107,6 @@ struct ClothingEditView: View {
       .onDisappear {
         updateImageCache()
       }
-  }
-
-  private var deleteConfirmationButtons: some View {
-    Group {
-      Button("削除する", role: .destructive) {
-        viewModel.deleteClothing(clothing)
-        dismiss()
-      }
-      Button("キャンセル", role: .cancel) {}
-    }
   }
 
   private func bindingFor(_ set: EditableImageSet) -> Binding<EditableImageSet> {
