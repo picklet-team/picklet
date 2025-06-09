@@ -95,9 +95,9 @@ extension UnifiedClothingFormSection {
           clothing.brandId = nil
         }
 
-        ForEach(brandManager.brands) { brand in
-          Button(brand.name) {
-            clothing.brandId = brand.id
+        ForEach(referenceDataManager.brands) { brandData in
+          Button(brandData.name) {
+            clothing.brandId = brandData.id
           }
         }
       } label: {
@@ -106,7 +106,7 @@ extension UnifiedClothingFormSection {
             .foregroundColor(themeManager.currentTheme.primaryColor)
             .font(.title2)
 
-          Text(brandManager.getBrandName(for: clothing.brandId))
+          Text(referenceDataManager.getBrandName(for: clothing.brandId))
             .foregroundColor(.primary)
             .font(.body)
 

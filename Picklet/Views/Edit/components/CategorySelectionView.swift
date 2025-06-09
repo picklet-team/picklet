@@ -4,7 +4,7 @@ import SwiftUI
 
 struct CategorySelectionView: View {
   @Binding var categoryIds: [UUID]
-  @EnvironmentObject var categoryManager: CategoryManager
+  @EnvironmentObject var referenceDataManager: ReferenceDataManager // 変更
   @EnvironmentObject var themeManager: ThemeManager
 
   var body: some View {
@@ -31,9 +31,9 @@ struct CategorySelectionView: View {
         GridItem(.flexible()),
         GridItem(.flexible())
       ], spacing: 12) {
-        ForEach(categoryManager.categories) { category in
+        ForEach(referenceDataManager.categories) { categoryData in // 変更
           CategoryChip(
-            category: category,
+            categoryData: categoryData, // 変更
             categoryIds: $categoryIds,
             themeManager: themeManager)
         }
@@ -45,19 +45,19 @@ struct CategorySelectionView: View {
 // MARK: - カテゴリチップ（改良版）
 
 struct CategoryChip: View {
-  let category: Category
+  let categoryData: ReferenceData // 変更
   @Binding var categoryIds: [UUID]
   let themeManager: ThemeManager
   @State private var isPressed = false
 
   private var isSelected: Bool {
-    categoryIds.contains(category.id)
+    categoryIds.contains(categoryData.id) // 変更
   }
 
   var body: some View {
     Button(action: toggleCategory) {
       HStack(spacing: 8) {
-        Text(category.name)
+        Text(categoryData.name) // 変更
           .font(.system(size: 14, weight: .medium))
           .foregroundColor(isSelected ? .white : .primary)
           .lineLimit(1)
@@ -99,9 +99,9 @@ struct CategoryChip: View {
 
     withAnimation(.easeInOut(duration: 0.2)) {
       if isSelected {
-        categoryIds.removeAll { $0 == category.id }
+        categoryIds.removeAll { $0 == categoryData.id } // 変更
       } else {
-        categoryIds.append(category.id)
+        categoryIds.append(categoryData.id) // 変更
       }
     }
   }

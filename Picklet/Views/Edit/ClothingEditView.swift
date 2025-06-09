@@ -4,8 +4,7 @@ import SwiftUI
 struct ClothingEditView: View {
   @EnvironmentObject var viewModel: ClothingViewModel
   @EnvironmentObject var themeManager: ThemeManager
-  @EnvironmentObject var categoryManager: CategoryManager
-  @EnvironmentObject var brandManager: BrandManager
+  @EnvironmentObject var referenceDataManager: ReferenceDataManager // 変更
   @Environment(\.dismiss) var dismiss
 
   @Binding var clothing: Clothing
@@ -13,10 +12,8 @@ struct ClothingEditView: View {
   let canDelete: Bool
   let isNew: Bool
 
-  // 編集用の一時的なコピーを作成 - privateを削除してinternalに
+  // 編集用の一時的なコピーを作成
   @State var editingClothing: Clothing
-
-  // privateを削除してinternalにする
   @State var editingSets: [EditableImageSet] = []
   @State var selectedImageSet: EditableImageSet?
   @State var showPhotoPicker = false
@@ -33,7 +30,6 @@ struct ClothingEditView: View {
     self.openPhotoPickerOnAppear = openPhotoPickerOnAppear
     self.canDelete = canDelete
     self.isNew = isNew
-    // 編集用の一時的なコピーを作成
     _editingClothing = State(initialValue: clothing.wrappedValue)
   }
 

@@ -7,47 +7,44 @@ import UIKit
 extension SQLiteManager {
   func setupDatabase() {
     do {
-      // データベースファイルのパス
-      let dbPath = documentsDirectory.appendingPathComponent("picklet.sqlite3").path
-      db = try Connection(dbPath)
+      let path = documentsDirectory.appendingPathComponent("picklet.sqlite3").path
+      db = try Connection(path)
+      print("✅ データベース接続成功: \(path)")
 
-      // テーブル作成
       try createTables()
-
-      // マイグレーション実行
       performMigrations()
-
-      print("✅ SQLiteデータベース初期化完了: \(dbPath)")
     } catch {
-      print("❌ SQLiteデータベース初期化エラー: \(error)")
+      print("❌ データベース初期化エラー: \(error)")
     }
   }
 
   func createTables() throws {
-    // 衣類テーブル
+    // Clothes テーブル作成
     try db?.run(clothesTable.create(ifNotExists: true) { table in
       table.column(clothesId, primaryKey: true)
       table.column(clothesName)
-      table.column(clothesPurchasePrice)
-      table.column(clothesFavoriteRating, defaultValue: 3)
-      table.column(clothesColors, defaultValue: "[]")
-      table.column(clothesCategoryIds, defaultValue: "[]")
-      table.column(clothesBrandId)
-      table.column(clothesTagIds, defaultValue: "[]")
-      table.column(clothesWearCount, defaultValue: 0)
-      table.column(clothesWearLimit)
       table.column(clothesCreatedAt)
       table.column(clothesUpdatedAt)
+      table.column(clothesPurchasePrice)
+      table.column(clothesFavoriteRating)
+      table.column(clothesColors)
+      table.column(clothesCategoryIds)
+      table.column(clothesBrandId)
+      table.column(clothesTagIds)
+      table.column(clothesWearCount)
+      table.column(clothesWearLimit)
     })
+    print("✅ Clothesテーブル作成完了")
 
-    // 着用履歴テーブル
+    // WearHistories テーブル作成
     try db?.run(wearHistoriesTable.create(ifNotExists: true) { table in
       table.column(wearId, primaryKey: true)
       table.column(wearClothingId)
       table.column(wearWornAt)
     })
+    print("✅ WearHistoriesテーブル作成完了")
 
-    // 画像メタデータテーブル
+    // ImageMetadata テーブル作成
     try db?.run(imageMetadataTable.create(ifNotExists: true) { table in
       table.column(imageId, primaryKey: true)
       table.column(imageClothingId)
@@ -57,63 +54,110 @@ extension SQLiteManager {
       table.column(imageMaskUrl)
       table.column(imageResultUrl)
     })
+    print("✅ ImageMetadataテーブル作成完了")
 
-    // カテゴリテーブル
+    // Categoriesテーブル作成（is_defaultカラム削除）
     try db?.run(categoriesTable.create(ifNotExists: true) { table in
       table.column(categoryId, primaryKey: true)
       table.column(categoryName)
-      table.column(categoryCreatedAt)
-      table.column(categoryUpdatedAt)
+      table.column(categoryIcon, defaultValue: "🏷️")
+      // is_defaultカラムを削除
     })
+    print("✅ Categoriesテーブル作成完了")
 
-    // ブランドテーブル
+    // Brandsテーブル作成（is_defaultカラム削除）
     try db?.run(brandsTable.create(ifNotExists: true) { table in
       table.column(brandId, primaryKey: true)
       table.column(brandName)
-      table.column(brandCreatedAt)
-      table.column(brandUpdatedAt)
+      table.column(brandIcon, defaultValue: "⭐")
+      // is_defaultカラムを削除
     })
+    print("✅ Brandsテーブル作成完了")
 
-    print("✅ SQLite: テーブル作成完了")
+    // Tagsテーブル作成（is_defaultカラム削除）
+    try db?.run(tagsTable.create(ifNotExists: true) { table in
+      table.column(tagId, primaryKey: true)
+      table.column(tagName)
+      table.column(tagIcon, defaultValue: "#️⃣")
+      // is_defaultカラムを削除
+    })
+    print("✅ Tagsテーブル作成完了")
+
+    // 既存テーブルにiconカラムを追加（マイグレーション）
+    addIconColumnsIfNeeded()
   }
 
   func performMigrations() {
-    guard let db = db else { return }
+    // 既存のマイグレーション処理
+    addIconColumnsIfNeeded()
+    removeIsDefaultColumnsIfNeeded() // is_defaultカラム削除マイグレーション
+  }
 
-    // 新しいカラムの追加（エラーを無視）
+  private func addIconColumnsIfNeeded() {
     do {
-      try db.run("ALTER TABLE clothes ADD COLUMN brand_id TEXT")
-      print("✅ brand_id カラムを追加しました")
+      // Categoriesテーブルにiconカラムを追加
+      try db?.run("ALTER TABLE categories ADD COLUMN icon TEXT DEFAULT '🏷️'")
+      print("✅ categoriesテーブルにiconカラムを追加")
     } catch {
-      print("ℹ️ brand_id カラムは既に存在します")
+      print("ℹ️ categoriesテーブルのiconカラムは既に存在します")
     }
 
     do {
-      try db.run("ALTER TABLE clothes ADD COLUMN tag_ids TEXT DEFAULT '[]'")
-      print("✅ tag_ids カラムを追加しました")
+      // Brandsテーブルにiconカラムを追加
+      try db?.run("ALTER TABLE brands ADD COLUMN icon TEXT DEFAULT '⭐'")
+      print("✅ brandsテーブルにiconカラムを追加")
     } catch {
-      print("ℹ️ tag_ids カラムは既に存在します")
+      print("ℹ️ brandsテーブルのiconカラムは既に存在します")
     }
 
     do {
-      try db.run("ALTER TABLE clothes ADD COLUMN wear_count INTEGER DEFAULT 0")
-      print("✅ wear_count カラムを追加しました")
+      // Tagsテーブルにiconカラムを追加
+      try db?.run("ALTER TABLE tags ADD COLUMN icon TEXT DEFAULT '#️⃣'")
+      print("✅ tagsテーブルにiconカラムを追加")
     } catch {
-      print("ℹ️ wear_count カラムは既に存在します")
+      print("ℹ️ tagsテーブルのiconカラムは既に存在します")
     }
+  }
 
-    do {
-      try db.run("ALTER TABLE clothes ADD COLUMN wear_limit INTEGER")
-      print("✅ wear_limit カラムを追加しました")
-    } catch {
-      print("ℹ️ wear_limit カラムは既に存在します")
-    }
+  private func removeIsDefaultColumnsIfNeeded() {
+    // SQLiteでは直接カラム削除ができないため、テーブル再作成で対応
+    // 本格的な運用時は慎重に実装する必要がありますが、
+    // 開発段階では既存データを削除して再作成することも可能
 
+    #if DEBUG
+    // 開発段階では既存テーブルを削除して再作成
     do {
-      try db.run("ALTER TABLE clothes ADD COLUMN category_ids TEXT DEFAULT '[]'")
-      print("✅ category_ids カラムを追加しました")
+      try db?.run("DROP TABLE IF EXISTS categories")
+      try db?.run("DROP TABLE IF EXISTS brands")
+      try db?.run("DROP TABLE IF EXISTS tags")
+      print("🔄 参照データテーブルを再作成")
+
+      // テーブルを再作成
+      try createReferenceDataTables()
     } catch {
-      print("ℹ️ category_ids カラムは既に存在します")
+      print("❌ テーブル再作成エラー: \(error)")
     }
+    #endif
+  }
+
+  private func createReferenceDataTables() throws {
+    // 前述のcreateTablesから該当部分を抜粋
+    try db?.run(categoriesTable.create(ifNotExists: true) { table in
+      table.column(categoryId, primaryKey: true)
+      table.column(categoryName)
+      table.column(categoryIcon, defaultValue: "🏷️")
+    })
+
+    try db?.run(brandsTable.create(ifNotExists: true) { table in
+      table.column(brandId, primaryKey: true)
+      table.column(brandName)
+      table.column(brandIcon, defaultValue: "⭐")
+    })
+
+    try db?.run(tagsTable.create(ifNotExists: true) { table in
+      table.column(tagId, primaryKey: true)
+      table.column(tagName)
+      table.column(tagIcon, defaultValue: "#️⃣")
+    })
   }
 }

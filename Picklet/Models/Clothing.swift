@@ -61,7 +61,7 @@ struct Clothing: Identifiable, Codable, Equatable {
   let createdAt: Date
   var updatedAt: Date
 
-  // 新規作成用の初期化メソッド
+  // 新規作成用の初期化メソッド（デフォルト設定対応）
   init(
     id: UUID = UUID(),
     name: String,
@@ -72,7 +72,8 @@ struct Clothing: Identifiable, Codable, Equatable {
     brandId: UUID? = nil,
     tagIds: [UUID] = [],
     wearCount: Int = 0,
-    wearLimit: Int? = nil) {
+    wearLimit: Int? = nil,
+    useDefaultWearLimit: Bool = true) {
     self.id = id
     self.name = name
     self.purchasePrice = purchasePrice
@@ -82,7 +83,16 @@ struct Clothing: Identifiable, Codable, Equatable {
     self.brandId = brandId
     self.tagIds = tagIds
     self.wearCount = wearCount
-    self.wearLimit = wearLimit
+
+    // デフォルト着用上限を適用
+    if useDefaultWearLimit && wearLimit == nil {
+      let defaultSettingsManager = DefaultSettingsManager()
+      defaultSettingsManager.loadSettings()
+      self.wearLimit = defaultSettingsManager.defaultWearLimit
+    } else {
+      self.wearLimit = wearLimit
+    }
+
     createdAt = Date()
     updatedAt = Date()
   }

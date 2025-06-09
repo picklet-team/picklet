@@ -10,8 +10,7 @@ struct UnifiedClothingFormSection: View {
   let onSelectImage: (EditableImageSet) -> Void
 
   @EnvironmentObject var themeManager: ThemeManager
-  @EnvironmentObject var categoryManager: CategoryManager
-  @EnvironmentObject var brandManager: BrandManager
+  @EnvironmentObject var referenceDataManager: ReferenceDataManager // 変更
 
   var body: some View {
     VStack(spacing: 24) {
@@ -59,7 +58,7 @@ struct UnifiedClothingFormSection: View {
     .padding(.vertical, 20)
   }
 
-  // セクションカードのラッパー（統一）- internalに変更
+  // セクションカードのラッパー（統一）
   func sectionCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
     content()
       .padding(.horizontal, 20)
@@ -77,7 +76,7 @@ struct UnifiedClothingFormSection: View {
           .stroke(Color(.systemGray5), lineWidth: 1))
   }
 
-  // セクションタイトル（統一）- internalに変更
+  // セクションタイトル（統一）
   func sectionTitle(_ title: String) -> some View {
     Text(title)
       .font(.headline)
