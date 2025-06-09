@@ -11,11 +11,13 @@ class ReferenceDataManager: ObservableObject {
   }
 
   // MARK: - Load Data
+
   private func loadReferenceData() {
     referenceData = sqliteManager.loadAllReferenceData()
   }
 
   // MARK: - Filter by Type
+
   func getData(for type: ReferenceDataType) -> [ReferenceData] {
     return referenceData.filter { $0.type == type }
   }
@@ -33,12 +35,12 @@ class ReferenceDataManager: ObservableObject {
   }
 
   // MARK: - CRUD Operations
+
   func addData(type: ReferenceDataType, name: String, icon: String = "📁") -> Bool {
     let newData = ReferenceData(
       type: type,
       name: name,
-      icon: icon
-    )
+      icon: icon)
 
     if sqliteManager.saveReferenceData(newData) {
       referenceData.append(newData)
@@ -66,6 +68,7 @@ class ReferenceDataManager: ObservableObject {
   }
 
   // MARK: - Helper Methods
+
   func getDataById(_ id: UUID) -> ReferenceData? {
     return referenceData.first { $0.id == id }
   }

@@ -21,17 +21,16 @@ struct ManagementRowView: View {
       EmojiInputField(
         currentEmoji: icon,
         onEmojiChange: onIconChange,
-        isEditing: $isEditingIcon
-      )
-      .frame(width: 32, height: 32)
-      .onTapGesture {
-        // 他のフィールドのフォーカスを外す
-        isNameFieldFocused = false
-        isEditingName = false
+        isEditing: $isEditingIcon)
+        .frame(width: 32, height: 32)
+        .onTapGesture {
+          // 他のフィールドのフォーカスを外す
+          isNameFieldFocused = false
+          isEditingName = false
 
-        // アイコン編集開始
-        isEditingIcon = true
-      }
+          // アイコン編集開始
+          isEditingIcon = true
+        }
 
       // 名前部分
       TextInputField(
@@ -39,20 +38,19 @@ struct ManagementRowView: View {
         placeholder: "名前",
         onTextChange: onNameChange,
         isEditing: $isEditingName,
-        isFocused: $isNameFieldFocused
-      )
-      .onTapGesture {
-        if !isEditingName {
-          // 他のフィールドのフォーカスを外す
-          isEditingIcon = false
+        isFocused: $isNameFieldFocused)
+        .onTapGesture {
+          if !isEditingName {
+            // 他のフィールドのフォーカスを外す
+            isEditingIcon = false
 
-          // 名前編集開始
-          isEditingName = true
-          DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            isNameFieldFocused = true
+            // 名前編集開始
+            isEditingName = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+              isNameFieldFocused = true
+            }
           }
         }
-      }
 
       Spacer()
 
@@ -84,12 +82,11 @@ struct ManagementRowView: View {
             .foregroundColor(linkedItemsCount > 0 ? .secondary : .red)
             .font(.system(size: 16))
             .frame(width: 32, height: 32)
+        })
+        .buttonStyle(.plain)
+        .confirmDeletionAlert(isPresented: $showingDeleteAlert) {
+          onDelete()
         }
-      )
-      .buttonStyle(.plain)
-      .confirmDeletionAlert(isPresented: $showingDeleteAlert) {
-        onDelete()
-      }
     }
     .padding(.vertical, 12)
     .padding(.horizontal, 16)

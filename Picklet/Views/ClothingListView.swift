@@ -32,8 +32,7 @@ struct ClothingListView: View {
                 colors: [],
                 categoryIds: [],
                 brandId: nil,
-                tagIds: []
-              )
+                tagIds: [])
               isNewClothing = true
               navigateToEdit = true
             }

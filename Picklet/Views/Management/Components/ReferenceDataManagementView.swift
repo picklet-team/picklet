@@ -74,10 +74,9 @@ struct ReferenceDataManagementView: View {
                 },
                 onDelete: {
                   _ = referenceDataManager.deleteData(data)
-                }
-              )
-              .listRowSeparator(.hidden)
-              .listRowBackground(Color.clear)
+                })
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
             }
 
             // プラスボタン
@@ -128,8 +127,7 @@ struct ReferenceDataManagementView: View {
     _ = referenceDataManager.addData(
       type: dataType,
       name: randomItem.name,
-      icon: randomItem.emoji
-    )
+      icon: randomItem.emoji)
 
     // 最後に追加されたアイテムのIDを取得して編集状態にする
     let latestData = referenceDataManager.getData(for: dataType).last

@@ -4,7 +4,6 @@ import SQLite
 // MARK: - 3つの別々テーブルでの参照データ管理
 
 extension SQLiteManager {
-
   // MARK: - Categories Table
 
   func saveCategory(_ data: ReferenceData) -> Bool {
@@ -12,8 +11,7 @@ extension SQLiteManager {
       let insert = categoriesTable.insert(
         categoryId <- data.id.uuidString,
         categoryName <- data.name,
-        categoryIcon <- data.icon
-      )
+        categoryIcon <- data.icon)
       try db?.run(insert)
       return true
     } catch {
@@ -31,8 +29,7 @@ extension SQLiteManager {
           id: UUID(uuidString: row[categoryId]) ?? UUID(),
           type: .category,
           name: row[categoryName],
-          icon: row[categoryIcon]
-        )
+          icon: row[categoryIcon])
         categories.append(category)
       }
     } catch {
@@ -47,8 +44,7 @@ extension SQLiteManager {
         .filter(categoryId == data.id.uuidString)
         .update(
           categoryName <- data.name,
-          categoryIcon <- data.icon
-        )
+          categoryIcon <- data.icon)
       guard let db = db else { return false }
       try db.run(update)
       return true
@@ -76,8 +72,7 @@ extension SQLiteManager {
       let insert = brandsTable.insert(
         brandId <- data.id.uuidString,
         brandName <- data.name,
-        brandIcon <- data.icon
-      )
+        brandIcon <- data.icon)
       try db?.run(insert)
       return true
     } catch {
@@ -95,8 +90,7 @@ extension SQLiteManager {
           id: UUID(uuidString: row[brandId]) ?? UUID(),
           type: .brand,
           name: row[brandName],
-          icon: row[brandIcon]
-        )
+          icon: row[brandIcon])
         brands.append(brand)
       }
     } catch {
@@ -111,8 +105,7 @@ extension SQLiteManager {
         .filter(brandId == data.id.uuidString)
         .update(
           brandName <- data.name,
-          brandIcon <- data.icon
-        )
+          brandIcon <- data.icon)
       guard let db = db else { return false }
       try db.run(update)
       return true
@@ -140,8 +133,7 @@ extension SQLiteManager {
       let insert = tagsTable.insert(
         tagId <- data.id.uuidString,
         tagName <- data.name,
-        tagIcon <- data.icon
-      )
+        tagIcon <- data.icon)
       try db?.run(insert)
       return true
     } catch {
@@ -159,8 +151,7 @@ extension SQLiteManager {
           id: UUID(uuidString: row[tagId]) ?? UUID(),
           type: .tag,
           name: row[tagName],
-          icon: row[tagIcon]
-        )
+          icon: row[tagIcon])
         tags.append(tag)
       }
     } catch {
@@ -175,8 +166,7 @@ extension SQLiteManager {
         .filter(tagId == data.id.uuidString)
         .update(
           tagName <- data.name,
-          tagIcon <- data.icon
-        )
+          tagIcon <- data.icon)
       guard let db = db else { return false }
       try db.run(update)
       return true

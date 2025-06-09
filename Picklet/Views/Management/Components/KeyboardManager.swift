@@ -34,7 +34,7 @@ struct KeyboardOverlayModifier: ViewModifier {
 
 extension View {
   func keyboardOverlay() -> some View {
-    self.modifier(KeyboardOverlayModifier())
+    modifier(KeyboardOverlayModifier())
   }
 }
 
@@ -58,9 +58,8 @@ struct EmojiInputField: View {
           },
           onFinish: {
             isEditing = false
-          }
-        )
-        .frame(width: 32, height: 32)
+          })
+          .frame(width: 32, height: 32)
       }
     }
   }
@@ -140,8 +139,7 @@ struct TextInputField: View {
         .background(Color(.systemGray6))
         .overlay(
           RoundedRectangle(cornerRadius: 8)
-            .stroke(Color(.systemGray4), lineWidth: 1)
-        )
+            .stroke(Color(.systemGray4), lineWidth: 1))
         .cornerRadius(8)
     }
   }
