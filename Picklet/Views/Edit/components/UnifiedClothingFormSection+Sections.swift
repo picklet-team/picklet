@@ -146,17 +146,17 @@ extension UnifiedClothingFormSection {
       .cornerRadius(10)
     }
   }
-  
+
   // 着用上限セクション
   var wearLimitSection: some View {
     VStack(alignment: .leading, spacing: 12) {
       sectionTitle("着用上限")
-      
+
       HStack(spacing: 12) {
         Image(systemName: "repeat.circle.fill")
           .foregroundColor(themeManager.currentTheme.primaryColor)
           .font(.title2)
-        
+
         VStack(alignment: .leading, spacing: 8) {
           HStack {
             TextField("上限回数", value: $clothing.wearLimit, format: .number)
@@ -166,7 +166,7 @@ extension UnifiedClothingFormSection {
               .padding(.vertical, 12)
               .background(Color(.secondarySystemBackground))
               .cornerRadius(10)
-            
+
             Button("未設定") {
               clothing.wearLimit = nil
             }
@@ -177,7 +177,7 @@ extension UnifiedClothingFormSection {
             .background(Color(.tertiarySystemBackground))
             .cornerRadius(8)
           }
-          
+
           if let wearLimit = clothing.wearLimit {
             Text("現在の着用回数: \(clothing.wearCount)/\(wearLimit)")
               .font(.caption)

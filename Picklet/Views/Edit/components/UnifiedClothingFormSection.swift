@@ -44,7 +44,7 @@ struct UnifiedClothingFormSection: View {
       sectionCard {
         brandSection
       }
-      
+
       // 着用上限セクション
       sectionCard {
         wearLimitSection
