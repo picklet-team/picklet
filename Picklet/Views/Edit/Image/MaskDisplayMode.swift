@@ -108,8 +108,7 @@ struct MaskEditorView: View {
     // NotificationCenterを使用して削除を通知
     NotificationCenter.default.post(
       name: NSNotification.Name("DeleteImageSet"),
-      object: imageSet.id
-    )
+      object: imageSet.id)
   }
 
   // ズームとパン用ジェスチャー (必要に応じて実装)
