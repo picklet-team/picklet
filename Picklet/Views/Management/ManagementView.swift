@@ -14,6 +14,15 @@ struct ManagementView: View {
 
         List {
           Section("データ管理") {
+            // 洋服管理を追加
+            NavigationLink(destination: ClothingManagementListView()) {
+              SimpleManagementRowView(
+                icon: "tshirt.fill",
+                title: "洋服管理",
+                subtitle: "洋服の一覧表示・編集・削除",
+                color: themeManager.currentTheme.primaryColor)
+            }
+
             NavigationLink(destination: ReferenceDataManagementView(dataType: .category)) {
               SimpleManagementRowView(
                 icon: "tag.fill",
