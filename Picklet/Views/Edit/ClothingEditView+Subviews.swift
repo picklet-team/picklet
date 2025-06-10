@@ -1,5 +1,15 @@
 import SwiftUI
 
+// MARK: - Array Extension for chunked method
+
+extension Array {
+  func chunked(into size: Int) -> [[Element]] {
+    return stride(from: 0, to: count, by: size).map {
+      Array(self[$0 ..< Swift.min($0 + size, count)])
+    }
+  }
+}
+
 // MARK: - EditableImageSet Extension
 
 extension EditableImageSet {
@@ -8,9 +18,10 @@ extension EditableImageSet {
   }
 }
 
-// MARK: - Subviews
+// MARK: - Image Section Component
 
 struct ImageListSection: View {
+  @EnvironmentObject var themeManager: ThemeManager
   @Binding var imageSets: [EditableImageSet]
   let addAction: () -> Void
   let selectAction: (EditableImageSet) -> Void
@@ -38,57 +49,9 @@ struct ImageListSection: View {
         .foregroundColor(.secondary)
       ProgressView()
         .scaleEffect(0.7)
+        .tint(themeManager.currentTheme.primaryColor)
       Spacer()
     }
     .padding(.vertical, 4)
-  }
-}
-
-struct ClothingFormSection: View {
-  @Binding var clothing: Clothing
-  let canDelete: Bool
-  let onDelete: () -> Void
-
-  var body: some View {
-    VStack(spacing: 16) {
-      VStack(alignment: .leading) {
-        Text("服の情報")
-          .font(.headline)
-          .padding(.bottom, 4)
-
-        VStack(spacing: 12) {
-          TextField("カテゴリ", text: $clothing.category)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Color(.secondarySystemBackground))
-            .cornerRadius(8)
-
-          TextField("色", text: $clothing.color)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Color(.secondarySystemBackground))
-            .cornerRadius(8)
-        }
-      }
-      .padding(.horizontal)
-      .padding(.vertical, 8)
-
-      if canDelete {
-        deleteButton
-      }
-    }
-  }
-
-  private var deleteButton: some View {
-    Section {
-      Button(action: onDelete) {
-        Text("削除")
-          .font(.callout)
-          .foregroundColor(.red.opacity(0.8))
-      }
-      .frame(maxWidth: .infinity, alignment: .center)
-      .listRowBackground(Color.clear)
-    }
-    .textCase(nil)
   }
 }

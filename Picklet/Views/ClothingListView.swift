@@ -4,6 +4,7 @@ struct ClothingListView: View {
   @EnvironmentObject private var viewModel: ClothingViewModel
   @EnvironmentObject private var themeManager: ThemeManager
   @EnvironmentObject private var overlayManager: GlobalOverlayManager
+  @EnvironmentObject private var referenceDataManager: ReferenceDataManager // 変更
 
   @State private var navigateToEdit = false
   @State private var editingClothing: Clothing?
@@ -14,7 +15,7 @@ struct ClothingListView: View {
       ClothingDockView()
         .environmentObject(viewModel)
         .environmentObject(overlayManager)
-        .environmentObject(themeManager) // この行を追加
+        .environmentObject(themeManager)
         .accessibility(identifier: "clothingListView")
         .background(
           themeManager.currentTheme.backgroundGradient
@@ -23,13 +24,15 @@ struct ClothingListView: View {
           PrimaryActionButton(
             title: "写真から服を追加",
             backgroundColor: themeManager.currentTheme.lightBackgroundColor) {
+              // 新しいClothingモデルを作成
               editingClothing = Clothing(
-                id: UUID(),
                 name: "",
-                category: "",
-                color: "",
-                createdAt: Date(),
-                updatedAt: Date())
+                purchasePrice: nil,
+                favoriteRating: 3,
+                colors: [],
+                categoryIds: [],
+                brandId: nil,
+                tagIds: [])
               isNewClothing = true
               navigateToEdit = true
             }
@@ -38,13 +41,13 @@ struct ClothingListView: View {
         .navigationDestination(isPresented: $navigateToEdit) {
           if let editingClothing = editingClothing {
             ClothingEditView(
-              clothing: Binding(
-                get: { editingClothing },
-                set: { self.editingClothing = $0 }),
+              clothing: .constant(editingClothing),
               openPhotoPickerOnAppear: true,
               canDelete: false,
               isNew: true)
               .environmentObject(viewModel)
+              .environmentObject(themeManager)
+              .environmentObject(referenceDataManager) // 変更
           }
         }
         .refreshable {

@@ -42,47 +42,8 @@ final class PickletUITests: XCTestCase {
   }
 
   @MainActor
-  func testLoginScreen() throws {
-    let app = XCUIApplication()
-    app.launch()
-
-    // 基本的な画面要素の確認（識別子に依存しない）
-    XCTAssertTrue(app.textFields.firstMatch.exists, "テキストフィールドが表示されていません")
-    XCTAssertTrue(app.secureTextFields.firstMatch.exists, "パスワードフィールドが表示されていません")
-    XCTAssertTrue(app.buttons.firstMatch.exists, "ボタンが表示されていません")
-
-    // メールアドレス入力
-    let emailField = app.textFields.firstMatch
-    emailField.tap()
-    emailField.typeText("test@example.com")
-
-    // パスワード入力
-    let passwordField = app.secureTextFields.firstMatch
-    passwordField.tap()
-    passwordField.typeText("password123")
-
-    // キーボードを閉じる（"Return"ボタンがなければタップしない）
-    if app.buttons["Return"].exists {
-      app.buttons["Return"].tap()
-    } else {
-      app.tap() // 画面の他の場所をタップしてキーボードを閉じる
-    }
-
-    // ログインボタンをタップ（テキストで識別）
-    let loginButton = app.buttons.matching(NSPredicate(format: "label CONTAINS 'ログイン'")).firstMatch
-    XCTAssertTrue(loginButton.exists, "ログインボタンが見つかりません")
-    loginButton.tap()
-
-    // 5秒待機してタブバーが表示されるか確認
-    let tabBar = app.tabBars.firstMatch
-    XCTAssertTrue(tabBar.waitForExistence(timeout: 5.0), "ログイン後にタブバーが表示されていません")
-  }
-
-  @MainActor
   func testClothingList() throws {
     let app = XCUIApplication()
-    // アプリを既にログイン状態で起動する
-    app.launchArguments = ["UI_TESTING", "LOGGED_IN"]
     app.launch()
 
     // アプリが起動したことを確認する最小限のテスト
@@ -109,8 +70,6 @@ final class PickletUITests: XCTestCase {
   @MainActor
   func testCaptureFlow() throws {
     let app = XCUIApplication()
-    // アプリを既にログイン状態で起動
-    app.launchArguments = ["UI_TESTING", "LOGGED_IN"]
     app.launch()
 
     // アプリが起動したことを確認する最小限のテスト
@@ -142,8 +101,6 @@ final class PickletUITests: XCTestCase {
   @MainActor
   func testWeatherView() throws {
     let app = XCUIApplication()
-    // アプリを既にログイン状態で起動
-    app.launchArguments = ["UI_TESTING", "LOGGED_IN"]
     app.launch()
 
     // タブバーが表示されることを確認
@@ -217,8 +174,6 @@ final class PickletUITests: XCTestCase {
   @MainActor
   func testSettingsView() throws {
     let app = XCUIApplication()
-    // アプリを既にログイン状態で起動
-    app.launchArguments = ["UI_TESTING", "LOGGED_IN"]
     app.launch()
 
     // 設定タブに移動（タブの順番で判断、通常は最後のタブ）
@@ -234,13 +189,6 @@ final class PickletUITests: XCTestCase {
     // トグルやスイッチの存在を確認
     let toggleExists = app.switches.firstMatch.waitForExistence(timeout: 2.0)
 
-    // ログアウト関連のボタンを検索（テキスト内容で判断）
-    let logoutPredicate = NSPredicate(format:
-      "label CONTAINS 'ログアウト' OR label CONTAINS 'サインアウト' OR " +
-      "label CONTAINS 'Logout' OR label CONTAINS 'Sign out'"
-    )
-    let logoutButton = app.buttons.matching(logoutPredicate).firstMatch
-
     // バージョン情報を表示するラベルを検索（テキスト内容で判断）
     let versionPredicate = NSPredicate(format: "label CONTAINS 'バージョン' OR label CONTAINS 'Version'")
     let versionTexts = app.staticTexts.matching(versionPredicate)
@@ -248,7 +196,7 @@ final class PickletUITests: XCTestCase {
     _ = versionTexts
 
     // 設定画面の基本要素の存在を確認
-    // トグルまたはログアウトボタンのどちらかがあればOK
-    XCTAssertTrue(toggleExists || logoutButton.exists, "設定画面の基本要素が表示されていません")
+    // トグルがあればOK
+    XCTAssertTrue(toggleExists, "設定画面の基本要素が表示されていません")
   }
 }
