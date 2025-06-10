@@ -65,5 +65,7 @@
 	<string>天気情報を取得するために位置情報を使用します</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>写真を選択するためにフォトライブラリへのアクセスを許可してください。</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>
