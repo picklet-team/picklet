@@ -34,7 +34,7 @@ struct ClothingManagementListView: View {
           deleteClothing(clothing)
         }
       }
-      Button("キャンセル", role: .cancel) { }
+      Button("キャンセル", role: .cancel) {}
     } message: {
       if let clothing = clothingToDelete {
         Text("「\(clothing.name)」を削除しますか？この操作は取り消せません。")
@@ -54,8 +54,7 @@ struct ClothingManagementListView: View {
         icon: "tshirt.fill",
         value: "\(viewModel.clothes.count)",
         label: "件",
-        color: themeManager.currentTheme.primaryColor
-      )
+        color: themeManager.currentTheme.primaryColor)
 
       Spacer()
 
@@ -64,8 +63,7 @@ struct ClothingManagementListView: View {
         icon: "repeat",
         value: "\(viewModel.clothes.reduce(0) { $0 + $1.wearCount })",
         label: "回",
-        color: .blue
-      )
+        color: .blue)
 
       Spacer()
 
@@ -76,8 +74,7 @@ struct ClothingManagementListView: View {
           icon: "yensign.circle",
           value: "¥\(Int(totalPrice).formatted())",
           label: "",
-          color: .green
-        )
+          color: .green)
       }
     }
     .padding()
@@ -92,13 +89,12 @@ struct ClothingManagementListView: View {
           onDelete: {
             clothingToDelete = clothing
             showingDeleteAlert = true
-          }
-        )
-        .environmentObject(viewModel)
-        .environmentObject(themeManager)
-        .environmentObject(referenceDataManager)
-        .listRowBackground(Color.clear)
-        .listRowSeparator(.hidden)
+          })
+          .environmentObject(viewModel)
+          .environmentObject(themeManager)
+          .environmentObject(referenceDataManager)
+          .listRowBackground(Color.clear)
+          .listRowSeparator(.hidden)
       }
     }
     .listStyle(PlainListStyle())

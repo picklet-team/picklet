@@ -63,8 +63,7 @@ struct ClothingManagementRowView: View {
     .background(
       RoundedRectangle(cornerRadius: 12)
         .fill(.ultraThinMaterial)
-        .shadow(color: .black.opacity(0.1), radius: 3, x: 0, y: 1)
-    )
+        .shadow(color: .black.opacity(0.1), radius: 3, x: 0, y: 1))
     .padding(.horizontal)
     .padding(.vertical, 4)
     .onAppear {
@@ -90,8 +89,7 @@ struct ClothingManagementRowView: View {
           .overlay(
             Image(systemName: "tshirt")
               .font(.title2)
-              .foregroundColor(.secondary)
-          )
+              .foregroundColor(.secondary))
       }
     }
     .frame(width: 60, height: 60)

@@ -22,7 +22,7 @@ struct ManagementView: View {
                 subtitle: "洋服の一覧表示・編集・削除",
                 color: themeManager.currentTheme.primaryColor)
             }
-            
+
             NavigationLink(destination: ReferenceDataManagementView(dataType: .category)) {
               SimpleManagementRowView(
                 icon: "tag.fill",
